@@ -5,6 +5,12 @@ name = "pypi"
 
 [packages]
 flask = "*"
+influxdb-client = "*"
+pandas = "*"
+h5py = "*"
+psycopg2-binary = "*"
+dash-bootstrap-components = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 

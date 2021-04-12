@@ -5,11 +5,13 @@ import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine
 import psycopg2
+from multiprocessing import Process
 
 from config_secret import pg
 
 df_header = ["time", "voltage", "current"]
 datatypes = {"time": "Time", "node_id": "Integer", "current": "Float", "voltage": "Float"}
+
 
 def ds_to_phys(dataset: h5py.Dataset):
     gain = dataset.attrs["gain"]
@@ -43,23 +45,36 @@ def put_in_timescale(data: pd.DataFrame, node_id: int):
     data.insert(1, "node_id", node_id)
     batch_size = 1000
     print(f"writing dataframe to database")
-    data.to_sql(pg['table'], engine, index=False, chunksize=batch_size, if_exists="replace", method="multi", )
+    data.to_sql(pg['table'], engine, index=False, chunksize=batch_size, if_exists="replace", method=None, )
     # todo: adding a scheme can help transparency
-    # method="multi"
+    # method="multi" OR None
+    # method="single"
     # schema="(time, node_id, current, voltage)"  # WRONG
     # dtype=datatypes  # time-datatype is not recognized, https://docs.sqlalchemy.org/en/14/core/type_basics.html#generic-types
 
 
 if __name__ == "__main__":
-    data = extract_hdf(Path("./rec.6.h5"))
+    proc_num = 4
     sample_size = 1000000
-    data = data.iloc[:sample_size,:]
+    data = extract_hdf(Path("./rec.6.h5"))
+    data = data.head(sample_size)
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
     print(f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}")
     print(data.iloc[0:5, :])
     time_start = time.time()
-    put_in_timescale(data, 0)
-    print(f"Insertion took {round(time.time() - time_start, 2)} seconds")
+
+    procs = list()
+    for iter in range(proc_num):
+        process = Process(target=put_in_timescale, args=(data, iter))
+        process.start()
+        procs.append(process)
+    print("Processes created")
+    for process in procs:
+        process.join()
+
+    duration = round(time.time() - time_start, 2)
+    insertsps = round(proc_num * sample_size / duration / 1000)
+    print(f"Insertion took {duration} seconds, {insertsps} k/s for {proc_num} * {sample_size} items")
 
 # results:
 # - 16.5 s, 1M Insert, replace, single-insert, batch=2000, -> 40 % cpu, batch-size has no influence
@@ -67,6 +82,10 @@ if __name__ == "__main__":
 # - 44.2 s, 1M Insert, replace, multi-insert, batch=2000
 # - 46.4 s, 1M Insert, replace, multi-insert, batch=4000
 # - ram usage is higher, same with cpu on VM (~60% on one core)
+# - multiprocessing (one vServer, 1 host that inserts data) [8cores,HT], single-inser, batch=1000
+#   - 1x 1M, 17.40 s, 57 k/s
+#   - 2x 1M, 17.40 s, 57 k/s (vm: 1 core 40)
+#   - 4x 1M, ... errors during transmitting (undefined table)
 
 # TODO: pandas also supports directly reading dataframe
 # TODO:
@@ -74,6 +93,7 @@ if __name__ == "__main__":
 # - optimize guid
 # - binary type i/o
 # - try asyncpg?
+# - is it possible to load from file?
 
 #connection = psycopg2.connect(user=pg["user"], password=pg["password"],
 #                              host=pg["host"], port=pg["port"],

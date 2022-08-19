@@ -16,11 +16,12 @@
 - secure admin-panel with some random (changing) hash-address
 - OneToOneField does not appear in form
 - even cleaner form from model? `editable` is there
+- dark mode toggle?
 
 django-questions
 - can we delete empty files like admin.py?
 - form to documentation, how?
-- 
+
 
 ## Building-Blocks
 
@@ -46,6 +47,13 @@ django-questions
   - https://pypi.org/project/python-secrets/
 - YAML as POST-source
   - https://jpadilla.github.io/django-rest-framework-yaml/
+- Form, automatic layouts
+  - crispy: https://pypi.org/project/django-crispy-forms/
+    - https://django-crispy-forms.readthedocs.io/en/latest/ 
+- try poetry instead of pipenv and other setup-tools?
+  - https://python-poetry.org/docs/basic-usage/
+- use forge instead of django? more constrained fork
+  - https://github.com/forgepackages/forge
 
 ## Data-Structures
 

@@ -4,15 +4,23 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
-influxdb-client = "*"
+django = "*"
 pandas = "*"
 h5py = "*"
+pyyaml = "*"
+django-crispy-forms = "*"
+crispy-bootstrap5 = "*"
+# under-test:
+social-auth-app-django = "*"
+fontawesomefree = "<7.0"
 psycopg2-binary = "*"
 dash-bootstrap-components = "*"
 sqlalchemy = "*"
+flask = "*"
+influxdb-client = "*"
+
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "3"

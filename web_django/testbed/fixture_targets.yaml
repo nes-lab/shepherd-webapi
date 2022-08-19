@@ -1,0 +1,46 @@
+--- # add with >>> python manage.py loaddata <fixturename>
+- model: testbed.target
+  pk: 1
+  fields:
+    name: tgt_nrf52_2021_001
+    #description:
+    comment: single target PCB, v2.1r0
+    platform1: nRF52
+    core1: nRF52840
+    programmer1: swd
+- model: testbed.target
+  pk: 2
+  fields:
+    name: tgt_nrf52_2021_002
+    #description:
+    comment: single target PCB, v2.1r0
+    platform1: nRF52
+    core1: nRF52840
+    programmer1: swd
+- model: testbed.target
+  pk: 3
+  fields:
+    name: tgt_nrf52_2021_003
+    #description:
+    comment: single target PCB, v2.1r0
+    platform1: nRF52
+    core1: nRF52840
+    programmer1: swd
+- model: testbed.target
+  pk: 4
+  fields:
+    name: tgt_nrf52_2021_004
+    #description:
+    comment: single target PCB, v2.1r0
+    platform1: nRF52
+    core1: nRF52840
+    programmer1: swd
+- model: testbed.target
+  pk: 5
+  fields:
+    name: none
+    #description:
+    comment: empty target
+    #platform1:
+    #core1:
+    #programmer1:

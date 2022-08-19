@@ -1,0 +1,123 @@
+--- # add with >>> python manage.py loaddata <fixturename>
+- model: testbed.gpio
+  pk: 1
+  fields:
+    name: GPIO0
+    #description:
+    #comment:
+    direction: IO
+    dir_switch: dir1
+    pin_pru: r31_00
+    pin_bbp: P8_45
+    pin_sys: gpio0_14
+    pin_bbs: P8_14
+- model: testbed.gpio
+  pk: 2
+  fields:
+    name: GPIO1
+    #description:
+    #comment:
+    direction: IO
+    dir_switch: dir1
+    pin_pru: r31_01
+    pin_bbp: P8_46
+    pin_sys: gpio0_27
+    pin_bbs: P8_17
+- model: testbed.gpio
+  pk: 3
+  fields:
+    name: GPIO2
+    #description:
+    #comment:
+    direction: IO
+    dir_switch: dir1
+    pin_pru: r31_02
+    pin_bbp: P8_43
+    pin_sys: gpio1_14
+    pin_bbs: P8_16
+- model: testbed.gpio # TODO: continue, firmware/pru1/main.c -> table
+  pk: 4
+  fields:
+    name: GPIO3
+    #description:
+    #comment:
+    direction: IO
+    dir_switch: dir1
+    pin_pru: r31_03
+    pin_sys: g0_14
+    pin_bbs: P8_15
+- model: testbed.gpio
+  pk: 5
+  fields:
+    name: GPIO4
+    #description:
+    #comment:
+    direction: I
+    #dir_switch:
+    pin_pru: r31_00
+    pin_sys: g0_14
+    pin_bbs: P8_14
+- model: testbed.gpio
+  pk: 6
+  fields:
+    name: GPIO5
+    #description:
+    #comment:
+    direction: I
+    dir_switch:
+    pin_pru: r31_00
+    pin_sys: g0_14
+    pin_bbs: P8_14
+- model: testbed.gpio
+  pk: 7
+  fields:
+    name: GPIO6
+    description:
+    #comment:
+    direction: I
+    #dir_switch:
+    pin_pru: r31_00
+    pin_sys: g0_14
+    pin_bbs: P8_14
+- model: testbed.gpio
+  pk: 8
+  fields:
+    name: GPIO7
+    description:
+    comment: UART_RX
+    direction: I
+    #dir_switch:
+    pin_pru: r31_00
+    pin_sys: g0_14
+    pin_bbs: P8_14
+- model: testbed.gpio
+  pk: 9
+  fields:
+    name: GPIO8
+    description:
+    comment: UART_TX
+    direction: IO
+    dir_switch: dir2
+    pin_pru: r31_00
+    pin_sys: g0_14
+    pin_bbs: P8_14
+- model: testbed.gpio
+  pk: 10
+  fields:
+    name: BAT_OK
+    description: signal from vsource (pru) to target
+    comment:
+    direction: O
+    dir_switch:
+    pin_pru: r30_09
+    pin_sys:
+    pin_bbs: P8_29
+- model: testbed.gpio
+  pk: 11
+  fields:
+    name: PRG1_CLK
+    direction: o
+
+    pin_pru: r30_09
+    pin_sys:
+    pin_bbs: P8_29

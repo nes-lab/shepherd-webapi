@@ -1,0 +1,69 @@
+---
+
+# sudo apt install unattended-upgrades
+# sudo dpkg-reconfigure -plow unattended-upgrades
+# OR manipulate config-file
+# etc/apt/apt.conf.d/10periodic
+# APT::Periodic::Update-Package-Lists "1";
+# APT::Periodic::Download-Upgradeable-Packages "1";
+# APT::Periodic::AutocleanInterval "7";
+# APT::Periodic::Unattended-Upgrade "1";
+# etc/apt/apt.conf.d/50unattended-upgrades -> allow normal updates, uncomment:
+# "${distro_id}:${distro_codename}-updates";
+# Unattended-Upgrade::Mail "..";
+# ref1: https://libre-software.net/ubuntu-automatic-updates/
+# ref2: https://wiki.ubuntuusers.de/Aktualisierungen/Konfiguration/
+
+
+- name: APT - Install required packages
+  apt:
+    name: 'unattended-upgrades'
+    state: present
+    update_cache: yes
+
+# usually you call: sudo dpkg-reconfigure -plow unattended-upgrades  
+- name: CFG - unattended upgrades - part A
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/10periodic
+    regexp: "{{ item.regex }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - {
+        regex: '^.*Periodic::Update-Package-Lists.*$', 
+        line: 'APT::Periodic::Update-Package-Lists "1";'
+        }
+    - {
+        regex: '^.*Periodic::Download-Upgradeable-Packages.*$', 
+        line: 'APT::Periodic::Download-Upgradeable-Packages "1";'
+        }
+    - {
+        regex: '^.*Periodic::AutocleanInterval.*$', 
+        line: 'APT::Periodic::AutocleanInterval "3";'
+        }
+    - {
+        regex: '^.*Periodic::Unattended-Upgrade.*$', 
+        line: 'APT::Periodic::Unattended-Upgrade "1";'
+        }
+
+- name: CFG - unattended upgrades - part B
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    regexp: "{{ item.regex }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - {
+        regex: '^.*Periodic::Update-Package-Lists.*$', 
+        line: 'APT::Periodic::Update-Package-Lists "1";'
+        }
+    - {
+        regex: '^.*Unattended-Upgrade::Mail.*$', 
+        line: 'Unattended-Upgrade::Mail "";'
+        }
+  when: false
+
+
+# TODO: there could also be an email-report
+#    etc/apt/apt.conf.d/50unattended-upgrades
+#    Unattended-Upgrade::Mail "..";       

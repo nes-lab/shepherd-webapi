@@ -1,0 +1,30 @@
+---
+- hosts: all
+  roles:
+    - apt-automatic
+    - datastorage-client
+    - ntp-client
+    - secure-host
+  handlers:
+    - name: restart device
+      shell: sleep 2 && shutdown -r now "Ansible restart"
+      async: 1
+      poll: 0
+      ignore_errors: true
+      become: yes
+      listen: "restart device"
+      notify: wait for reboot
+    - name: wait for reboot
+      wait_for_connection:
+        delay: 15
+        timeout: 300
+      listen: "wait for reboot"
+  pre_tasks:
+    - name: Get time and date from ansible controller
+      local_action: command date -u +"%Y-%m-%dT%H:%M:%SZ"
+      register: local_time
+      become: no
+
+    - name: Set correct time
+      command: "date -s {{ local_time.stdout }}"
+  become: yes

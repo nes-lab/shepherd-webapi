@@ -1,0 +1,42 @@
+---
+
+- fail: msg="The variable '{{item}}' is not defined"
+  when: (item is defined) and (item|length > 0) 
+  with_items:
+  - key_server
+  - data_server
+  - data_path_remote
+  - data_path_local
+  - zih_user
+  - zih_password
+
+- name: Check if keypair is present on shepherd-server
+  stat:
+    path: /home/{{ ansible_user }}/.ssh/id_rsa.pub
+  register: key_file
+      
+- name: Generate fresh key-pair (if needed)
+  ansible.builtin.shell: ssh-keygen -q -t rsa -N "" -C cfaed_nes_shepherd_server
+  when: not key_file.exits
+  become: no
+
+- name: APT - Install required packages
+  apt:
+    name: ["sshfs", "sshpass"] 
+    state: present
+    update_cache: yes
+
+- name: Authorize shp-server with key-server
+  ansible.builtin.shell: sshpass -p "{{zih_password}}" ssh-copy-id {{zih_user}}@{{key_server}}
+
+- name: Create mount-directory
+  ansible.builtin.file:
+    path: {{data_path_local}}
+    owner: {{ansible_user}}
+
+- name: Enable automatic mounting
+  ansible.builtin.lineinfile:
+    dest: '/home/{{ ansible_user }}/.bashrc'
+    regex: '^.*sshfs.*$'
+    line: 'sshfs {{zih_user}}@{{data_server}}:{{data_path_remote}} {{data_path_local}}'
+  notify: restart device

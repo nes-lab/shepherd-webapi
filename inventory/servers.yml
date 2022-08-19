@@ -1,0 +1,17 @@
+all:
+  hosts:
+    shp_srv:
+      ansible_host: cfaed-shepherd.zih.tu-dresden.de
+      # replace with IP for now ...
+  vars:
+    # special internal variables
+    ansible_user: jacob
+    # datastorage-role
+    key_server: login.zih.tu-dresden.de
+    data_server: dgw.zih.tu-dresden.de
+    data_path_remote: /svm/vs-grp04/shepherdDS
+    data_path_local: /mnt/shp_ds/
+    zih_user:
+    zih_password: # note: will only be used during setup - server uses ssh-key-pair later
+    # django_server
+    django_secret_key:

@@ -3,6 +3,7 @@ Installation
 
 InfluxDB
 --------
+
 https://docs.influxdata.com/influxdb/v2.0/get-started/?t=Linux
 - install binary in path
 - install service
@@ -24,12 +25,14 @@ https://docs.influxdata.com/influxdb/v2.0/get-started/?t=Linux
 - default port: 8086
 
 Influx-TODO
-----
+-----------
+
 - create admin, org, bucket, user for bucket
 - limit DB to local access
 
 TimescaleDB
 -----------
+
 https://www.postgresql.org/download/linux/ubuntu/
 - install, if not already
 https://docs.timescale.com/latest/getting-started/installation/ubuntu/installation-apt-ubuntu

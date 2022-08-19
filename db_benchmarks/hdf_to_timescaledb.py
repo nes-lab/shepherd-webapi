@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 import psycopg2
 from multiprocessing import Process
 
-from config_secret import pg
+from config_secrets import pg
 
 df_header = ["time", "voltage", "current"]
 datatypes = {"time": "Time", "node_id": "Integer", "current": "Float", "voltage": "Float"}
@@ -56,7 +56,7 @@ def put_in_timescale(data: pd.DataFrame, node_id: int):
 if __name__ == "__main__":
     proc_num = 4
     sample_size = 1000000
-    data = extract_hdf(Path("./rec.6.h5"))
+    data = extract_hdf(Path("rec.6.h5"))
     data = data.head(sample_size)
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
     print(f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}")

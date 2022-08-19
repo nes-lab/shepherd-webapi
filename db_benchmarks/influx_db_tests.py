@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from config_secret import client, bucket, org
+from config_secrets import client, bucket, org
 from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 #from influxdb_client.client.bucket_api import
 from influxdb_client import InfluxDBClient, Point, WriteOptions, WritePrecision

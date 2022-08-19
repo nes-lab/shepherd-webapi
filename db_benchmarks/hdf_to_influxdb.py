@@ -5,7 +5,7 @@ import pandas as pd
 from pathlib import Path
 from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 from influxdb_client import InfluxDBClient, WritePrecision
-from config_secret import bucket, org, token
+from config_secrets import bucket, org, token
 from multiprocessing import Process
 
 df_header = ["voltage", "current"]
@@ -57,7 +57,7 @@ def put_in_influx(data: pd.DataFrame, client_id: int):
 if __name__ == "__main__":
     proc_num = 16
     sample_size = 1000000
-    data = extract_hdf(Path("./rec.6.h5"))
+    data = extract_hdf(Path("rec.6.h5"))
     data = data.head(sample_size)
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")

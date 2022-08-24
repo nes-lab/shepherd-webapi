@@ -12,9 +12,11 @@ import re
 
 class Gpio(models.Model):
     """
-    Entries describe relation for target GPIO:
+    Entries describe relation for target GPIO: \n
     - main GPIOs are monitored by the PRU and can be observed
-    - all GPIos are connected to system and can be controlled from linux userspace
+    - most GPIOs are connected to a second pin and can be controlled from linux userspace
+    - for each pin the position on the Pin-Header and the affiliated register-name are provided
+
     """
     name = models.SlugField(
         max_length=30,
@@ -91,6 +93,9 @@ class Gpio(models.Model):
 
 
 class Controller(models.Model):
+    """
+    MCUs are logic building-blocks of :model:`testbed.Target` defined by a general MCU-Family, a specific core and a programming-method.
+    """
     name = models.SlugField(
         max_length=30,
         primary_key=True,
@@ -134,6 +139,11 @@ class Controller(models.Model):
 
 
 class Target(models.Model):
+    """
+    Target-Boards are connected to the :model:`testbed.Observer` via one of two target-ports. Each Target-PCB can contain up to two MCUs (:model:`testbed.Controller`). This novel approach has multiple benefits:\n
+    - one observer could utilize more than 2 MCUs (unused MCUs would receive a sleep-firmware)
+    - a Target can use one MCU for processing and another one would be used as a radio or FRAM (MSP430FR)
+    """
     name = models.SlugField(
         max_length=30,
         primary_key=True,
@@ -180,6 +190,9 @@ class Target(models.Model):
 
 
 class Observer(models.Model):
+    """
+    An Observer consists of a Beaglebone Board (running shepherd software) and a shepherd cape. The cape can emulate energy environments and record the power consumption of cyber-physical system (:model:`testbed.Target`). These are connected via two individual Ports.
+    """
     name = models.SlugField(
         max_length=30,
         primary_key=True,  # implies unique
@@ -274,3 +287,4 @@ class Observer(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = "Observer-Node"

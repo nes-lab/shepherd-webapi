@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Observers{% endblock %}
+
+{% block content %}
+
+<h1>Observers</h1>
+<ul>
+{% for object in object_list %}
+    <li>{{ object.name }} - {{ object.ip }}</li>
+{% empty %}
+    <li>No observers yet.</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

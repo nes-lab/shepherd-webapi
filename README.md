@@ -21,6 +21,7 @@ python manage.py createsuperuser
 
 # add initial data
 python manage.py loaddata .\testbed\fixture_gpios.yaml
+python manage.py loaddata .\testbed\fixture_controllers.yaml
 python manage.py loaddata .\testbed\fixture_targets.yaml
 python manage.py loaddata .\testbed\fixture_observers.yaml
 

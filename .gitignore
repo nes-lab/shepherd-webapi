@@ -116,3 +116,4 @@ dmypy.json
 # Project specific states
 *.sqlite3
 *_secrets.py
+**/migrations/00*.py

@@ -1,60 +1,182 @@
+from django.core.validators import RegexValidator
+from django.utils.translation import gettext as _
+from django.utils import timezone
 from django.db import models
+import re
 
-# TODO: generate documentation from these models? field-name, description, data-type constraints
-# TODO: migration is not generated in working condition -> target gets created last, but references earlier
-# TODO: do we need more than one key? add new fields to other models
+# TODO: generate documentation from these models? field-name, description, data-type constraints -> yes, but only adminDoc?
+#   -> http://127.0.0.1:8000/admin_testbed/doc/models/testbed.target/
+# - use docstring
+# - determine how to show model of -> :model:`testbed.Observer`
 
 
 class Gpio(models.Model):
-
+    """
+    Entries describe relation for target GPIO:
+    - main GPIOs are monitored by the PRU and can be observed
+    - all GPIos are connected to system and can be controlled from linux userspace
+    """
     name = models.SlugField(
         max_length=30,
         primary_key=True,
-    )  # only letters, numbers, underscores, hyphens
-    description = models.TextField(max_length=400, blank=True)
-    comment = models.TextField(max_length=200, blank=True)
+        verbose_name="GPIO-Name",
+        # help_text="",
+    )
+    description = models.CharField(
+        max_length=400,
+        default="",
+        blank=True,
+        help_text="Properties or special behaviour that needs documentation",
+    )
+    comment = models.CharField(
+        max_length=200,
+        default="",
+        blank=True,
+        help_text="ideas, TODOs or other temporary info",
+    )
 
-    direction = models.SlugField(max_length=2)  # TODO: multiple choice
-    dir_switch = models.SlugField(max_length=10, blank=True)  # TODO: multiple choice
+    direction_choices = [
+        ('I', 'Input'),
+        ('O', 'Output'),
+        ('IO', 'Bidirectional'),
+    ]
 
-    pin_pru = models.SlugField(max_length=10)
-    pin_bbp = models.SlugField(max_length=10)
-    pin_sys = models.SlugField(max_length=10)
-    pin_bbs = models.SlugField(max_length=10)
+    direction = models.SlugField(
+        max_length=2,
+        choices=direction_choices,
+        default="I",
+        verbose_name="Direction-Capability",
+        help_text="Specify I=Input, O=Output, IO, with reference to observer",
+    )
+    dir_switch = models.SlugField(
+        max_length=10,
+        blank=True,
+        verbose_name="Direction-Pin",
+        help_text="Toggle changes direction, High is sys-out / target-in",
+    )
+
+    reg_pru = models.SlugField(
+        max_length=10,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="PRU Register-Name of Pin",
+        help_text="something like r31_05 for input, r30_xx for output",
+    )
+    pin_pru = models.SlugField(
+        max_length=10,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="PRU Pin-Name on Header",
+        help_text="something like P8_29",
+    )
+
+    reg_sys = models.SlugField(
+        max_length=10,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="System Register-Name of Pin",
+        help_text="something like GPIO1[23] translates to 1*32+23 = 55",
+    )
+    pin_sys = models.SlugField(
+        max_length=10,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="System Pin-Name on Header",
+        help_text="something like P8_29",
+    )
+
+
+class Controller(models.Model):
+    name = models.SlugField(
+        max_length=30,
+        primary_key=True,
+        verbose_name="MCU-Name",
+        # help_text="",
+    )
+    comment = models.CharField(
+        max_length=200,
+        default="",
+        blank=True,
+        help_text="ideas, TODOs or other temporary info",
+    )
+    platform = models.SlugField(
+        max_length=20,
+        verbose_name="MCU-Platform",
+        help_text="MCU-Family or generalized Name",
+    )
+    core = models.SlugField(
+        max_length=20,
+        unique=True,
+        verbose_name="Part-Number",
+        help_text="PN of Manufacturer",
+    )
+    programmer_choices = [
+        ('swd', 'Serial-Wire-Debug'),
+        ('sbw', 'Spy-By-Wire'),
+        ('jtag', 'JTAG'),
+        ('uart', 'UART'),
+    ]
+    programmer = models.SlugField(
+        max_length=10,
+        choices=programmer_choices,
+        help_text="Choose how the MCU gets programmed",
+    )
+
+    def __str__(self):
+        return self.core
+
+    class Meta:
+        ordering = ['name']
 
 
 class Target(models.Model):
     name = models.SlugField(
         max_length=30,
         primary_key=True,
-    )  # only letters, numbers, underscores, hyphens
-    description = models.TextField(
+        verbose_name="Name of Target-PCB",
+        help_text="unique and descriptive name",
+    )
+    description = models.CharField(
         max_length=400,
         blank=True,
         default="",
+        help_text="Properties or special behaviour that needs documentation",
     )
-    comment = models.TextField(
+    comment = models.CharField(
         max_length=200,
         default="",
         blank=True,
+        help_text="ideas, TODOs or other temporary info",
     )
 
-    platform1 = models.SlugField(max_length=10, blank=True)
-    core1 = models.SlugField(max_length=10, blank=True)
-    programmer1 = models.SlugField(max_length=10, blank=True)
-    platform2 = models.SlugField(max_length=10, blank=True)
-    core2 = models.SlugField(max_length=10, blank=True)
-    programmer2 = models.SlugField(max_length=10, blank=True)
-    # TODO: not optimal. maybe use option to link up to two cores?
+    controller1 = models.ForeignKey(
+        Controller,
+        on_delete=models.PROTECT,
+        verbose_name="MCU 1",
+        to_field="name",
+        related_name="targets_a",
+        help_text="MCU on Programming Port 1",
+        null=True,
+    )
+    controller2 = models.ForeignKey(
+        Controller,
+        on_delete=models.PROTECT,
+        verbose_name="MCU 2",
+        to_field="name",
+        related_name="targets_b",
+        help_text="MCU on Programming Port 2",
+        null=True,
+    )
 
+    def __str__(self):
+        return self.name
 
-def validate_mac(value):
-    # 18:62:E4:D0:DE:3F, TODO
-    #raise ValidationError(
-    #    _('%(value)s is not an even number'),
-    #    params={'value': value},
-    #)
-    pass
+    class Meta:
+        ordering = ['name']
 
 
 class Observer(models.Model):
@@ -62,65 +184,93 @@ class Observer(models.Model):
         max_length=30,
         primary_key=True,  # implies unique
         verbose_name="Name of Observer",
-        help_text="String (up to %(max_length)s), only letters, numbers, underscores & hyphens",
+        help_text=_("String (up to %(max_length)s), only letters, numbers, underscores & hyphens"),  # TODO: not working could be useful for all
     )
-    description = models.TextField(
+    description = models.CharField(
         max_length=400,
         default="",
-        help_text="String (up to %(max_length)s)",
         blank=True,
+        help_text="Properties or special behaviour that needs documentation",
     )
-    comment = models.TextField(
+    comment = models.CharField(
         max_length=200,
         default="",
         blank=True,
+        help_text="ideas, TODOs or other temporary info",
     )
 
     ip = models.GenericIPAddressField(
         protocol="both",
         unique=True,
         verbose_name="IP-Address",
+        help_text="Accepts IPv4 and IPv6 Format",
 
     )  # or limit to "IPv4"
     mac = models.CharField(
         max_length=17,
         blank=True,
-        validators=[validate_mac],
+        validators=[RegexValidator(regex=r"^(([a-f0-9]{2}([-:]?)){5})[a-f0-9]{2}", flags=re.I, message="provided MAC-Address is not valid"), ],
         unique=True,
         verbose_name="MAC-Address",
+        help_text="Accepts hex divided by ':' or '-', like 'AF:FE:E4:D0:9E:6A'",
     )
 
-    room = models.SlugField(max_length=10)
-    eth_port = models.SlugField(max_length=20, unique=True, )
+    room = models.SlugField(
+        max_length=10,
+        verbose_name="Room-Name",
+        help_text="Where to find the Observer",
+    )
+    eth_port = models.SlugField(
+        max_length=20,
+        unique=True,
+        verbose_name="Ethernet-Port",
+        help_text="Name on Wall-Socket",
+    )
 
-    longitude = models.FloatField()
-    latitude = models.FloatField()
+    latitude = models.FloatField(
+        help_text="Y in decimal degrees, 1 udeg ~= 111 mm, cfaed is at 51.02662",
+        default=51.026573,  # out of bound, SE
+    )
+    longitude = models.FloatField(
+        help_text="X in decimal degrees, 1 udeg ~= 0.64 * 111 mm (for lat ~ 50), cfaed is at 13.72288",
+        default=13.723291,  # out of bound, SE
+    )
+    # see /cfaed_floorplan_gps.svg for help
+    # or https://navigator.tu-dresden.de/etplan/bar/02
 
     target_a = models.OneToOneField(
         Target,
         on_delete=models.PROTECT,
-        verbose_name="Target Port A",
-        related_name="connectedA",
+        verbose_name="Target on Port A",
+        related_name="observers_a",
         to_field="name",
-        parent_link=True,
         help_text="Target board for Port A on Shepherd Cape",
+        null=True,
         blank=True,
     )
     target_b = models.OneToOneField(
         Target,
         on_delete=models.PROTECT,
-        verbose_name="Target Port B",
-        related_name="connectedB",
+        verbose_name="Target on Port B",
+        related_name="observers_b",
         to_field="name",
-        parent_link=True,
-        help_text="Target board for Port B on Shepherd Cape",  # TODO: add to others
+        help_text="Target board for Port B on Shepherd Cape",
+        null=True,
         blank=True,
     )
-    # TODO: add ForeignKey.to_field?
 
     alive_last = models.DateTimeField(
-        verbose_name="Last seen",  # TODO: is this correct? could also be label
-        help_text="Timestamp of latest alive-message.",
+        verbose_name="Last seen",
+        help_text="Timestamp of latest alive-message",
         editable=False,
-        blank=True,
+        null=True,
     )
+    created = models.DateTimeField(
+        verbose_name="Setup-Time",
+        help_text="When was the node added",
+        default=timezone.now,
+        editable=False,
+    )
+
+    class Meta:
+        ordering = ['name']

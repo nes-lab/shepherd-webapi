@@ -17,11 +17,14 @@
 - OneToOneField does not appear in form
 - even cleaner form from model? `editable` is there
 - dark mode toggle?
+- 
 
 django-questions
 - can we delete empty files like admin.py?
 - form to documentation, how?
 
+Later: 
+- analyzers for codequality, coverage, maintainability
 
 ## Building-Blocks
 
@@ -35,12 +38,9 @@ django-questions
   - https://fontawesome.com/docs/web/use-with/python-django
 - Oauth
   - https://djangopackages.org/grids/g/oauth/?python3=1 -> Client
-  - **https://python-social-auth.readthedocs.io/en/latest/backends/github.html**
-    - https://github.com/python-social-auth/social-app-django
-    - github
-    - bitbucket
-    - gitlab
-    - stackoverflow
+  - **https://django-allauth.readthedocs.io/en/latest/installation.html**
+  - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+  - Services: github, bitbucket, gitlab, stackoverflow
 - Rest-Framework
   - https://www.django-rest-framework.org/
 - Secrets-Management
@@ -54,6 +54,8 @@ django-questions
   - https://python-poetry.org/docs/basic-usage/
 - use forge instead of django? more constrained fork
   - https://github.com/forgepackages/forge
+- Server-Monitoring, remote alerting
+  - sentry-sdk,
 
 ## Data-Structures
 
@@ -64,6 +66,23 @@ django-questions
 - TODO: 
   - which nodes
   - firmware
+
+### Form-Design in Django
+
+General Form-Design:
+- proper Elements
+  - CharField instead of textField (better documentation, smaller field?)
+  - SlugField to force only letters, numbers, underscores, hyphens
+  - 
+- documentation and common options
+  - verbose_name 
+  - help_text
+  - blank -> allow empty
+  - null -> allow nonexistance
+  - unique -> content can only be used once
+  - primary_key
+  - editable
+- extra doc -> use docstring, reference other models with :model:'testbed.Target' for example
 
 ### User
 
@@ -97,6 +116,7 @@ internal:
 - **schedule**
 - group
 - state: prototype, scheduled, in progress, postprocessing, finished (downloadable)
+  - https://django-model-utils.readthedocs.io/en/latest/fields.html#statusfield
 - **target-setup(s)**
 
 finished:
@@ -119,6 +139,7 @@ internal:
 
 - start
 - **duration**
+  - https://django-model-utils.readthedocs.io/en/latest/models.html#timeframedmodel + manager
 
 internal:
 - setup-duration (something like 120s + 10% of duration if power-)
@@ -183,37 +204,3 @@ GPIO-Actuation
   - **time_offset**
   - period
   - count
-
-### Testbed-Setup
-
-GPIOs
-- **name**
-- description
-- comment
-- direction
-- pru-monitored
-- pin_sys
-
-Target (element of observer)
-- **name**
-- description
-- comment
-- platform:
-- core:
-- programmer: 
-
-Observer
-- **name**
-- **IP**
-- MAC
-- room
-- port
-- ID
-- comments
-- longitude (decimal degrees, 0.1 udeg ~= 11 mm)
-  - https://navigator.tu-dresden.de/etplan/bar/02
-- latitude
-- target [A1, A2, B1, B2]: name
-
-
-

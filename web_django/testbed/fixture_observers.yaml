@@ -7,11 +7,11 @@
     mac: 18:62:E4:E4:41:8D
     room: II69
     eth_port: II65_S3_B_10
-    #comment:
-    longitude: 12
-    latitude: 12
-    target_a: tgt_nrf52_2021_001
-    #target_b:
+    comment: test-deployment, not final
+    longitude: 13.723073
+    latitude: 51.026566
+    target_a: T_nRF52_2021_001
+    target_b:
 - model: testbed.observer
   pk: 2
   fields:
@@ -20,10 +20,11 @@
     mac: 18:62:E4:D0:DE:3F
     room: II69
     eth_port: II65_S3_B_12
-    #comment:
-    longitude: 11
-    latitude: 11
-    target_a: tgt_nrf52_2021_002
+    comment: test-deployment, not final
+    longitude: 13.723076
+    latitude: 51.026554
+    target_a: T_nRF52_2021_002
+    target_b:
 - model: testbed.observer
   pk: 3
   fields:
@@ -32,10 +33,11 @@
     mac: 18:62:E4:D0:9E:6A
     room: II69
     eth_port: II65_S3_B_14
-    #comment:
-    longitude: 15
-    latitude: 15
-    target_a: tgt_nrf52_2021_003
+    comment: test-deployment, not final
+    longitude: 13.723080
+    latitude: 51.026543
+    target_a: T_nRF52_2021_003
+    target_b:
 - model: testbed.observer
   pk: 4
   fields:
@@ -44,7 +46,8 @@
     mac: 18:62:E4:D0:61:4D
     room: II71
     eth_port: II65_S3_C_4
-    #comment:
-    longitude: 16
-    latitude: 16
-    target_a: tgt_nrf52_2021_004
+    comment: test-deployment, not final
+    longitude: 13.722991
+    latitude: 51.026536
+    target_a: T_nRF52_2021_004
+    target_b:

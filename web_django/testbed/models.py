@@ -1,8 +1,9 @@
-from django.core.validators import RegexValidator
-from django.utils.translation import gettext as _
-from django.utils import timezone
-from django.db import models
 import re
+
+from django.core.validators import RegexValidator
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext as _
 
 # TODO: generate documentation from these models? field-name, description, data-type constraints -> yes, but only adminDoc?
 #   -> http://127.0.0.1:8000/admin_testbed/doc/models/testbed.target/
@@ -18,6 +19,7 @@ class Gpio(models.Model):
     - for each pin the position on the Pin-Header and the affiliated register-name are provided
 
     """
+
     name = models.SlugField(
         max_length=30,
         primary_key=True,
@@ -28,7 +30,7 @@ class Gpio(models.Model):
         max_length=400,
         default="",
         blank=True,
-        help_text="Properties or special behaviour that needs documentation",
+        help_text="Properties or special behavior that needs documentation",
     )
     comment = models.CharField(
         max_length=200,
@@ -38,9 +40,9 @@ class Gpio(models.Model):
     )
 
     direction_choices = [
-        ('I', 'Input'),
-        ('O', 'Output'),
-        ('IO', 'Bidirectional'),
+        ("I", "Input"),
+        ("O", "Output"),
+        ("IO", "Bidirectional"),
     ]
 
     direction = models.SlugField(
@@ -96,6 +98,7 @@ class Controller(models.Model):
     """
     MCUs are logic building-blocks of :model:`testbed.Target` defined by a general MCU-Family, a specific core and a programming-method.
     """
+
     name = models.SlugField(
         max_length=30,
         primary_key=True,
@@ -120,10 +123,10 @@ class Controller(models.Model):
         help_text="PN of Manufacturer",
     )
     programmer_choices = [
-        ('swd', 'Serial-Wire-Debug'),
-        ('sbw', 'Spy-By-Wire'),
-        ('jtag', 'JTAG'),
-        ('uart', 'UART'),
+        ("swd", "Serial-Wire-Debug"),
+        ("sbw", "Spy-By-Wire"),
+        ("jtag", "JTAG"),
+        ("uart", "UART"),
     ]
     programmer = models.SlugField(
         max_length=10,
@@ -135,7 +138,7 @@ class Controller(models.Model):
         return self.core
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
 
 class Target(models.Model):
@@ -144,6 +147,7 @@ class Target(models.Model):
     - one observer could utilize more than 2 MCUs (unused MCUs would receive a sleep-firmware)
     - a Target can use one MCU for processing and another one would be used as a radio or FRAM (MSP430FR)
     """
+
     name = models.SlugField(
         max_length=30,
         primary_key=True,
@@ -154,7 +158,7 @@ class Target(models.Model):
         max_length=400,
         blank=True,
         default="",
-        help_text="Properties or special behaviour that needs documentation",
+        help_text="Properties or special behavior that needs documentation",
     )
     comment = models.CharField(
         max_length=200,
@@ -186,24 +190,27 @@ class Target(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
 
 class Observer(models.Model):
     """
     An Observer consists of a Beaglebone Board (running shepherd software) and a shepherd cape. The cape can emulate energy environments and record the power consumption of cyber-physical system (:model:`testbed.Target`). These are connected via two individual Ports.
     """
+
     name = models.SlugField(
         max_length=30,
         primary_key=True,  # implies unique
         verbose_name="Name of Observer",
-        help_text=_("String (up to %(max_length)s), only letters, numbers, underscores & hyphens"),  # TODO: not working could be useful for all
+        help_text=_(
+            "String (up to %(max_length)s), only letters, numbers, underscores & hyphens"
+        ),  # TODO: not working could be useful for all
     )
     description = models.CharField(
         max_length=400,
         default="",
         blank=True,
-        help_text="Properties or special behaviour that needs documentation",
+        help_text="Properties or special behavior that needs documentation",
     )
     comment = models.CharField(
         max_length=200,
@@ -217,12 +224,17 @@ class Observer(models.Model):
         unique=True,
         verbose_name="IP-Address",
         help_text="Accepts IPv4 and IPv6 Format",
-
     )  # or limit to "IPv4"
     mac = models.CharField(
         max_length=17,
         blank=True,
-        validators=[RegexValidator(regex=r"^(([a-f0-9]{2}([-:]?)){5})[a-f0-9]{2}", flags=re.I, message="provided MAC-Address is not valid"), ],
+        validators=[
+            RegexValidator(
+                regex=r"^(([a-f0-9]{2}([-:]?)){5})[a-f0-9]{2}",
+                flags=re.I,
+                message="provided MAC-Address is not valid",
+            ),
+        ],
         unique=True,
         verbose_name="MAC-Address",
         help_text="Accepts hex divided by ':' or '-', like 'AF:FE:E4:D0:9E:6A'",
@@ -286,5 +298,5 @@ class Observer(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
         verbose_name = "Observer-Node"

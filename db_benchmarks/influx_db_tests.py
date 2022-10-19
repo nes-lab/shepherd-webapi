@@ -1,11 +1,19 @@
-from datetime import datetime, timedelta
-
-from config_secrets import client, bucket, org
-from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
-#from influxdb_client.client.bucket_api import
-from influxdb_client import InfluxDBClient, Point, WriteOptions, WritePrecision
 import time
+from datetime import datetime
+from datetime import timedelta
+
 import pandas as pd
+from config_secrets import bucket
+from config_secrets import client
+from config_secrets import org
+
+# from influxdb_client.client.bucket_api import
+from influxdb_client import InfluxDBClient
+from influxdb_client import Point
+from influxdb_client import WriteOptions
+from influxdb_client import WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client.client.write_api import PointSettings
 
 # lib-readme    https://influxdb-client.readthedocs.io/en/latest/usage.html
 # line protocol https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_tutorial/
@@ -38,32 +46,44 @@ write_client = client.write_api(point_settings=point_setting, write_options=SYNC
 
 # each point separate
 for iter in range(100):
-    ts = round(time.time()*1e9)  # returns nanosecond timestamp
+    ts = round(time.time() * 1e9)  # returns nanosecond timestamp
     data = f"my_meas1 voltage={23 + iter/100} {ts}"  # line protocol
     write_client.write(bucket, org, data, write_precision=WritePrecision.NS)
 
 print(f"separate Point VarA: {data}")
 
 # alternative: use api, but previous raw should be faster
-data = Point("my_meas2").tag("location", "lab").field("voltage", 40.0).time(datetime.now())
+data = (
+    Point("my_meas2").tag("location", "lab").field("voltage", 40.0).time(datetime.now())
+)
 write_client.write(bucket, org, data, write_precision=WritePrecision.NS)
 print(f"separate Point VarB: {data}")
 
 # batch-write a window of data -> perfect for our use-case
 # - high throughput
-sequence = ["my_meas3,host=BB-3 voltage=23.43234543",
-            "my_meas3,host=BB-3 voltage=15.856523"]
+sequence = [
+    "my_meas3,host=BB-3 voltage=23.43234543",
+    "my_meas3,host=BB-3 voltage=15.856523",
+]
 write_client.write(bucket, org, sequence)
 print(f"batch write    VarA: {sequence[0]}")
 
 # alternative: direct dataframe
-_now = round(time.time()*1e9)
-_data_frame = pd.DataFrame(data=[["roomY", 1.0], ["roomY", 2.0]],
-                           index=[_now, _now + 5000],
-                           columns=["location", "voltage"])
+_now = round(time.time() * 1e9)
+_data_frame = pd.DataFrame(
+    data=[["roomY", 1.0], ["roomY", 2.0]],
+    index=[_now, _now + 5000],
+    columns=["location", "voltage"],
+)
 
-write_client.write(bucket, org, record=_data_frame, data_frame_measurement_name='my_meas4',
-                    data_frame_tag_columns=['location'], write_precision=WritePrecision.NS)
+write_client.write(
+    bucket,
+    org,
+    record=_data_frame,
+    data_frame_measurement_name="my_meas4",
+    data_frame_tag_columns=["location"],
+    write_precision=WritePrecision.NS,
+)
 print(f"batch write    VarB: {_data_frame}")
 
 client.close()

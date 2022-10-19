@@ -4,7 +4,7 @@
 - nothing really works, but
   - signup and login
 
-## install 
+## install
 
 TODO: copy secrets
 

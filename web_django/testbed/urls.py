@@ -1,5 +1,6 @@
-from django.urls import path
 from django.contrib.auth import views as admin_views
+from django.urls import path
+
 from . import views
 
 urlpatterns = [

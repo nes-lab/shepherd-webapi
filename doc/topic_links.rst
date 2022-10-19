@@ -11,8 +11,7 @@
     - influx connector https://github.com/aaronestrada/flask-influxdb-client
 - Flask Tutorial
     - https://pythonbasics.org/flask-rest-api/
-    - maiks ctf-seite https://github.com/fkt/36c3-junior-ctf-pub/blob/master/interface2/accounts/urls.py
-    -
+    - maiks ctf-seite https://github.com/fkt/36c3-junior-ctf-pub
 - py oauth2 https://github.com/joestump/python-oauth2
     - https://docs.github.com/en/developers/apps/authorizing-oauth-apps
     - https://pythonhosted.org/Flask-OAuth/

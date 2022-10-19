@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "abd" #os.environ['DJANGO_SECRET_KEY']
+SECRET_KEY = "abd"  # os.environ['DJANGO_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -40,13 +40,13 @@ INSTALLED_APPS = [
     "django.contrib.admindocs",
     "django.forms",
     # project apps
-    'experiments',
-    'accounts',
-    'testbed',
+    "experiments",
+    "accounts",
+    "testbed",
     # third-party extensions
     "crispy_forms",
     "crispy_bootstrap5",
-#    "fontawesomefree",
+    #    "fontawesomefree",
     # add
 ]
 
@@ -65,8 +65,7 @@ ROOT_URLCONF = "web_django.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates']
-        ,
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -90,9 +89,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db_django.sqlite3",
-        'TEST': {
-            'NAME': 'db_for_test'
-        }
+        "TEST": {"NAME": "db_for_test"},
     }
 }
 
@@ -106,9 +103,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        'OPTIONS': {
-            'min_length': 12,
-        }
+        "OPTIONS": {
+            "min_length": 12,
+        },
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -135,10 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "templates/"
-#STATIC_ROOT = "/var/www/templates/"
-STATICFILES_DIRS = [
-    BASE_DIR / "static/"
-]
+# STATIC_ROOT = "/var/www/templates/"
+STATICFILES_DIRS = [BASE_DIR / "static/"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -147,24 +142,24 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Email-Settings
 
-DEFAULT_FROM_EMAIL = 'webmaster@shepherd.de'
-SERVER_EMAIL = 'root@shepherd.de'
+DEFAULT_FROM_EMAIL = "webmaster@shepherd.de"
+SERVER_EMAIL = "root@shepherd.de"
 
 # TODO: email settings (EMAIL_HOST, _PORT, _HOST_USER, _HOST_PASSWORD)
 
 # media (user-content)
 
 MEDIA_URL = "media/"
-#MEDIA_ROOT = "/var/www/media/"
+# MEDIA_ROOT = "/var/www/media/"
 
 # OAUTH and other third party
 
-AUTH_USER_MODEL = 'accounts.User'
-#LOGIN_URL
+AUTH_USER_MODEL = "accounts.User"
+# LOGIN_URL
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
-#SECURE_SSL_REDIRECT = True
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+# SECURE_SSL_REDIRECT = True
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

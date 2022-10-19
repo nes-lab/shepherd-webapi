@@ -3,7 +3,7 @@
 
 - static websites
   - impressum
-  - accessability
+  - accessibility
   - landing-page
 - generate webform from class? constraints for var
 - interactive graphics with plotly?
@@ -11,19 +11,19 @@
 - email-account shepherd-neslab@tu-dresden.de ? neslab-shepherd@tu-dresden.de
 - ssl-certificate
 - figure out groups
-  - 
+  -
 - load css and others locally
 - secure admin-panel with some random (changing) hash-address
 - OneToOneField does not appear in form
 - even cleaner form from model? `editable` is there
 - dark mode toggle?
-- 
+-
 
 django-questions
 - can we delete empty files like admin.py?
 - form to documentation, how?
 
-Later: 
+Later:
 - analyzers for codequality, coverage, maintainability
 
 ## Building-Blocks
@@ -49,7 +49,7 @@ Later:
   - https://jpadilla.github.io/django-rest-framework-yaml/
 - Form, automatic layouts
   - crispy: https://pypi.org/project/django-crispy-forms/
-    - https://django-crispy-forms.readthedocs.io/en/latest/ 
+    - https://django-crispy-forms.readthedocs.io/en/latest/
 - try poetry instead of pipenv and other setup-tools?
   - https://python-poetry.org/docs/basic-usage/
 - use forge instead of django? more constrained fork
@@ -63,7 +63,7 @@ Later:
 - allow down- and upload for admin
   - testbed setup
 - experiments should document itself (reread directory for )
-- TODO: 
+- TODO:
   - which nodes
   - firmware
 
@@ -73,12 +73,12 @@ General Form-Design:
 - proper Elements
   - CharField instead of textField (better documentation, smaller field?)
   - SlugField to force only letters, numbers, underscores, hyphens
-  - 
+  -
 - documentation and common options
-  - verbose_name 
+  - verbose_name
   - help_text
   - blank -> allow empty
-  - null -> allow nonexistance
+  - null -> allow nonexistence
   - unique -> content can only be used once
   - primary_key
   - editable
@@ -120,7 +120,7 @@ internal:
 - **target-setup(s)**
 
 finished:
-- runtime_final 
+- runtime_final
 - storage_size
 - path_data (usr_group_)
 - Services
@@ -172,10 +172,10 @@ internal:
 UART
 
 - **observerIDs**
-- **port** 
+- **port**
 - **baudrate**
 - result-stat: char-count, transmissions / cr-count
-- 
+-
 
 Power-Profiling
 

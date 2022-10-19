@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
     /*
-     * XML template for FlockLab test configuration. 
+     * XML template for FlockLab test configuration.
      * This template can be downloaded from http://www.flocklab.ethz.ch/user/xml/flocklab_template.xml
      * The corresponding schema can be found at http://www.flocklab.ethz.ch/user/xml/flocklab.xsd
      * Help is available at https://gitlab.ethz.ch/tec/public/flocklab/wiki/-/wikis/Man/XmlConfig

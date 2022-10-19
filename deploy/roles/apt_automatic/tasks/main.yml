@@ -32,19 +32,19 @@
     - {
       regex: '^.*Periodic::Update-Package-Lists.*$',
       line: 'APT::Periodic::Update-Package-Lists "1";'
-        }
+    }
     - {
       regex: '^.*Periodic::Download-Upgradeable-Packages.*$',
       line: 'APT::Periodic::Download-Upgradeable-Packages "1";'
-        }
+    }
     - {
       regex: '^.*Periodic::AutocleanInterval.*$',
       line: 'APT::Periodic::AutocleanInterval "3";'
-        }
+    }
     - {
       regex: '^.*Periodic::Unattended-Upgrade.*$',
       line: 'APT::Periodic::Unattended-Upgrade "1";'
-        }
+    }
 
 - name: CFG - unattended upgrades - part B
   ansible.builtin.lineinfile:
@@ -56,11 +56,11 @@
     - {
       regex: '^.*Periodic::Update-Package-Lists.*$',
       line: 'APT::Periodic::Update-Package-Lists "1";'
-        }
+    }
     - {
       regex: '^.*Unattended-Upgrade::Mail.*$',
       line: 'Unattended-Upgrade::Mail "";'
-        }
+    }
   when: false
 
 

@@ -21,7 +21,7 @@
     state: present
     update_cache: true
 
-# usually you call: sudo dpkg-reconfigure -plow unattended-upgrades  
+# usually you call: sudo dpkg-reconfigure -plow unattended-upgrades
 - name: CFG - unattended upgrades - part A
   ansible.builtin.lineinfile:
     dest: /etc/apt/apt.conf.d/10periodic
@@ -30,20 +30,20 @@
     state: present
   with_items:
     - {
-        regex: '^.*Periodic::Update-Package-Lists.*$', 
-        line: 'APT::Periodic::Update-Package-Lists "1";'
+      regex: '^.*Periodic::Update-Package-Lists.*$',
+      line: 'APT::Periodic::Update-Package-Lists "1";'
         }
     - {
-        regex: '^.*Periodic::Download-Upgradeable-Packages.*$', 
-        line: 'APT::Periodic::Download-Upgradeable-Packages "1";'
+      regex: '^.*Periodic::Download-Upgradeable-Packages.*$',
+      line: 'APT::Periodic::Download-Upgradeable-Packages "1";'
         }
     - {
-        regex: '^.*Periodic::AutocleanInterval.*$', 
-        line: 'APT::Periodic::AutocleanInterval "3";'
+      regex: '^.*Periodic::AutocleanInterval.*$',
+      line: 'APT::Periodic::AutocleanInterval "3";'
         }
     - {
-        regex: '^.*Periodic::Unattended-Upgrade.*$', 
-        line: 'APT::Periodic::Unattended-Upgrade "1";'
+      regex: '^.*Periodic::Unattended-Upgrade.*$',
+      line: 'APT::Periodic::Unattended-Upgrade "1";'
         }
 
 - name: CFG - unattended upgrades - part B
@@ -54,16 +54,16 @@
     state: present
   with_items:
     - {
-        regex: '^.*Periodic::Update-Package-Lists.*$', 
-        line: 'APT::Periodic::Update-Package-Lists "1";'
+      regex: '^.*Periodic::Update-Package-Lists.*$',
+      line: 'APT::Periodic::Update-Package-Lists "1";'
         }
     - {
-        regex: '^.*Unattended-Upgrade::Mail.*$', 
-        line: 'Unattended-Upgrade::Mail "";'
+      regex: '^.*Unattended-Upgrade::Mail.*$',
+      line: 'Unattended-Upgrade::Mail "";'
         }
   when: false
 
 
 # TODO: there could also be an email-report
 #    etc/apt/apt.conf.d/50unattended-upgrades
-#    Unattended-Upgrade::Mail "..";       
+#    Unattended-Upgrade::Mail "..";

@@ -4,9 +4,9 @@
   ansible.builtin.lineinfile:
     dest: '/home/{{ ansible_user }}/.bashrc'
     regex: '^.*export DJANGO_SECRET_KEY.*$'
-    line: "export DJANGO_SECRET_KEY={{django_secret_key}}"
+    line: "export DJANGO_SECRET_KEY={{ django_secret_key }}"
   notify: restart device
-  
-# TODO: 
+
+# TODO:
 # - enable django-server
-# - is this usable without login? 
+# - is this usable without login?

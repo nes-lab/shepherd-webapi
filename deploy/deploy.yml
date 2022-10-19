@@ -28,10 +28,10 @@
   hosts: server
   become: true
   roles:
-    - apt-automatic
-    - ntp-client
-    - secure-host
-    - django-server
+    - apt_automatic
+    - ntp_client
+    - secure_host
+    - django_server
 
 - name: Integrate Datastorage, Update System and cleanup
   hosts: server
@@ -53,6 +53,3 @@
     - name: Clean apt-caches - C
       ansible.builtin.apt:
         clean: true
-
-
-

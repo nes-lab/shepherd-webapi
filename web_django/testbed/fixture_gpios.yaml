@@ -3,8 +3,8 @@
   pk: 1
   fields:
     name: GPIO0
-    #description:
-    #comment:
+    # description:
+    # comment:
     direction: IO
     dir_switch: DIR1
     reg_pru: r31_00
@@ -97,15 +97,15 @@
     direction: O
     reg_pru: r30_09
     pin_pru: P8_29
-    #reg_sys:
-    #pin_sys:
+    # reg_sys:
+    # pin_sys:
 - model: testbed.gpio
   pk: 11
   fields:
     name: PRG1_CLK
     description: alias JTAG_TCK
     direction: O
-    #reg_pru:
+    # reg_pru:
     reg_sys: 5
     pin_sys: P9_17
 - model: testbed.gpio
@@ -115,7 +115,7 @@
     description: alias JTAG_TDI
     direction: IO
     dir_switch: PDIR1
-    #reg_pru:
+    # reg_pru:
     reg_sys: 4
     pin_sys: P9_18
 - model: testbed.gpio
@@ -124,7 +124,7 @@
     name: PRG2_CLK
     description: alias JTAG_TDO
     direction: O
-    #reg_pru:
+    # reg_pru:
     reg_sys: 8
     pin_sys: P8_35
 - model: testbed.gpio
@@ -134,7 +134,7 @@
     description: alias JTAG_TMS
     direction: IO
     dir_switch: PDIR2
-    #reg_pru:
+    # reg_pru:
     reg_sys: 9
     pin_sys: P8_33
 - model: testbed.gpio
@@ -143,7 +143,7 @@
     name: DIR1
     description: changes direction of GPIO[0:3]
     direction: O
-    #reg_pru:
+    # reg_pru:
     reg_sys: 78
     pin_sys: P8_37
 - model: testbed.gpio
@@ -152,7 +152,7 @@
     name: DIR2
     description: changes direction of GPIO8
     direction: O
-    #reg_pru:
+    # reg_pru:
     reg_sys: 79
     pin_sys: P8_38
 - model: testbed.gpio
@@ -161,7 +161,7 @@
     name: PDIR1
     description: changes direction PRG1_IO
     direction: O
-    #reg_pru:
+    # reg_pru:
     reg_sys: 10
     pin_sys: P8_31
 - model: testbed.gpio
@@ -170,6 +170,6 @@
     name: PDIR2
     description: changes direction PRG2_IO
     direction: O
-    #reg_pru:
+    # reg_pru:
     reg_sys: 11
     pin_sys: P8_32

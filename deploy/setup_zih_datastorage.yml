@@ -1,0 +1,140 @@
+---
+# proposed by helpdesk - login-server and dgw share home-directory
+# hard to do as a role because of vars_prompt of temp user-data
+# offline pre-tasks
+# - get network storage with nfs share
+# - enable access for server AND testbed-network
+# - authorize function-account
+
+# TODO: it is better to store a set of authorized keys and distribute them
+
+# Storage-benchmarks from BBB:
+# sudo dd if=/dev/zero of=./testfile bs=4096 count=40000 oflag=direct
+#     nfsver=4 -> 160 mb in 53 s, 3.1 MB/s
+# sudo dd if=/dev/zero of=./testfile bs=100M count=10 oflag=direct
+#     nfsver=4 -> 1000 mb in 91 s, 11.5 MB/s
+# sudo dd if=/dev/zero of=./testfile bs=100M count=10
+#     nfsver=4 -> 1000 mb in 91 s, 11.5 MB/s
+
+# Storage-benchmarks from vServer:
+# sudo dd if=/dev/zero of=./testfile bs=400M count=20 oflag=direct
+#     nfsver=4 -> 8.4 GB in 34 s, 250 MB/s
+
+- name: Add (network) datastorage to remote nodes
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    key_server: login.zih.tu-dresden.de
+    scp_server: dgw.zih.tu-dresden.de:/glw/shepherd_d
+    nfs_server: vs-grp07.zih.tu-dresden.de:/shepherd_d
+    # data will be stored in {{nfs_server}}/recordings/{{ansible_hostname}}/
+    data_path_local: /var/shepherd/recordings/
+
+  vars_prompt:
+    - name: zih_user
+      prompt: "Please provide ZIH username with access to key-server (will not be stored)"
+      private: false
+    - name: zih_password
+      prompt: "users password"
+      private: true
+
+  pre_tasks:
+
+    - name: Fail if prerequisites are missing
+      ansible.builtin.fail:
+        msg: "The variable '{{item}}' is not defined"
+      when: (item is not defined) or (item|length < 1)
+      loop:
+        - key_server
+        - scp_server
+        - nfs_server
+        - data_path_local
+        - zih_user
+        - zih_password
+
+    - name: Report hostname
+      ansible.builtin.debug:
+        var: ansible_hostname
+
+    - name: Check if key-pair is present on remote node
+      ansible.builtin.stat:
+        path: "~/.ssh/id_rsa.pub"
+      register: key_file
+      become: false
+
+    - name: Generate fresh key-pair (if needed)
+      ansible.builtin.shell:
+        cmd: 'ssh-keygen -q -t rsa -N "" -C cfaed_nes_shepherd_node'
+      when: not key_file.stat.exists
+      become: false
+
+    - name: APT - Install required packages
+      ansible.builtin.apt:
+        name: [ "sshpass", "nfs-common" ]
+        state: present
+        update_cache: true
+
+  tasks:
+
+# ssh-copy-id -f -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub s2480790@login.zih.tu-dresden.de
+# mkdir  /tmp/recordings/sheep0 -p
+# scp -r /tmp/recordings/ nesshpf@dgw.zih.tu-dresden.de:/glw/shepherd_d/recordings/
+# sudo mount -t nfs -o vers=4 vs-grp07.zih.tu-dresden.de:/shepherd_d /var/shepherd/recordings
+# OR add to /etc/fstab:
+# vs-grp07.zih.tu-dresden.de:/shepherd_d/recordings/sheep0/ /var/shepherd/recordings nfs nfsvers=4,rw 0 1
+
+    - name: Authorize remote node with key-server
+      ansible.builtin.shell:
+        cmd: "sshpass -e ssh-copy-id -f -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub {{zih_user}}@{{key_server}}"
+      environment:
+        SSHPASS: '{{zih_password}}'
+      become: false
+      register: auth_ret
+      until: auth_ret is not failed
+      retries: 7
+
+    - name: Create temporary folder-structure
+      ansible.builtin.file:
+        path: "/tmp/recordings/{{ansible_hostname}}/"
+        state: directory
+        mode: "a+rwx"
+      become: false
+
+    - name: Create remote private recordings-directory
+      ansible.builtin.command:
+        cmd: "sshpass -e scp -o StrictHostKeyChecking=no -r /tmp/recordings {{zih_user}}@{{scp_server}}/"
+      environment:
+        SSHPASS: '{{zih_password}}'
+      become: false
+      register: auth_ret
+      until: auth_ret is not failed
+      retries: 7
+
+    - name: Create local mount-directory
+      ansible.builtin.file:
+        path: "{{data_path_local}}/"
+        state: directory
+        owner: "{{ansible_user}}"
+        mode: 'a+rwx'
+
+    - name: Allow automatic Mounting
+      ansible.builtin.lineinfile:
+        dest: /etc/fstab
+        regex: '^.*{{ nfs_server }}.*$'
+        line: '{{ nfs_server }}/recordings/{{ansible_hostname}}/ {{ data_path_local }} nfs nfsvers=4,rw 0 1'
+        state: present
+
+    - name: Remove old automatic mounting
+      ansible.builtin.lineinfile:
+        dest: '/home/{{ ansible_user }}/.bashrc'
+        regex: '^.*sshfs.*$'
+        state: absent
+
+  post_tasks:
+
+    - name: Restart device
+      ansible.builtin.reboot:
+        connect_timeout: 20
+        reboot_timeout: 200

@@ -1,4 +1,4 @@
-all:
+server:
   hosts:
     shp_srv:
       ansible_host: cfaed-shepherd.zih.tu-dresden.de

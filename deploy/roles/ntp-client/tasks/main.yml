@@ -1,10 +1,10 @@
-- name: Disable GPS and PTP services
-  systemd:
+- name: Disable GPS and PTP services (some entries will fail)
+  ansible.builtin.systemd:
     name: "{{ item }}"
     state: stopped
-    enabled: no
-    daemon_reload: yes
-  with_items:
+    enabled: false
+    daemon_reload: true
+  loop:
     - chrony.service
     - gpsd.service
     - gpsd.socket
@@ -12,17 +12,17 @@
     - ptp4l.service
     - phc2sys@eth0.service
     - ptp4l@eth0.service
-  ignore_errors: yes  # services may not exist
+  failed_when: false  # services may not exist
   tags:
     - ptp
     - conf
 
 - name: Enable NTP service
-  systemd:
+  ansible.builtin.systemd:
     name: systemd-timesyncd
     state: restarted
-    enabled: yes
-    daemon_reload: yes
+    enabled: true
+    daemon_reload: true
   tags:
     - ptp
     - conf

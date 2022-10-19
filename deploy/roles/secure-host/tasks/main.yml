@@ -1,19 +1,19 @@
 ---
-# note: best to be started with "-v" to get stdout
+# TODO: (maybe) remove avahi in managed network
 
 - name: SYS - Remove default User "ubuntu"
-  user:
+  ansible.builtin.user:
     name: ubuntu
-    remove: yes
+    remove: true
     state: absent
 
 - name: CFG - Improve SSHd-Security
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "{{ item.regex }}"
     line: "{{ item.line }}"
     state: present
-  with_items:
+  loop:
     - {regex: '^.*Protocol.*$', line: 'Protocol 2'}
     - {regex: '^.*StrictModes.*$', line: 'StrictModes yes'}
     - {regex: '^.*LoginGraceTime.*$', line: 'LoginGraceTime 1m'}
@@ -36,19 +36,19 @@
   # TODO: x11Forwarding is twice in file, one yes and one no
 
 - name: CFG - Install custom SSHd-Banner for Login
-  copy:
+  ansible.builtin.copy:
     src: 'sshd_banner.text'
     dest: '/etc/issue.net'
-    force: yes
-    mode: u=rw
+    force: true
+    mode: '0644'
 
 - name: INIT - Check if "message of the day" exists
-  stat:
+  ansible.builtin.stat:
     path: /etc/default/motd-news
   register: motd_result
 
 - name: CFG - Disable "message of the day"-Service (motd)
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/default/motd-news
     regexp: '^.*ENABLED.*$'
     line: 'ENABLED=0'
@@ -56,21 +56,47 @@
   when: motd_result.stat.exists
 
 - name: CFG - Disable motd-news.timer
-  command: systemctl disable motd-news.timer
+  ansible.builtin.systemd:
+    name: 'motd-news.timer'
+    masked: true
+    state: stopped
+    enabled: false
+  changed_when: true
 
+- name: CFG - Disable Terminal over Serial -> Services
+  ansible.builtin.systemd:
+    name: '{{ item }}'
+    masked: true
+    state: stopped
+    enabled: false
+  loop:
+    - serial-getty@ttyGS0.service
+    - serial-getty@ttyS0.service
+    - getty@tty1.service
+  changed_when: true
+  # change active ones with: sudo systemctl list-units
 
 - name: SYS - Find and disable world-writables
-  command: find / -xdev -perm +o=w ! \( -type d -perm +o=t \) ! -type l -ok chmod -v o-w {} \;
+  ansible.builtin.command:
+    cmd: 'find / -xdev -perm +o=w ! \( -type d -perm +o=t \) ! -type l -ok chmod -v o-w {} \;'
+  changed_when: true
 
 - name: SYS - Prevent active User from creating new world writables
-  shell: 'umask 002 && umask'
-  notify: restart device
+  ansible.builtin.shell:
+    cmd: 'umask 002 && umask'
+  changed_when: true
 
+- name: Restart device
+  ansible.builtin.reboot:
+    connect_timeout: 20
+    reboot_timeout: 200
 
 - name: INFO - check for port-listeners (look for open ports beside of SSHd)
-  ansible.builtin.shell: netstat -apn | grep LISTEN
+  ansible.builtin.shell:
+    cmd: 'netstat -apn | grep LISTEN'
+  changed_when: false
   register: netstat
-  
+
 - name: INFO - print listeners
   ansible.builtin.debug:
     msg: "{{ netstat.stdout }}"

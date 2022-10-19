@@ -16,14 +16,14 @@
 
 
 - name: APT - Install required packages
-  apt:
+  ansible.builtin.apt:
     name: 'unattended-upgrades'
     state: present
-    update_cache: yes
+    update_cache: true
 
 # usually you call: sudo dpkg-reconfigure -plow unattended-upgrades  
 - name: CFG - unattended upgrades - part A
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/apt/apt.conf.d/10periodic
     regexp: "{{ item.regex }}"
     line: "{{ item.line }}"
@@ -47,7 +47,7 @@
         }
 
 - name: CFG - unattended upgrades - part B
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
     regexp: "{{ item.regex }}"
     line: "{{ item.line }}"

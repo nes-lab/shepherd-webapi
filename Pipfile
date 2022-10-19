@@ -21,6 +21,12 @@ influxdb-client = "*"
 docutils = "*"
 
 [dev-packages]
+pylint = "*"
+black = "*"
+pre-commit = "*"
+
+[pipenv]
+allow_prereleases = false
 
 [requires]
 python_version = "3"

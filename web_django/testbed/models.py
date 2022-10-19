@@ -5,7 +5,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-# TODO: generate documentation from these models? field-name, description, data-type constraints -> yes, but only adminDoc?
+# TODO: generate documentation from these models?
+#   field-name, description, data-type constraints -> yes, but only adminDoc?
 #   -> http://127.0.0.1:8000/admin_testbed/doc/models/testbed.target/
 # - use docstring
 # - determine how to show model of -> :model:`testbed.Observer`
@@ -96,7 +97,8 @@ class Gpio(models.Model):
 
 class Controller(models.Model):
     """
-    MCUs are logic building-blocks of :model:`testbed.Target` defined by a general MCU-Family, a specific core and a programming-method.
+    MCUs are logic building-blocks of :model:`testbed.Target` defined
+    by a general MCU-Family, a specific core and a programming-method.
     """
 
     name = models.SlugField(
@@ -143,9 +145,13 @@ class Controller(models.Model):
 
 class Target(models.Model):
     """
-    Target-Boards are connected to the :model:`testbed.Observer` via one of two target-ports. Each Target-PCB can contain up to two MCUs (:model:`testbed.Controller`). This novel approach has multiple benefits:\n
-    - one observer could utilize more than 2 MCUs (unused MCUs would receive a sleep-firmware)
-    - a Target can use one MCU for processing and another one would be used as a radio or FRAM (MSP430FR)
+    Target-Boards are connected to the :model:`testbed.Observer` via one of two target-ports.
+    Each Target-PCB can contain up to two MCUs (:model:`testbed.Controller`).
+    This novel approach has multiple benefits:\n
+    - one observer could utilize more than 2 MCUs
+      (unused MCUs would receive a sleep-firmware)
+    - a Target can use one MCU for processing and another one would
+      be used as a radio or FRAM (MSP430FR)
     """
 
     name = models.SlugField(
@@ -195,7 +201,9 @@ class Target(models.Model):
 
 class Observer(models.Model):
     """
-    An Observer consists of a Beaglebone Board (running shepherd software) and a shepherd cape. The cape can emulate energy environments and record the power consumption of cyber-physical system (:model:`testbed.Target`). These are connected via two individual Ports.
+    An Observer consists of a Beaglebone Board (running shepherd software) and a shepherd cape.
+    The cape can emulate energy environments and record the power consumption of cyber-physical
+    system (:model:`testbed.Target`). These are connected via two individual Ports.
     """
 
     name = models.SlugField(
@@ -257,7 +265,7 @@ class Observer(models.Model):
         default=51.026573,  # out of bound, SE
     )
     longitude = models.FloatField(
-        help_text="X in decimal degrees, 1 udeg ~= 0.64 * 111 mm (for lat ~ 50), cfaed is at 13.72288",
+        help_text="X in dec deg, 1 udeg ~= 0.64 * 111 mm (for lat ~ 50), cfaed is at 13.72288",
         default=13.723291,  # out of bound, SE
     )
     # see /cfaed_floorplan_gps.svg for help

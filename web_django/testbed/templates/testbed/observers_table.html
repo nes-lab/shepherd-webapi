@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Observers{% endblock %}
+
+{% block extloader %}
+{% load render_table from django_tables2 %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Observer-Table</h1>
+
+{% render_table object_list %}
+
+{% endblock %}

@@ -9,6 +9,7 @@ pandas = "*"
 h5py = "*"
 pyyaml = "*"
 django-crispy-forms = "*"
+django-tables2 = "*"
 crispy-bootstrap5 = "*"
 # under-test:
 social-auth-app-django = "*"

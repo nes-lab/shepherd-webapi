@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "accounts",
     "testbed",
     # third-party extensions
+    "django_tables2",
     "crispy_forms",
     "crispy_bootstrap5",
     #    "fontawesomefree",

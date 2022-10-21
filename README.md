@@ -11,7 +11,7 @@ TODO: copy secrets
 ```shell
 
 pipenv shell
-pepenv sync
+pipenv sync
 
 cd web_django
 python manage.py makemigrations

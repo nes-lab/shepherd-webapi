@@ -57,6 +57,19 @@ Later:
 - Server-Monitoring, remote alerting
   - sentry-sdk,
 
+- models of data-structures
+  - django-internal -> should be independent of django, but I see no alternative atm
+  - validation (cross-field): https://github.com/shezadkhan137/required
+  - transformation: https://convtools.readthedocs.io/en/latest/index.html#ref-index-intro
+  - pydantic-models: https://pydantic-docs.helpmanual.io/usage/exporting_models/
+  - djantic: https://jordaneremieff.github.io/djantic/
+  - idea: django-model -> djantic -> pydantic -> dict -> yml
+- view Data (list or individual elements)
+  - https://pypi.org/project/django-static-models/
+  - 
+
+
+
 ## Data-Structures
 
 - **bold** ones are mandatory

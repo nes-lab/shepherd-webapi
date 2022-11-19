@@ -1,4 +1,5 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 
 # Create your models here.
@@ -38,7 +39,7 @@ class Harvester(models.Model):
         choices=base_choices,
         default="mppt_opt",
         verbose_name="Base Model",
-        help_text="Source for Fallback values -> allows omitting redundant parameters"
+        help_text="Source for Fallback values -> allows omitting redundant parameters",
     )
 
     # window_size      -> not relevant for emu-harvester
@@ -95,7 +96,11 @@ class Harvester(models.Model):
         verbose_name="Measurement-Duration [ms]",
         help_text="Duration of measurement",
         blank=True,
-        validators=[MinValueValidator(0.01), MaxValueValidator(1_000_000), MaxValueValidator(interval_ms)],
+        validators=[
+            MinValueValidator(0.01),
+            MaxValueValidator(1_000_000),
+            MaxValueValidator(interval_ms),
+        ],
     )
 
     # rising            -> not relevant for emu

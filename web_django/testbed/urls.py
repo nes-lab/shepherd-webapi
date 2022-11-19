@@ -8,7 +8,11 @@ urlpatterns = [
     path("observers", views.ObserversView.as_view(), name="observer-all"),
     path("observer/add", views.observer_add, name="observer-add"),
     path("observer/<str:observer_name>", views.observer_view, name="observer-view"),
-    path("observer/<str:observer_name>/change", views.observer_change, name="observer-change"),
+    path(
+        "observer/<str:observer_name>/change",
+        views.observer_change,
+        name="observer-change",
+    ),
 ]
 
 

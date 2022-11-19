@@ -42,7 +42,7 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.1.0
+    rev: v3.2.2
     hooks:
       - id: pyupgrade
         args: ["--py38-plus"]
@@ -79,7 +79,7 @@ repos:
           - flake8-assertive
 
   - repo: https://github.com/ansible-community/ansible-lint.git
-    rev: v6.8.2
+    rev: v6.8.6
     hooks:
       - id: ansible-lint
         files: \.(yaml|yml)$

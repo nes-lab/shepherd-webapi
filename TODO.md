@@ -66,8 +66,15 @@ Later:
   - idea: django-model -> djantic -> pydantic -> dict -> yml
 - view Data (list or individual elements)
   - https://pypi.org/project/django-static-models/
-  - 
+  -
 
+Alternative Bases:
+- Panel, www.awesome-panel.org
+  - Streamz, https://streamz.readthedocs.io
+  - Param, https://param.holoviz.org/
+    - Param for django https://pypi.org/project/django-param/
+  - Pydantic, https://pydantic-docs.helpmanual.io/
+- https://streamlit.io
 
 
 ## Data-Structures

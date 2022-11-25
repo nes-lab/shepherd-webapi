@@ -20,6 +20,9 @@ sqlalchemy = "*"
 flask = "*"
 influxdb-client = "*"
 docutils = "*"
+fastapi = "*"
+pydantic = "*"
+param = "*"
 
 [dev-packages]
 pylint = "*"

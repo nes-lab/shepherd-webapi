@@ -14,7 +14,7 @@ target_pin_nums = [  # pin-order from target-connector
     {"name": "swd2_io", "pin": 9, "dir": 11},
 ]
 
-dir_pins = set([pin["dir"] for pin in target_pin_nums if isinstance(pin["dir"], int)])
+dir_pins = {pin["dir"] for pin in target_pin_nums if isinstance(pin["dir"], int)}
 print(dir_pins)
 dirs = {}
 for pin in dir_pins:

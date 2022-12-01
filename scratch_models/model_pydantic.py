@@ -1,7 +1,13 @@
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Extra, conlist, constr, condecimal, root_validator, Field
+from pydantic import BaseModel
+from pydantic import Extra
+from pydantic import Field
+from pydantic import condecimal
+from pydantic import conlist
+from pydantic import constr
+from pydantic import root_validator
 
 
 def load_vsources() -> dict:
@@ -9,7 +15,7 @@ def load_vsources() -> dict:
     def_path = Path(__file__).parent.resolve() / def_file
     with open(def_path) as def_data:
         configs = yaml.safe_load(def_data)["virtsources"]
-        configs = dict((k.lower(), v) for k, v in configs.items())
+        configs = {k.lower(): v for k, v in configs.items()}
     return configs
 
 
@@ -25,11 +31,13 @@ def acquire_def(name: str):
         ValueError(f"ConverterBase {name} not known!")
 
 
-#class VirtualSourceBasePyd(BaseModel, extra=Extra.forbid):
+# class VirtualSourceBasePyd(BaseModel, extra=Extra.forbid):
 class VirtualSourceBasePyd_old(BaseModel):
 
     name: constr(strip_whitespace=True, to_lower=True, min_length=4) = "neutral"
-    converter_base: constr(strip_whitespace=True, to_lower=True, min_length=4) = "neutral"
+    converter_base: constr(
+        strip_whitespace=True, to_lower=True, min_length=4
+    ) = "neutral"
     enable_boost: bool = False
     enable_buck: bool = False
     log_intermediate_voltage: bool = False
@@ -50,7 +58,9 @@ class VirtualSourceBasePyd_old(BaseModel):
     V_intermediate_disable_threshold_mV: float = 0
     interval_check_thresholds_ms: float = 0
 
-    LUT_output_efficiency: conlist(item_type=condecimal(ge=0.0, le=1.0), min_items=12, max_items=12) = 12 * [1.00]
+    LUT_output_efficiency: conlist(
+        item_type=condecimal(ge=0.0, le=1.0), min_items=12, max_items=12
+    ) = 12 * [1.00]
 
     @root_validator(pre=True)
     def recursive_fill(cls, values):
@@ -94,9 +104,16 @@ class VirtualSourceBasePyd(BaseModel):
         to_lower=True,
         min_length=4,
     )
-    converter_base: str = Field(default="neutral", strip_whitespace=True, to_lower=True, min_length=4)
-    enable_boost: bool = Field(default=False, description="if false -> V_intermediate becomes V_input, output-switch-hysteresis is still usable")
-    enable_buck: bool = Field(default=False, description="if false -> V_output becomes V_intermediate")
+    converter_base: str = Field(
+        default="neutral", strip_whitespace=True, to_lower=True, min_length=4
+    )
+    enable_boost: bool = Field(
+        default=False,
+        description="if false -> V_intermediate becomes V_input, output-switch-hysteresis is still usable",
+    )
+    enable_buck: bool = Field(
+        default=False, description="if false -> V_output becomes V_intermediate"
+    )
     log_intermediate_voltage: bool = False
 
     interval_startup_delay_drain_ms: condecimal(ge=0, le=10e3) = 0
@@ -115,11 +132,13 @@ class VirtualSourceBasePyd(BaseModel):
     V_intermediate_disable_threshold_mV: float = 0
     interval_check_thresholds_ms: float = 0
 
-    LUT_output_efficiency: conlist(item_type=condecimal(ge=0.0, le=1.0), min_items=12, max_items=12) = 12 * [1.00]
+    LUT_output_efficiency: conlist(
+        item_type=condecimal(ge=0.0, le=1.0), min_items=12, max_items=12
+    ) = 12 * [1.00]
 
     @root_validator(pre=True)
     def recursive_fill(cls, values):
-        
+
         if "converter_base" in values:
             config_name = values.get("converter_base")
             config_base = acquire_def(config_name)
@@ -153,7 +172,10 @@ class VirtualSourceBasePyd(BaseModel):
 class VirtualSourcePyd(VirtualSourceBasePyd):
 
     name: constr(strip_whitespace=True, to_lower=True, min_length=4)
-    converter_base: constr(strip_whitespace=True, to_lower=True, min_length=4) = "neutral"
+    converter_base: constr(
+        strip_whitespace=True, to_lower=True, min_length=4
+    ) = "neutral"
+
 
 # TODO: what is missing
 #   - documentation like name, description

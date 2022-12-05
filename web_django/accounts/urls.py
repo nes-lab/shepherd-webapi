@@ -11,14 +11,14 @@ urlpatterns = [
     path(
         "password-change/",
         admin_views.PasswordChangeView.as_view(
-            template_name="accounts/password_change_form.html"
+            template_name="accounts/password_change_form.html",
         ),
         name="password_change",
     ),
     path(
         "password-change/done/",
         admin_views.PasswordChangeDoneView.as_view(
-            template_name="accounts/password_change_done.html"
+            template_name="accounts/password_change_done.html",
         ),
         name="password_change_done",
     ),

@@ -12,7 +12,7 @@ User = get_user_model()
 @require_http_methods(["GET"])
 def experiments(request):
     return HttpResponse(
-        "This will be the overview and management screen for experiments"
+        "This will be the overview and management screen for experiments",
     )
 
 
@@ -20,5 +20,5 @@ def experiments(request):
 @require_http_methods(["POST", "GET"])
 def experiment(request):
     return HttpResponse(
-        "This will be the overview and management screen for experiments"
+        "This will be the overview and management screen for experiments",
     )

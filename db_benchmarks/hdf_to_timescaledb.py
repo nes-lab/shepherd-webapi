@@ -72,7 +72,7 @@ if __name__ == "__main__":
     data = data.head(sample_size)
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
     print(
-        f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}"
+        f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}",
     )
     print(data.iloc[0:5, :])
     time_start = time.time()
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     duration = round(time.time() - time_start, 2)
     insertsps = round(proc_num * sample_size / duration / 1000)
     print(
-        f"Insertion took {duration} seconds, {insertsps} k/s for {proc_num} * {sample_size} items"
+        f"Insertion took {duration} seconds, {insertsps} k/s for {proc_num} * {sample_size} items",
     )
 
 # results:

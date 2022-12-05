@@ -46,10 +46,14 @@ def put_in_influx(data: pd.DataFrame, client_id: int):
     point_setting.add_default_tag("location", "roomX")
     # point_setting.add_default_tag("start", "210404200000")
     client = InfluxDBClient(
-        url="http://10.0.0.39:8086", token=token, timeout=10000, enable_gzip=True
+        url="http://10.0.0.39:8086",
+        token=token,
+        timeout=10000,
+        enable_gzip=True,
     )
     write_client = client.write_api(
-        point_settings=point_setting, write_options=SYNCHRONOUS
+        point_settings=point_setting,
+        write_options=SYNCHRONOUS,
     )  # Asynch makes no big difference
     batch_size = 50000  # link states optimum at 5k lines, https://docs.influxdata.com/influxdb/v2.0/write-data/best-practices/optimize-writes/
     sample_size = data.shape[0]
@@ -75,7 +79,7 @@ if __name__ == "__main__":
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
     print(
-        f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}"
+        f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}",
     )
     print(data.iloc[0:5, :])
 
@@ -93,7 +97,7 @@ if __name__ == "__main__":
     duration = round(time.time() - time_start, 2)
     insertsps = round(proc_num * sample_size / duration / 1000)
     print(
-        f"Insertion took {duration} seconds, {insertsps} k/s for {proc_num} * {sample_size} items"
+        f"Insertion took {duration} seconds, {insertsps} k/s for {proc_num} * {sample_size} items",
     )
 
 # results:

@@ -211,7 +211,7 @@ class Observer(models.Model):
         primary_key=True,  # implies unique
         verbose_name="Name of Observer",
         help_text=_(
-            "String (up to %(max_length)s), only letters, numbers, underscores & hyphens"
+            "String (up to %(max_length)s), only letters, numbers, underscores & hyphens",
         ),  # TODO: not working could be useful for all
     )
     description = models.CharField(

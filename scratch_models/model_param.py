@@ -11,7 +11,9 @@ class VirtualSourceBase(param.Parameterized):
     log_intermediate_voltage = param.Boolean(False, allow_None=True)
 
     interval_startup_delay_drain_ms = param.Number(
-        0, bounds=(0, 10_000), allow_None=True
+        0,
+        bounds=(0, 10_000),
+        allow_None=True,
     )
 
     harvester = param.String("mppt_opt", allow_None=True)
@@ -25,7 +27,10 @@ class VirtualSourceBase(param.Parameterized):
     I_intermediate_leak_nA = param.Number(0.0, bounds=(0, 4.29e9), allow_None=True)
 
     LUT_output_efficiency = param.List(
-        efficiency_opt, item_type=param.Magnitude, bounds=(12, 12), allow_None=True
+        efficiency_opt,
+        item_type=param.Magnitude,
+        bounds=(12, 12),
+        allow_None=True,
     )
 
     @param.depends(on_init=True)

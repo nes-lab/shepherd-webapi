@@ -1,8 +1,8 @@
 from django.contrib import admin
-from testbed.models import Controller
-from testbed.models import Gpio
-from testbed.models import Observer
-from testbed.models import Target
+from .models import Controller
+from .models import Gpio
+from .models import Observer
+from .models import Target
 
 
 @admin.register(Gpio)

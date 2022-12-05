@@ -82,4 +82,3 @@ class Gpio(models.Model):
         verbose_name="System Pin-Name on Header",
         help_text="something like P8_29",
     )
-

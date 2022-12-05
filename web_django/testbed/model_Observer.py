@@ -1,9 +1,10 @@
 import re
-from django.db import models
+
 from django.core.validators import RegexValidator
+from django.db import models
 from django.utils import timezone
-from model_Target import Target
 from django.utils.translation import gettext as _
+from model_Target import Target
 
 
 class Observer(models.Model):

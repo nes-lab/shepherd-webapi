@@ -109,7 +109,7 @@ General Form-Design:
 - **name**
 - **email**
 - **pw**
-- Groups
+- Groups / Team
 
 internal:
 - oauth2-data
@@ -119,7 +119,7 @@ internal:
 - duration_cap (last 7 days?)
 - duration_current
 
-### Groups
+### Groups / Team
 
 - **name**
 - description
@@ -130,6 +130,7 @@ internal:
 
 ### Experiment
 
+On Creation:
 - **name**
 - description
 - custom
@@ -194,7 +195,7 @@ UART
 - **observerIDs**
 - **port**
 - **baudrate**
-- result-stat: char-count, transmissions / cr-count
+- result-stat: char-count, transmissions / CR-count
 -
 
 Power-Profiling

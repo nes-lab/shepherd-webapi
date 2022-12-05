@@ -1,5 +1,5 @@
 from model_param import VirtualSource
-from model_pydantic import VirtualSourceBasePyd
+from models.d_VirtualSourceMin_model import VirtualSourceMin
 
 vs_d = VirtualSource(name="direct", converter_base="neutral")
 vs_dicap = VirtualSource(
@@ -24,8 +24,8 @@ print(vs_dicap.param.harvester)
 # streamlit-pydantic    https://github.com/LukasMasuch/streamlit-pydantic
 # streamlit-authenticator https://pypi.org/project/streamlit-authenticator/
 
-pvs_d = VirtualSourceBasePyd(name="direct", converter_base="neutral")
-pvs_dicap = VirtualSourceBasePyd(
+pvs_d = VirtualSourceMin(name="direct", converter_base="neutral")
+pvs_dicap = VirtualSourceMin(
     name="diode+capacitor",
     V_input_drop_mV=300,
     C_intermediate_uF=10,
@@ -34,7 +34,7 @@ pvs_dicap = VirtualSourceBasePyd(
 print(pvs_dicap.harvester)
 print(pvs_dicap.dict())
 
-pvs_spec = VirtualSourceBasePyd(
+pvs_spec = VirtualSourceMin(
     name="special",
     converter_base="BQ25570si",
     V_output_mV=3300,

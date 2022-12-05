@@ -1,4 +1,5 @@
 from django.db import models
+
 from .model_Controller import Controller
 
 
@@ -56,4 +57,3 @@ class Target(models.Model):
 
     class Meta:
         ordering = ["name"]
-

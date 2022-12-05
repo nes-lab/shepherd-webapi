@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import Controller
 from .models import Gpio
 from .models import Observer

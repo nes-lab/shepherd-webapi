@@ -1,4 +1,4 @@
-virtsources:
+VirtualSources:
   # info:
   # - compendium of all parameters & description
   # - base for neutral fallback values if provided yml is sparse
@@ -66,26 +66,26 @@ virtsources:
     LUT_output_I_min_log2_nA: 0  # 2^8 = 256 nA -> array[0] is for inputs < 256 nA, see notes on LUT_input for explanation
 
   direct:
-    converter_base: neutral
+    inherit_from: neutral
     # Note: current input has no influence
 
   diode+capacitor:
-    converter_base: neutral
+    inherit_from: neutral
     V_input_drop_mV: 300  # simulate input-diode
     C_intermediate_uF: 10  # primary storage-Cap
 
   dio_cap: # simpler naming
-    converter_base: diode+capacitor
+    inherit_from: diode+capacitor
 
   diode+resistor+capacitor:
-    converter_base: diode+capacitor
+    inherit_from: diode+capacitor
     R_input_mOhm: 10000
 
   dio_res_cap: # simpler naming
-    converter_base: diode+resistor+capacitor
+    inherit_from: diode+resistor+capacitor
 
   BQ25504:
-    converter_base: neutral # to complete undefined vars
+    inherit_from: neutral # to complete undefined vars
     enable_boost: true # if false -> v_intermediate = v_input, output-switch-hysteresis is still usable
     log_intermediate_voltage: false # record virtual intermediate (cap-)voltage and -output-current instead of output-voltage and -current
     harvester:
@@ -129,14 +129,14 @@ virtsources:
     LUT_input_I_min_log2_nA: 13 # example: 2^8 = 256 nA -> array[0] is for inputs < 256 nA
 
   BQ25504s: # Version with Schmitt-Trigger
-    converter_base: BQ25504
+    inherit_from: BQ25504
     immediate_pwr_good_signal: true
 
   BQ25504-Schmitt:
-    converter_base: BQ25504s
+    inherit_from: BQ25504s
 
   BQ25570:
-    converter_base: BQ25504 # inherit Input-LUT that is similar enough
+    inherit_from: BQ25504 # inherit Input-LUT that is similar enough
     enable_boost: true # if false -> v_intermediate = v_input, output-switch-hysteresis is still usable
     enable_buck: true # if false -> v_output = v_intermediate
 
@@ -170,14 +170,14 @@ virtsources:
     LUT_output_I_min_log2_nA: 10  # example: 2^8 = 256 nA -> array[0] is for inputs < 256 nA, see notes on LUT_input for explanation
 
   BQ25570s:  # Version with Schmitt-Trigger
-    converter_base: BQ25570
+    inherit_from: BQ25570
     immediate_pwr_good_signal: true
 
   BQ25570-Schmitt:
-    converter_base: BQ25570s
+    inherit_from: BQ25570s
   default:
-    converter_base: BQ25570s
+    inherit_from: BQ25570s
 
   BQ25570si:  # record internal StorageCap instead of Output
-    converter_base: BQ25570s
+    inherit_from: BQ25570s
     log_intermediate_voltage: true

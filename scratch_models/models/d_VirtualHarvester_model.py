@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import Field, constr, conint, confloat, root_validator, ValidationError
 from pydantic import BaseModel
 
-from scratch_models.models.d_FixtureModel import Fixtures
+from scratch_models.models.d_FixtureModel import Fixtures, FixtureModel
 
 vharvesters = Fixtures("d_VirtualHarvester_fixtures.yml", "VirtualHarvesters")
 
@@ -14,7 +14,7 @@ class DTypeEnum(str, Enum):
     isc_voc = "isc_voc"
 
 
-class VirtualHarvester(BaseModel):
+class VirtualHarvester(FixtureModel):
 
     # General Config
     name: constr(
@@ -55,7 +55,7 @@ class VirtualHarvester(BaseModel):
     def recursive_fill(cls, values):
         values, chain = vharvesters.inheritance(values)
         if values["name"] == "neutral":
-            raise ValidationError("Resulting Harvester can't be neutral")
+            raise ValueError("Resulting Harvester can't be neutral")
         print(f"VHrv-Inheritances: {chain}")
         return values
 

@@ -1,4 +1,4 @@
-from .d_FixtureModel import Fixtures
+from .d_FixtureModel import Fixtures, FixtureModel
 from .d_VirtualHarvester_model import VirtualHarvester
 from pydantic import BaseModel
 from pydantic import confloat
@@ -10,7 +10,7 @@ from pydantic import root_validator
 vsources = Fixtures("d_VirtualSource_fixtures.yml", "VirtualSources")
 
 
-class VirtualSource(BaseModel):
+class VirtualSource(FixtureModel):
 
     # General Config
     name: constr(
@@ -26,7 +26,7 @@ class VirtualSource(BaseModel):
 
     enable_boost: bool = False
     enable_buck: bool = False
-    log_intermediate_voltage: bool = False
+    log_intermediate_voltage: bool = False  # TODO: duplicate in PowerSampling()
 
     interval_startup_delay_drain_ms: confloat(ge=0, le=10e3) = 0
 
@@ -85,6 +85,10 @@ class VirtualSource(BaseModel):
         min_anystr_length = 4
         anystr_lower = True
         anystr_strip_whitespace = True  # strip leading & trailing whitespaces
+        # TODO: according to
+        #   - https://docs.pydantic.dev/usage/schema/#field-customization
+        #   - https://docs.pydantic.dev/usage/model_config/
+        # "fields["name"].description = ... should be usable to modify model
 
     @root_validator(pre=True)
     def recursive_fill(cls, values):

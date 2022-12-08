@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from pydantic import constr, conint, confloat
+from pydantic import constr, conint, confloat, root_validator
 from pydantic import BaseModel
 
+from .d_Features_interface import PowerLogging, SystemLogging, GpioLogging
 from .d_VirtualSource_model import VirtualSource
 
 
@@ -16,34 +17,67 @@ class TargetPort(str, Enum):
 
 class Compression(str, Enum):
     lzf = "lzf"
-    gzip1 = "1"
+    gzip1 = 1  # TODO: will not work
+
+
+compressions_allowed: list = [None, "lzf", 1]
 
 
 class EmulatorIF(BaseModel):
 
-#    name: constr(
-#        strip_whitespace=True,
-#        to_lower=True,
-#        min_length=4,
-#    )
-
     # General config
     input_path: Path
     output_path: Optional[Path]
+    # ⤷ output_path:
+    #   - providing a directory -> file is named emu_timestamp.h5
+    #   - for a complete path the filename is not changed except it exists and overwrite is disabled -> emu#num.h5
     force_overwrite: bool = False
-    compression: Optional[Compression] = None
+    output_compression: Union[None, str, int] = None
+    # ⤷ should be 1 (level 1 gzip), lzf, or None (order of recommendation)
 
     start_time: datetime  # = Field(default_factory=datetime.utcnow)
     duration: timedelta
 
     # emulation-specific
     use_cal_default: bool = False
+    # ⤷ do not load calibration from EEPROM
 
     enable_io: bool = False
-    io_target: TargetPort = "A"
-    pwr_target: TargetPort = "A"
-    aux_target_voltage: confloat(ge=0, le=5) = 0
+    # ⤷ pre-req for sampling gpio
+    io_port: TargetPort = "A"
+    # ⤷ either Port A or B
+    pwr_port: TargetPort = "A"
+    # ⤷ that one will be current monitored (main), the other is aux
+    voltage_aux: confloat(ge=0, le=5) = 0
+    # ⤷ aux_voltage options:
+    #   - None to disable (0 V),
+    #   - 0-4.5 for specific const Voltage,
+    #   - "mid" will output intermediate voltage (vsource storage cap),
+    #   - true or "main" to mirror main target voltage
 
+    # TODO: verbosity
+
+    # sub-elements
     virtual_source: VirtualSource = {"name": "neutral"}
+    power_logging: PowerLogging = PowerLogging()
+    gpio_logging: GpioLogging = GpioLogging()
+    sys_logging: SystemLogging = SystemLogging()
 
+    class Config:
+        # title = "Virtual Source MinDef"
+        allow_mutation = False  # const after creation?
+        extra = "forbid"  # no unnamed attributes allowed
+        validate_all = True  # also check defaults
+        min_anystr_length = 4
+        anystr_lower = True
+        anystr_strip_whitespace = True  # strip leading & trailing whitespaces
 
+    @root_validator()
+    def validate(cls, values: dict):
+        comp = values.get("output_compression")
+        if comp not in compressions_allowed:
+            raise ValueError(f"value is not allowed ({comp} not in {compressions_allowed}")
+        # TODO: limit paths
+        # TODO: date older than now?
+        # TODO:
+        return values

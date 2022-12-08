@@ -91,15 +91,16 @@ class VirtualSource(FixtureModel):
         # "fields["name"].description = ... should be usable to modify model
 
     @root_validator(pre=True)
-    def recursive_fill(cls, values):
+    def recursive_fill(cls, values: dict):
         values, chain = vsources.inheritance(values)
         print(f"VSrc-Inheritances: {chain}")
         return values
 
     @root_validator(pre=False)
-    def post_adjust(cls, values):
+    def post_adjust(cls, values: dict):
         # TODO
         return values
 
     def get_parameters(self):
+        # TODO
         pass

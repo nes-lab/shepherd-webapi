@@ -52,7 +52,7 @@ class VirtualHarvester(FixtureModel):
     # ⤷ first cycle: ADC-Sampling & DAC-Writing, further steps: waiting
 
     @root_validator(pre=True)
-    def recursive_fill(cls, values):
+    def recursive_fill(cls, values: dict):
         values, chain = vharvesters.inheritance(values)
         if values["name"] == "neutral":
             raise ValueError("Resulting Harvester can't be neutral")
@@ -60,9 +60,10 @@ class VirtualHarvester(FixtureModel):
         return values
 
     @root_validator(pre=False)
-    def post_adjust(cls, values):
+    def post_adjust(cls, values: dict):
         # TODO
         return values
 
     def get_parameters(self):
+        # TODO
         pass

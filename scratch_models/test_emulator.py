@@ -14,3 +14,18 @@ elif isinstance(emu_cfg, dict):
     vs_mdl = EmulatorIF.parse_obj(emu_cfg)
 else:
     raise TypeError
+
+vs_dict = vs_mdl.dict(exclude_defaults=True, exclude_unset=True)
+print(vs_dict)
+# Dirty Test ...
+vs_dict["input_path"] = str(vs_dict["input_path"])
+vs_dict["output_path"] = str(vs_dict["output_path"])
+vs_dict["duration"] = str(vs_dict["duration"])
+#vs_dict["io_port"] = str(vs_dict["io_port"])
+#vs_dict["pwr_port"] = str(vs_dict["pwr_port"])
+vs_dict["virtual_source"]["harvester"]["datatype"] = \
+    str(vs_dict["virtual_source"]["harvester"]["datatype"])
+
+
+with open("example_config_emulator_out.yml", "w") as file_yml:
+    yaml.safe_dump(vs_dict, file_yml, default_flow_style=False, sort_keys=False,)

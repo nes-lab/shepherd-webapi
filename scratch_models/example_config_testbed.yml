@@ -1,0 +1,32 @@
+
+experiment:
+  name: X
+  description: Y
+  # start also? would allow immediate enqueuing
+  duration: S
+  email_results: true
+fixtures_forward:
+  emu1:
+    type: Emulator
+    observers: [2:5]
+    parameters:
+      input_path: 5
+fixtures_forward2:
+  - emu:
+      type: Emu
+      observers: 3, 4
+      parameters:
+        whatever: no
+  - emu:  # -> same name OK now
+      type: Hrv
+      observers: 4,7
+      parameters:
+        name: dada
+fixture_forward3: # ansible-style
+  - name: "isndi"
+    type: Emu
+    observers: 3,4
+    parameters:
+      try: me
+
+# TODO: use &anchors and *aliases?

@@ -71,6 +71,7 @@ class EmulatorIF(BaseModel):
         min_anystr_length = 4
         anystr_lower = True
         anystr_strip_whitespace = True  # strip leading & trailing whitespaces
+        #fields["start_time"].description =
 
     @root_validator()
     def validate(cls, values: dict):
@@ -81,3 +82,14 @@ class EmulatorIF(BaseModel):
         # TODO: date older than now?
         # TODO:
         return values
+
+    @root_validator(pre=False)
+    def post_adjust(cls, values: dict):
+        # TODO
+        return values
+
+    def get_parameters(self):
+        # TODO
+        print("you got it")
+        return self.dict()
+        # pass

@@ -18,7 +18,7 @@ parameters:
   enable_io: true
   io_port: A  # either Port A or B
   pwr_port: A
-  
+
   voltage_aux: 3.3
   # aux_voltage options:
   # - None to disable (0 V),

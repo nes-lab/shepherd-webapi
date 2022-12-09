@@ -1,12 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
-from pydantic import constr, conint, confloat, root_validator
 from pydantic import BaseModel
+from pydantic import confloat
+from pydantic import root_validator
 
-from .d_Features_interface import PowerLogging, SystemLogging, GpioLogging
+from .d_Features_interface import GpioLogging
+from .d_Features_interface import PowerLogging
+from .d_Features_interface import SystemLogging
 from .d_VirtualSource_model import VirtualSource
 
 
@@ -71,13 +76,15 @@ class EmulatorIF(BaseModel):
         min_anystr_length = 4
         anystr_lower = True
         anystr_strip_whitespace = True  # strip leading & trailing whitespaces
-        #fields["start_time"].description =
+        # fields["start_time"].description =
 
     @root_validator()
     def validate(cls, values: dict):
         comp = values.get("output_compression")
         if comp not in compressions_allowed:
-            raise ValueError(f"value is not allowed ({comp} not in {compressions_allowed}")
+            raise ValueError(
+                f"value is not allowed ({comp} not in {compressions_allowed}",
+            )
         # TODO: limit paths
         # TODO: date older than now?
         # TODO:

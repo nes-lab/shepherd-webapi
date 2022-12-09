@@ -2,13 +2,12 @@ from pathlib import Path
 
 import yaml
 from pydantic import BaseModel
-from pydantic import Extra
 from pydantic import Field
 from pydantic import confloat
 from pydantic import conlist
 from pydantic import root_validator
 
-from scratch_models.models.ds_VHarvester_model import VirtualHarvester
+from scratch_models.models.d_VirtualHarvester_model import VirtualHarvester
 
 
 def load_vsources() -> dict:

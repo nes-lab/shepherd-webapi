@@ -1,11 +1,12 @@
-from .d_FixtureModel import Fixtures, FixtureModel
-from .d_VirtualHarvester_model import VirtualHarvester
-from pydantic import BaseModel
 from pydantic import confloat
 from pydantic import conint
 from pydantic import conlist
 from pydantic import constr
 from pydantic import root_validator
+
+from .d_FixtureModel import FixtureModel
+from .d_FixtureModel import Fixtures
+from .d_VirtualHarvester_model import VirtualHarvester
 
 vsources = Fixtures("d_VirtualSource_fixtures.yml", "VirtualSources")
 

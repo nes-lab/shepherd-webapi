@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import yaml
-
 from models.d_VirtualSource_model import VirtualSource
 
 # TODO open Problem:
@@ -42,5 +41,3 @@ else:
 
 # print("INIT from file") # -> json and pickle only
 # vs_mf = VirtualSource.parse_file(vs_path)
-
-

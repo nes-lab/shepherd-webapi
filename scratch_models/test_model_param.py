@@ -1,6 +1,5 @@
 from model_param import VirtualSource as VirtualSourceParam
 
-
 vs_d = VirtualSourceParam(name="direct", converter_base="neutral")
 vs_dicap = VirtualSourceParam(
     name="diode+capacitor",

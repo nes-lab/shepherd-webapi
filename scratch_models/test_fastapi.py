@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi import Form
 from models.ds_VirtualSourceMin_model import VirtualSourceMin
-from models.ds_VirtualSourceMin_model import acquire_def
 from models.ds_VirtualSourceMin_model import configs_predef
 
 # imports indirectly needed: uvicorn, python-multipart, jinja2

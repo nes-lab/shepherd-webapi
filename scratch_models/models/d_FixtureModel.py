@@ -38,16 +38,23 @@ class Fixtures:
             chain = []
         values = copy.copy(values)
         if "inherit_from" in values:
-            fixture_name = values.pop("inherit_from")  # will also remove entry from dict
+            fixture_name = values.pop(
+                "inherit_from",
+            )
+            # ⤷ will also remove entry from dict
             if "name" in values and len(chain) < 1:
                 base_name = values.get("name")
                 if base_name in chain:
-                    raise ValueError(f"Inheritance-Circle detected ({base_name} already in {chain})")
+                    raise ValueError(
+                        f"Inheritance-Circle detected ({base_name} already in {chain})",
+                    )
                 if base_name == fixture_name:
-                    raise ValueError(f"Inheritance-Circle detected ({base_name} == {fixture_name})")
+                    raise ValueError(
+                        f"Inheritance-Circle detected ({base_name} == {fixture_name})",
+                    )
                 chain.append(base_name)
             fixture_base = copy.copy(self[fixture_name])
-            #print(f"{self.name} will inherit from {fixture_name}")
+            # print(f"{self.name} will inherit from {fixture_name}")
             fixture_base["name"] = fixture_name
             chain.append(fixture_name)
             base_dict, chain = self.inheritance(values=fixture_base, chain=chain)
@@ -62,7 +69,7 @@ class Fixtures:
                 values["name"] = fixture_name
             else:
                 fixture_base = copy.copy(self[fixture_name])
-                #print(f"{self.name} '{fixture_name}' will init as {fixture_name}")
+                # print(f"{self.name} '{fixture_name}' will init as {fixture_name}")
                 fixture_base["name"] = fixture_name
                 chain.append(fixture_name)
                 values, chain = self.inheritance(values=fixture_base, chain=chain)
@@ -71,7 +78,6 @@ class Fixtures:
 
 
 class FixtureModel(BaseModel):
-
     class Config:
         # title = "Virtual Source MinDef"
         allow_mutation = False  # const after creation?

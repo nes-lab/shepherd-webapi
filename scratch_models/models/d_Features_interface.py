@@ -1,7 +1,5 @@
-from enum import Enum
-from typing import Optional
-
-from pydantic import BaseModel, conint
+from pydantic import BaseModel
+from pydantic import conint
 
 
 class PowerLogging(BaseModel):

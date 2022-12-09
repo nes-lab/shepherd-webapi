@@ -1,9 +1,12 @@
 from enum import Enum
 
-from pydantic import Field, constr, conint, confloat, root_validator, ValidationError
-from pydantic import BaseModel
+from pydantic import confloat
+from pydantic import conint
+from pydantic import constr
+from pydantic import root_validator
 
-from scratch_models.models.d_FixtureModel import Fixtures, FixtureModel
+from scratch_models.models.d_FixtureModel import FixtureModel
+from scratch_models.models.d_FixtureModel import Fixtures
 
 vharvesters = Fixtures("d_VirtualHarvester_fixtures.yml", "VirtualHarvesters")
 

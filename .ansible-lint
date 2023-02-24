@@ -1,0 +1,4 @@
+---
+exclude_paths:
+  - scratch_models/
+  - .github/

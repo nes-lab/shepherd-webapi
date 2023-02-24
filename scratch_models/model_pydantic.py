@@ -3,7 +3,6 @@ from pydantic import constr
 
 
 class VirtualSourcePyd(VirtualSource):
-
     name: constr(strip_whitespace=True, to_lower=True, min_length=4)
     converter_base: constr(
         strip_whitespace=True,

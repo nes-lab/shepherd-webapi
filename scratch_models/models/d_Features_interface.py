@@ -3,7 +3,6 @@ from pydantic import conint
 
 
 class PowerLogging(BaseModel):
-
     # initial recording
     log_voltage: bool = True
     log_current: bool = True
@@ -27,7 +26,6 @@ class PowerLogging(BaseModel):
 
 
 class GpioLogging(BaseModel):
-
     # initial recording
     log_gpio: bool = False  # TODO: activate
     mask: conint(ge=0, le=2**10) = 2**10  # all
@@ -48,7 +46,6 @@ class GpioLogging(BaseModel):
 
 
 class SystemLogging(BaseModel):
-
     log_dmesg: bool = False  # TODO: activate
     log_ptp: bool = False  # TODO: activate
 

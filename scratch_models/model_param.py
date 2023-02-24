@@ -39,7 +39,6 @@ class VirtualSourceBase(param.Parameterized):
 
 
 class VirtualSource(VirtualSourceBase):
-
     name = param.String()
     converter_base = param.String("neutral")
 

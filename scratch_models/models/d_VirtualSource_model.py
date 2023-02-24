@@ -12,7 +12,6 @@ vsources = Fixtures("d_VirtualSource_fixtures.yml", "VirtualSources")
 
 
 class VirtualSource(FixtureModel):
-
     # General Config
     name: constr(
         strip_whitespace=True,

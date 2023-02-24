@@ -35,7 +35,6 @@ def acquire_def(name: str):
 
 
 class VirtualSourceDoc(BaseModel):
-
     # General Config
     name: str = Field(
         title="Name of Virtual Source",
@@ -243,7 +242,6 @@ class VirtualSourceDoc(BaseModel):
 
     @root_validator(pre=True)
     def recursive_fill(cls, values):
-
         if "inherit_from" in values:
             config_name = values.get("inherit_from")
             config_base = acquire_def(config_name)

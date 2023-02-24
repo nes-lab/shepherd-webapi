@@ -29,7 +29,6 @@ compressions_allowed: list = [None, "lzf", 1]
 
 
 class EmulatorIF(BaseModel):
-
     # General config
     input_path: Path
     output_path: Optional[Path]

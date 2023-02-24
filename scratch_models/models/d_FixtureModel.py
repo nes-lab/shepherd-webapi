@@ -14,7 +14,6 @@ from pydantic import BaseModel
 
 
 class Fixtures:
-
     path: Path
     name: str
     elements: dict = {}

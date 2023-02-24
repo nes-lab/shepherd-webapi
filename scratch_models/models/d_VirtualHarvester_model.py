@@ -18,7 +18,6 @@ class DTypeEnum(str, Enum):
 
 
 class VirtualHarvester(FixtureModel):
-
     # General Config
     name: constr(
         strip_whitespace=True,

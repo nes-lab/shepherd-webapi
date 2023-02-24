@@ -9,7 +9,6 @@ from django.db import models
 
 
 class Harvester(models.Model):
-
     name = models.SlugField(
         max_length=10,
         primary_key=True,

@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.utils import timezone
+
+# from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 # from django.views.generic import DetailView
@@ -46,11 +47,9 @@ class ObserversView(ListView):
     template_name = "templates/testbed/observers_table.html"
 
 
-"""
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
-        return context
-"""
+#    def get_context_data(self, **kwargs):
+#        context = super().get_context_data(**kwargs)
+#        context["now"] = timezone.now()
+#        return context
 
 # TODO: try https://github.com/jieter/django-tables2/

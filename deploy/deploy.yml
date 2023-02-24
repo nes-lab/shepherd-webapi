@@ -30,7 +30,7 @@
   roles:
     - apt_automatic
     - ntp_client
-    - secure_host
+    - secure_server
     - django_server
 
 - name: Integrate Datastorage, Update System and cleanup

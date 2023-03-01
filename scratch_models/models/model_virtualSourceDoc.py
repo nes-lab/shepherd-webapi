@@ -7,7 +7,7 @@ from pydantic import confloat
 from pydantic import conlist
 from pydantic import root_validator
 
-from scratch_models.models.d_VirtualHarvester_model import VirtualHarvester
+from models.model_virtualHarvester import VirtualHarvester
 
 
 def load_vsources() -> dict:

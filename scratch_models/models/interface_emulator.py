@@ -9,10 +9,10 @@ from pydantic import BaseModel
 from pydantic import confloat
 from pydantic import root_validator
 
-from .d_Features_interface import GpioLogging
-from .d_Features_interface import PowerLogging
-from .d_Features_interface import SystemLogging
-from .d_VirtualSource_model import VirtualSource
+from models.interface_features import GpioLogging
+from models.interface_features import PowerLogging
+from models.interface_features import SystemLogging
+from models.model_virtualSource import VirtualSource
 
 
 class TargetPort(str, Enum):

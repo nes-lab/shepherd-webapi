@@ -5,10 +5,10 @@ from pydantic import conint
 from pydantic import constr
 from pydantic import root_validator
 
-from scratch_models.models.d_FixtureModel import FixtureModel
-from scratch_models.models.d_FixtureModel import Fixtures
+from models.model_fixture import FixtureModel
+from models.model_fixture import Fixtures
 
-vharvesters = Fixtures("d_VirtualHarvester_fixtures.yml", "VirtualHarvesters")
+vharvesters = Fixtures("fixtures_virtualHarvester.yml", "VirtualHarvesters")
 
 
 class DTypeEnum(str, Enum):

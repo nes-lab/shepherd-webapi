@@ -1,6 +1,6 @@
 import copy
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import yaml
 from pydantic import BaseModel
@@ -31,6 +31,9 @@ class Fixtures:
             return self.elements[key]
         else:
             ValueError(f"{self.name} '{key}' not found!")
+
+    def keys(self):  # -> _dict_keys[Any, Any]:
+        return self.elements.keys()
 
     def inheritance(self, values: dict, chain: Optional[list] = None) -> (dict, list):
         if chain is None:

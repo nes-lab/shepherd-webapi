@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi import Form
-from models.ds_VirtualSourceMin_model import VirtualSourceMin
-from models.ds_VirtualSourceMin_model import configs_predef
+from models.model_virtualSource import VirtualSource
+from models.model_virtualSource import vsources
 
 # imports indirectly needed: uvicorn, python-multipart, jinja2
 
@@ -15,16 +15,16 @@ async def root():
 
 @app.get("/vs_item/{item_id}")
 async def read_item(item_id: str):
-    return VirtualSourceMin(name=item_id).dict()
+    return VirtualSource(name=item_id).dict()
 
 
 @app.get("/vs_items")
 async def read_items(skip: int = 0, limit: int = 40):
-    return {"message": list(configs_predef.keys())[skip : skip + limit]}
+    return {"message": list(vsources.keys())[skip : skip + limit]}
 
 
 @app.post("/vs_set")
-async def read_items(item: VirtualSourceMin):
+async def read_items(item: VirtualSource):
     return item.dict()
 
 

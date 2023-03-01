@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import yaml
-from models.d_VirtualSource_model import VirtualSource
+from models.model_virtualSource import VirtualSource
 
 # TODO open Problem:
 # - provide custom fixtures

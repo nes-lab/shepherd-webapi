@@ -2,7 +2,7 @@ import base64
 from pathlib import Path
 
 import yaml
-from models.d_Emulator_interface import EmulatorIF
+from models.interface_emulator import EmulatorIF
 
 print("INIT from preRead file")
 emu_path = Path("example_config_emulator.yml").absolute()

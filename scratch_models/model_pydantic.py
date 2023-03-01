@@ -1,4 +1,4 @@
-from models.d_VirtualSource_model import VirtualSource
+from models.model_virtualSource import VirtualSource
 from pydantic import constr
 
 

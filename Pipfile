@@ -23,6 +23,9 @@ docutils = "*"
 fastapi = "*"
 pydantic = "*"
 param = "*"
+uvicorn = "*"
+python-multipart = "*"
+jinja2 = "*"
 
 [dev-packages]
 pylint = "*"
@@ -31,6 +34,5 @@ pre-commit = "*"
 
 [pipenv]
 allow_prereleases = false
-
 #[requires]
 #python_version = "3"

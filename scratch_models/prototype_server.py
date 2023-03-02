@@ -1,16 +1,18 @@
 from fastapi import FastAPI
-from fastapi import Form
+from fastapi import Request
+from models.interface_emulator import EmulatorIF
+from models.interface_features import GpioLogging
+from models.interface_features import PowerLogging
+from models.interface_features import SystemLogging
+from models.model_virtualHarvester import VirtualHarvester
+from models.model_virtualHarvester import vharvesters
+
+# from fastapi import Form
 from models.model_virtualSource import VirtualSource
 from models.model_virtualSource import vsources
-from models.interface_emulator import EmulatorIF
-from models.interface_features import (
-    PowerLogging,
-    GpioLogging,
-    SystemLogging,
-)
-from models.model_virtualHarvester import VirtualHarvester, vharvesters
 
 # imports indirectly needed: uvicorn, python-multipart, jinja2
+# run with: uvicorn prototype_server:app --reload
 
 app = FastAPI()
 
@@ -23,7 +25,14 @@ async def root():
 @app.post("/emulator_set")
 async def set_emulator(item: EmulatorIF):
     print(f"Received new emulator - ipath = '{ item.input_path }'")
-    return item.dict()
+    return {"status": "SUCCESS", "data": item.dict()}
+
+
+@app.post("/json_set")
+async def set_json(data: Request):
+    item = await data.json()
+    print(f"Received new json")
+    return {"status": "SUCCESS", "data": item.dict()}
 
 
 @app.post("/virtualSource_set")
@@ -32,10 +41,10 @@ async def set_virtual_source(item: VirtualSource):
     return item.dict()
 
 
-@app.get("/virtualSource_items")
+@app.get("/virtualSource_items")  # items?skip=10&limit=100
 async def read_virtual_source_items(skip: int = 0, limit: int = 40):
     print(f"Request for VirtualSource [{ skip } : {skip + limit}]")
-    return {"message": list(vsources.keys())[skip: skip + limit]}
+    return {"message": list(vsources.keys())[skip : skip + limit]}
 
 
 @app.get("/virtualSource_item/{item_id}")
@@ -53,7 +62,7 @@ async def set_virtual_harvester(item: VirtualHarvester):
 @app.get("/virtualHarvester_items")
 async def read_virtual_harvester_items(skip: int = 0, limit: int = 40):
     print(f"Request for VirtualHarvester [{ skip } : {skip + limit}]")
-    return {"message": list(vharvesters.keys())[skip: skip + limit]}
+    return {"message": list(vharvesters.keys())[skip : skip + limit]}
 
 
 @app.get("/virtualHarvester_item/{item_id}")
@@ -65,7 +74,7 @@ async def read_virtual_harvester_item(item_id: str):
 @app.post("/feature_PowerLogging_set")
 async def set_feature_power_logging(item: PowerLogging):
     print(
-        f"Received new PowerLogging - log V/C = '{ item.log_voltage, item.log_current }'"
+        f"Received new PowerLogging - log V/C = '{ item.log_voltage, item.log_current }'",
     )
     return item.dict()
 
@@ -79,9 +88,6 @@ async def set_feature_gpio_logging(item: GpioLogging):
 @app.post("/feature_SystemLogging_set")
 async def set_feature_system_logging(item: SystemLogging):
     print(
-        f"Received new SystemLogging - log dmesg/ptp = '{ item.log_dmesg, item.log_ptp }'"
+        f"Received new SystemLogging - log dmesg/ptp = '{ item.log_dmesg, item.log_ptp }'",
     )
     return item.dict()
-
-
-# run with: uvicorn prototype_server:app --reload

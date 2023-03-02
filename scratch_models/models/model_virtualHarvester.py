@@ -1,12 +1,11 @@
 from enum import Enum
 
+from models.model_fixture import FixtureModel
+from models.model_fixture import Fixtures
 from pydantic import confloat
 from pydantic import conint
 from pydantic import constr
 from pydantic import root_validator
-
-from models.model_fixture import FixtureModel
-from models.model_fixture import Fixtures
 
 vharvesters = Fixtures("fixtures_virtualHarvester.yml", "VirtualHarvesters")
 

@@ -5,14 +5,13 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-from pydantic import BaseModel
-from pydantic import confloat
-from pydantic import root_validator
-
 from models.interface_features import GpioLogging
 from models.interface_features import PowerLogging
 from models.interface_features import SystemLogging
 from models.model_virtualSource import VirtualSource
+from pydantic import BaseModel
+from pydantic import confloat
+from pydantic import root_validator
 
 
 class TargetPort(str, Enum):
@@ -79,7 +78,9 @@ class EmulatorIF(BaseModel):
 
     @root_validator()
     def validate(cls, values: dict):
-        comp = values.get("output_compression")
+        if isinstance(values, bytes):
+            print(values)  # TODO: only temporary - bughunt
+        comp = values.get("output_compression", None)
         if comp not in compressions_allowed:
             raise ValueError(
                 f"value is not allowed ({comp} not in {compressions_allowed}",

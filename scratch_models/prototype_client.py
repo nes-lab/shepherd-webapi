@@ -1,18 +1,30 @@
 import json
 from pathlib import Path
-
+from pydantic import BaseModel
+from models.interface_features import PowerLogging
 import requests
 import yaml
 
+from models.interface_emulator import EmulatorIF
 
-def post_data(file: Path, url: str):
+
+def load_yam(file: Path) -> dict:
     print(f"Opening {file}")
     with open(file, "rb") as f:
-        data = yaml.safe_load(f)
-    print(f"Got: {data}")
-    response = requests.post(url, json=json.dumps(data["parameters"]))
+        content = yaml.safe_load(f)
+    return content
+
+
+def post_data(mdata: BaseModel, url: str):
+    print(f"Will post: {mdata}")
+    response = requests.post(url, json=mdata.dict())
     print(response)
 
 
-post_data(Path("./example_config_emulator.yml"), "http://127.0.0.1:8000/emulator_set")
-# post_data(Path("./example_config_emulator.yml"), "http://127.0.0.1:8000/json_set")
+if False:
+    data = EmulatorIF.parse_obj(load_yam(Path("./example_config_emulator.yml"))["parameters"])
+    # post_data(data, "http://127.0.0.1:8000/emulator_set")
+    post_data(data, "http://127.0.0.1:8000/json_set")
+
+data = PowerLogging.parse_obj(load_yam(Path("./example_config_emulator.yml"))["parameters"]["power_logging"])
+post_data(data, "http://127.0.0.1:8000/feature_PowerLogging_set")

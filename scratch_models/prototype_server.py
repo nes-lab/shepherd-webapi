@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi import Request
-from models.interface_emulator import EmulatorIF
+from models.interface_emulator import Emulator
 from models.interface_features import GpioLogging
 from models.interface_features import PowerLogging
 from models.interface_features import SystemLogging
@@ -10,6 +10,7 @@ from models.model_virtualHarvester import vharvesters
 # from fastapi import Form
 from models.model_virtualSource import VirtualSource
 from models.model_virtualSource import vsources
+from models.model_wrapper import Wrapper
 
 # imports indirectly needed: uvicorn, python-multipart, jinja2
 # run with: uvicorn prototype_server:app --reload
@@ -23,15 +24,22 @@ async def root():
 
 
 @app.post("/emulator_set")
-async def set_emulator(item: EmulatorIF):
+async def set_emulator(item: Emulator):
+    if isinstance(item, dict):
+        print(f"Emulator had to be casted from dict")
+        item = Emulator.parse_obj(item)
     print(f"Received new emulator - ipath = '{ item.input_path }'")
     return {"status": "SUCCESS", "data": item.dict()}
 
 
 @app.post("/json_set")
-async def set_json(data: Request):
-    item = await data.json()
-    print(f"Received new json")
+async def set_json(data: Wrapper):
+    if isinstance(data, dict):
+        data = Emulator.parse_obj(data)
+    getattr("models", data.type).parse_obj(data.parameters)
+    #item = await data.json()
+    print(f"Received new json {data}")
+    item = Emulator.parse_obj(data)  # TODO: dynamic casting would be needed
     return {"status": "SUCCESS", "data": item.dict()}
 
 

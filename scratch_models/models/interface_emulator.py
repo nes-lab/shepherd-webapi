@@ -27,7 +27,7 @@ class Compression(str, Enum):
 compressions_allowed: list = [None, "lzf", 1]
 
 
-class EmulatorIF(BaseModel):
+class Emulator(BaseModel):
     # General config
     input_path: Path
     output_path: Optional[Path]

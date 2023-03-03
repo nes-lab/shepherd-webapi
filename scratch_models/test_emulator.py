@@ -2,16 +2,16 @@ import base64
 from pathlib import Path
 
 import yaml
-from models.interface_emulator import EmulatorIF
+from models.interface_emulator import Emulator
 
 print("INIT from preRead file")
 emu_path = Path("example_config_emulator.yml").absolute()
 with open(emu_path) as file_data:
     emu_cfg = yaml.safe_load(file_data)["parameters"]
 if isinstance(emu_cfg, str):
-    vs_mdl = EmulatorIF(name=emu_cfg)
+    vs_mdl = Emulator(name=emu_cfg)
 elif isinstance(emu_cfg, dict):
-    vs_mdl = EmulatorIF.parse_obj(emu_cfg)
+    vs_mdl = Emulator.parse_obj(emu_cfg)
 else:
     raise TypeError
 

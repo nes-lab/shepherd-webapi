@@ -14,13 +14,16 @@ from models.model_wrapper import Wrapper
 
 # imports indirectly needed: uvicorn, python-multipart, jinja2
 # run with: uvicorn prototype_server:app --reload
+# -> open interface http://127.0.0.1:8000
+# -> open docs      http://127.0.0.1:8000/docs
+# -> open docs      http://127.0.0.1:8000/redoc -> long load, but interactive / better
 
-app = FastAPI()
+app = FastAPI(title="shepherd-web-api", version="22.03.03", redoc_url="/")  # , contact="https://github.com/orgua/shepherd")
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World - from FastApi-Server-Prototype"}
+# @app.get("/")
+# async def root():
+#    return {"message": "Hello World - from FastApi-Server-Prototype"}
 
 
 @app.post("/emulator_set")

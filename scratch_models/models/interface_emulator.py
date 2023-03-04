@@ -39,7 +39,7 @@ class Emulator(BaseModel):
     # ⤷ should be 1 (level 1 gzip), lzf, or None (order of recommendation)
 
     start_time: datetime  # = Field(default_factory=datetime.utcnow)
-    duration: timedelta
+    duration: timedelta  # TODO: both could also be "None", interpreted as start ASAP, run till EOF
 
     # emulation-specific
     use_cal_default: bool = False

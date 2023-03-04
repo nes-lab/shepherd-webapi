@@ -22,3 +22,13 @@
     <param1>: <value1>
 
 - flatter, but only viable when there is just one of each
+
+
+TODO:
+- proto 2 with this config scheme 
+  - automatic switcher for wrapped files or typed inputs- DB-backend
+- completion-guide
+- fully describe API
+  - integrate all needed fields
+  - test lists
+  - 

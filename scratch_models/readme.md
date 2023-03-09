@@ -25,10 +25,14 @@
 
 
 TODO:
-- proto 2 with this config scheme 
+- proto 2 with the config scheme proposed above 
   - automatic switcher for wrapped files or typed inputs- DB-backend
 - completion-guide
 - fully describe API
   - integrate all needed fields
   - test lists
-  - 
+
+- tests with 
+  - from fastapi.testclient import TestClient
+  - https://fastapi.tiangolo.com/tutorial/testing/
+- use metadata tags to describe the items in redoc (https://fastapi.tiangolo.com/tutorial/metadata/)

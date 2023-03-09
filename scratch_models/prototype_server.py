@@ -1,5 +1,7 @@
-from fastapi import FastAPI
-from fastapi import Request
+from fastapi import FastAPI, Depends
+from fastapi import Form
+from fastapi.security import OAuth2PasswordBearer
+
 from models.interface_emulator import Emulator
 from models.interface_features import GpioLogging
 from models.interface_features import PowerLogging
@@ -18,16 +20,30 @@ from models.model_wrapper import Wrapper
 # -> open docs      http://127.0.0.1:8000/docs
 # -> open docs      http://127.0.0.1:8000/redoc -> long load, but interactive / better
 
-app = FastAPI(title="shepherd-web-api", version="22.03.03", redoc_url="/")  # , contact="https://github.com/orgua/shepherd")
+app = FastAPI(
+    title="shepherd-api",
+    version="22.03.03",
+    description="The web-api for the shepherd-testbed for energy harvesting CPS",
+    redoc_url="/",
+    # contact="https://github.com/orgua/shepherd",
+    # docs_url=None,
+)
 
 
 # @app.get("/")
 # async def root():
 #    return {"message": "Hello World - from FastApi-Server-Prototype"}
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+
+
+@app.post("/login")
+async def login(username: str = Form(), password: str = Form()):
+    return {"username": username}
+
 
 @app.post("/emulator_set")
-async def set_emulator(item: Emulator):
+async def set_emulator(item: Emulator, token: str = Depends(oauth2_scheme)):
     if isinstance(item, dict):
         print(f"Emulator had to be casted from dict")
         item = Emulator.parse_obj(item)

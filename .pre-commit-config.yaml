@@ -1,5 +1,5 @@
 # install       pip3 install pre-commit
-# run           pre-commit run --all-files
+# run           pre-commit run -a  # or --all-files
 # update deps   pre-commit autoupdate
 
 repos:

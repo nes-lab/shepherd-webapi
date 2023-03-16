@@ -1,0 +1,20 @@
+from models.interface_emulator import Emulator
+from models.interface_features import GpioLogging
+from models.interface_features import PowerLogging
+from models.interface_features import SystemLogging
+from models.model_virtualHarvester import VirtualHarvester
+from models.model_virtualHarvester import vharvesters
+
+gpio_json1 = GpioLogging.schema()  # -> dict
+# gpio_json2 = GpioLogging.json() -> instantiated model (data)
+gpio_json3 = GpioLogging.schema_json()  # -> string of same dict
+
+print(gpio_json1)
+print(gpio_json3)
+
+print(Emulator.schema_json())
+
+# output can be fed into
+# https://json-editor.github.io/json-editor/?data=N4Ig9gDgLglmB2BnEAuUMDGCA2MBGqIAZglAIYDuApomALZUCsIANOHgFZUZQD62ZAJ5gArlELwwAJzplsrEIgwALKrNShYUbFUIAFKlNrwFUQRF0p2XHgqlUAjiJj2AJqgDaIeGQYKyAOa6bK5kUMHEZABu0jDhvFjY0gpB8K6GCkkYYXAmbBZQyAC6+VKQhrA0Gt6+lprmlopQUjDwAQrpSi3QuYQAYi6IUAAEZGnDADJkQ8M+fmx0rRNUbVDKqAAsIVREZCLY4lYAUoZqgsMAItImAL5sgXUgZhaEreFBUh07eweoAEyMBatGB0ER0VAARgAHAsyAAPEFg1AATmRd0iMRa8USyTQTwahCGLTaChIMjChBxnzYWh0hF2mLiVGGVK+u32hxAAGIiLtGAAGfkgdGpdKfPHPRpE1rtNgrJEoLyyOlsIhqOQRMBrDJFdGhcLVSWE5oy0nSWSc/WanoIZB4ogCKAQTAAa3FwBunrYWRyCENBKsYE43HENLidKsEzA2VgftK5SklTtoAwcUE/peVmlJO27N+VgAymNhn0pGNU0owMK2EMwo8jVmTTmQOk85yAMIAQWrIFTZlrBolAaaxNlLZoGG6sZMVgAKsoYIhhovhqlDHXXKMxPQctlsNhzkQynRhtrhhB7FE4CIl1AKGBhkQYFRsK5kDS1BBHY1gMA+4IvWGX8ByoT0FAoMIVGqf9CB9acADoYJrchBxAODcngkDhU9dECmTfFMxAMgpDLdNVXNCkrHIPAVSecNGgMQoFBEeAYCcKgAElwjoO1mhEKg2CZHiM0aIMbFDOjtAYqgJIvBMkxExTG1HBR5XBRVewpEIwDHPAXHcNh7B6WitVUT4SnHNtCFcHSezmeth2zdocNzH5Dg8epCJssd7MIAB1ORwk+G5dS9RRlDACheEMMojFeeAgrIHhehpVQ/CsPAwC1IkyAgDZsKAA===
+#
+# or https://pypi.org/project/django-jsonforms/

@@ -1,13 +1,12 @@
 import json
 from pathlib import Path
 
-from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
-from models.interface_features import PowerLogging
 import requests
 import yaml
-
+from fastapi.encoders import jsonable_encoder
 from models.interface_emulator import Emulator
+from models.interface_features import PowerLogging
+from pydantic import BaseModel
 
 do_send_powerlog = True
 do_send_emulator = True
@@ -32,10 +31,14 @@ def post_data(mdata: BaseModel, url: str):
 
 
 if do_send_emulator:
-    data = Emulator.parse_obj(load_yam(Path("./example_config_emulator.yml"))["parameters"])
+    data = Emulator.parse_obj(
+        load_yam(Path("./example_config_emulator.yml"))["parameters"],
+    )
     post_data(data, "http://127.0.0.1:8000/emulator_set")
     # post_data(data, "http://127.0.0.1:8000/json_set")
 
 if do_send_powerlog:
-    data = PowerLogging.parse_obj(load_yam(Path("./example_config_emulator.yml"))["parameters"]["power_logging"])
+    data = PowerLogging.parse_obj(
+        load_yam(Path("./example_config_emulator.yml"))["parameters"]["power_logging"],
+    )
     post_data(data, "http://127.0.0.1:8000/feature_PowerLogging_set")

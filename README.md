@@ -1,8 +1,16 @@
-# shepherd_webservice
+# Shepherd Webservice
 
 - alpha prototype state
 - nothing really works, but
   - signup and login
+
+---
+
+**Main Project**: [https://github.com/orgua/shepherd](https://github.com/orgua/shepherd)
+
+**Source Code**: [https://github.com/orgua/shepherd_webservice](https://github.com/orgua/shepherd_webservice)
+
+---
 
 ## install
 

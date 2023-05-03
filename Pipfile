@@ -21,11 +21,10 @@ flask = "*"
 influxdb-client = "*"
 docutils = "*"
 fastapi = "*"
-pydantic = "*"
-param = "*"
 uvicorn = "*"
 python-multipart = "*"
 jinja2 = "*"
+shepherd-data = "*"
 
 [dev-packages]
 pylint = "*"

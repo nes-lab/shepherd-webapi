@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from typing import Optional
 
 from fastapi import Depends
@@ -5,6 +6,11 @@ from fastapi import FastAPI
 from fastapi import Form
 from fastapi.security import OAuth2PasswordBearer
 import shepherd_core.data_models.testbed as stb
+import shepherd_core.data_models.content as scn
+from shepherd_core.data_models.content.firmware import fixtures as fix_fw
+from shepherd_core.data_models.content.energy_environment import fixtures as fix_eenv
+from shepherd_core.data_models.content.virtual_source import fixtures as fix_vsrc
+from shepherd_core.data_models.content.virtual_harvester import fixtures as fix_vhrv
 from shepherd_core.data_models.testbed.cape import fixtures as fix_cape
 from shepherd_core.data_models.testbed.mcu import fixtures as fix_mcu
 from shepherd_core.data_models.testbed.gpio import fixtures as fix_gpio
@@ -54,7 +60,42 @@ async def login(username: str = Form(), password: str = Form()):
     return {"username": username}
 
 
+interface_items = {
+    # components
+    "cape": {"model": stb.Cape, "db": fix_cape},
+    "gpio": {"model": stb.GPIO, "db": fix_gpio},
+    "mcu": {"model": stb.MCU, "db": fix_mcu},
+    "observer": {"model": stb.Observer, "db": fix_observer},
+    "target": {"model": stb.Target, "db": fix_target},
+    "testbed": {"model": stb.Testbed, "db": fix_testbed},
+    # content
+    "energy_environment": {"model": scn.EnergyEnvironment, "db": fix_eenv},
+    "firmware": {"model": scn.Firmware, "db": fix_fw},
+    "virtual_harvester": {"model": scn.virtual_harvester, "db": fix_vhrv},
+    "virtual_source": {"model": scn.virtual_source, "db": fix_vsrc},
+}
+
+
+@app.get("/shepherd/{item_name}")  # items?skip=10&limit=100
+async def read_item_ids_list(item_name: str, skip: int = 0, limit: int = 40):
+    if item_name not in interface_items:
+        raise HTTPException(status_code=404, detail="item-name not found")
+    elems = interface_items[item_name]["db"].elements_by_id.keys()
+    return {"message": list(elems)[skip : skip + limit]}
+
+
+@app.get("/shepherd/{item_name}/{item_id}")
+async def read_item_by_id(item_name: str, item_id: Optional[int]):
+    if item_name not in interface_items:
+        raise HTTPException(status_code=404, detail="item-name not found")
+    interface = interface_items[item_name]
+    if item_id not in interface["db"].elements_by_id:
+        raise HTTPException(status_code=404, detail="item-id not found")
+    return interface["model"](id=item_id).dict()
+
+
 """
+
 @app.post("/emulator_set", tags=["emulator"])
 async def set_emulator(item: Emulator):
     # async def set_emulator(item: Emulator, token: str = Depends(oauth2_scheme)):
@@ -80,94 +121,7 @@ async def set_json(data: Wrapper):
 async def set_virtual_source(item: VirtualSource):
     print(f"Received new VirtualSource - name = '{item.name}'")
     return item.dict()
-"""
 
-
-@app.get("/cape")  # items?skip=10&limit=100
-async def read_cape_items(skip: int = 0, limit: int = 40):
-    print(f"Request for Capes [{skip} : {skip + limit}]")
-    return {"message": list(fix_cape.elements_by_id.keys())[skip : skip + limit]}
-
-
-@app.get("/cape/{item_id}")
-async def read_cape_item(item_id: Optional[int]):
-    print(f"Request for Capes [{item_id}]")
-    if item_id not in fix_cape.elements_by_id:
-        return None
-    return stb.Cape(id=item_id).dict()
-
-
-@app.get("/gpio")  # items?skip=10&limit=100
-async def read_gpio_items(skip: int = 0, limit: int = 40):
-    print(f"Request for gpio [{skip} : {skip + limit}]")
-    return {"message": list(fix_gpio.elements_by_id.keys())[skip : skip + limit]}
-
-
-@app.get("/gpio/{item_id}")
-async def read_gpio_item(item_id: Optional[int]):
-    print(f"Request for gpio [{item_id}]")
-    if item_id not in fix_gpio.elements_by_id:
-        return None
-    return stb.GPIO(id=item_id).dict()
-
-
-@app.get("/mcu")  # items?skip=10&limit=100
-async def read_mcu_items(skip: int = 0, limit: int = 40):
-    print(f"Request for mcu [{skip} : {skip + limit}]")
-    return {"message": list(fix_mcu.elements_by_id.keys())[skip : skip + limit]}
-
-
-@app.get("/mcu/{item_id}")
-async def read_mcu_item(item_id: Optional[int]):
-    print(f"Request for mcu [{item_id}]")
-    if item_id not in fix_mcu.elements_by_id:
-        return None
-    return stb.MCU(id=item_id).dict()
-
-
-@app.get("/observer")  # items?skip=10&limit=100
-async def read_observer_items(skip: int = 0, limit: int = 40):
-    print(f"Request for observer [{skip} : {skip + limit}]")
-    return {"message": list(fix_observer.elements_by_id.keys())[skip : skip + limit]}
-
-
-@app.get("/observer/{item_id}")
-async def read_observer_item(item_id: Optional[int]):
-    print(f"Request for observer [{item_id}]")
-    if item_id not in fix_observer.elements_by_id:
-        return None
-    return stb.Observer(id=item_id).dict()
-
-
-@app.get("/target")  # items?skip=10&limit=100
-async def read_target_items(skip: int = 0, limit: int = 40):
-    print(f"Request for target [{skip} : {skip + limit}]")
-    return {"message": list(fix_target.elements_by_id.keys())[skip : skip + limit]}
-
-
-@app.get("/target/{item_id}")
-async def read_target_item(item_id: Optional[int]):
-    print(f"Request for target [{item_id}]")
-    if item_id not in fix_target.elements_by_id:
-        return None
-    return stb.Target(id=item_id).dict()
-
-
-@app.get("/testbed")  # items?skip=10&limit=100
-async def read_testbed_items(skip: int = 0, limit: int = 40):
-    print(f"Request for testbed [{skip} : {skip + limit}]")
-    return {"message": list(fix_testbed.elements_by_id.keys())[skip : skip + limit]}
-
-
-@app.get("/testbed/{item_id}")
-async def read_testbed_item(item_id: Optional[int]):
-    print(f"Request for testbed [{item_id}]")
-    if item_id not in fix_testbed.elements_by_id:
-        return None
-    return stb.Testbed(id=item_id).dict()
-
-
-"""
 
 @app.post("/virtualHarvester_set")
 async def set_virtual_harvester(item: VirtualHarvester):

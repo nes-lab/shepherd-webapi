@@ -7,6 +7,7 @@ from fastapi import Form
 from fastapi.security import OAuth2PasswordBearer
 import shepherd_core.data_models.testbed as stb
 import shepherd_core.data_models.content as scn
+from shepherd_core.data_models import Wrapper
 from shepherd_core.data_models.content.firmware import fixtures as fix_fw
 from shepherd_core.data_models.content.energy_environment import fixtures as fix_eenv
 from shepherd_core.data_models.content.virtual_source import fixtures as fix_vsrc
@@ -40,7 +41,7 @@ tag_metadata = [
 
 app = FastAPI(
     title="shepherd-api",
-    version="22.03.03",
+    version="23.06.17",
     description="The web-api for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/",
     # contact="https://github.com/orgua/shepherd",
@@ -60,39 +61,73 @@ async def login(username: str = Form(), password: str = Form()):
     return {"username": username}
 
 
+# white-list for data-models
+# TODO: implement a generator -> nicer documentation needed
 interface_items = {
-    # components
-    "cape": {"model": stb.Cape, "db": fix_cape},
-    "gpio": {"model": stb.GPIO, "db": fix_gpio},
-    "mcu": {"model": stb.MCU, "db": fix_mcu},
-    "observer": {"model": stb.Observer, "db": fix_observer},
-    "target": {"model": stb.Target, "db": fix_target},
-    "testbed": {"model": stb.Testbed, "db": fix_testbed},
+    # testbed-components
+    "Cape": {"model": stb.Cape, "db": fix_cape},
+    "GPIO": {"model": stb.GPIO, "db": fix_gpio},
+    "MCU": {"model": stb.MCU, "db": fix_mcu},
+    "Observer": {"model": stb.Observer, "db": fix_observer},
+    "Target": {"model": stb.Target, "db": fix_target},
+    "Testbed": {"model": stb.Testbed, "db": fix_testbed},
     # content
-    "energy_environment": {"model": scn.EnergyEnvironment, "db": fix_eenv},
-    "firmware": {"model": scn.Firmware, "db": fix_fw},
-    "virtual_harvester": {"model": scn.virtual_harvester, "db": fix_vhrv},
-    "virtual_source": {"model": scn.virtual_source, "db": fix_vsrc},
+    "EnergyEnvironment": {"model": scn.EnergyEnvironment, "db": fix_eenv},
+    "Firmware": {"model": scn.Firmware, "db": fix_fw},
+    "VirtualHarvesterConfig": {"model": scn.VirtualHarvesterConfig, "db": fix_vhrv},
+    "VirtualSourceConfig": {"model": scn.VirtualSourceConfig, "db": fix_vsrc},
 }
 
 
-@app.get("/shepherd/{item_name}")  # items?skip=10&limit=100
-async def read_item_ids_list(item_name: str, skip: int = 0, limit: int = 40):
-    if item_name not in interface_items:
+@app.get("/shepherd/session_key")
+async def read_session_key():
+    # TODO
+    return {"value": b"this_will_be_a_asym_pubkey"}
+
+
+@app.get("/shepherd/user")
+async def read_userdata(token: str):
+    # TODO
+    return {"name": "Klaus", "group": "TU Dresden", "email": "test@best.com", "token": token}
+
+
+@app.get("/shepherd/{type_name}/ids")  # items?skip=10&limit=100
+async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40):
+    if type_name not in interface_items:
         raise HTTPException(status_code=404, detail="item-name not found")
-    elems = interface_items[item_name]["db"].elements_by_id.keys()
+    elems = interface_items[type_name]["db"].elements_by_id.keys()
     return {"message": list(elems)[skip : skip + limit]}
 
 
-@app.get("/shepherd/{item_name}/{item_id}")
-async def read_item_by_id(item_name: str, item_id: Optional[int]):
-    if item_name not in interface_items:
+@app.get("/shepherd/{type_name}/names")  # items?skip=10&limit=100
+async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40):
+    if type_name not in interface_items:
         raise HTTPException(status_code=404, detail="item-name not found")
-    interface = interface_items[item_name]
-    if item_id not in interface["db"].elements_by_id:
-        raise HTTPException(status_code=404, detail="item-id not found")
-    return interface["model"](id=item_id).dict()
+    elems = interface_items[type_name]["db"].elements_by_name.keys()
+    return {"message": list(elems)[skip : skip + limit]}
 
+
+@app.get("/shepherd/{type_name}/item")
+async def read_item_by_id(
+    type_name: str, item_id: Optional[int] = None, item_name: Optional[str] = None
+):
+    if type_name not in interface_items:
+        raise HTTPException(status_code=404, detail="item-name not found")
+    interface = interface_items[type_name]
+    if item_id:
+        if item_id not in interface["db"].elements_by_id:
+            raise HTTPException(status_code=404, detail="item-id not found")
+        return interface["model"](id=item_id).dict()
+    elif item_name:
+        if item_name not in interface["db"].elements_by_name:
+            raise HTTPException(status_code=404, detail="item-name not found")
+        return interface["model"](name=item_name).dict()
+    raise HTTPException(status_code=404, detail="neither item-id or -name provided")
+
+
+@app.post("/shepherd/{type_name}/add")
+async def write_item(type_name: str, item: Wrapper):
+    pass
 
 """
 

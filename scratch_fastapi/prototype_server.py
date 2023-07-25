@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import HTTPException
 from typing import Optional
 
@@ -88,7 +89,12 @@ async def read_session_key():
 @app.get("/shepherd/user")
 async def read_userdata(token: str):
     # TODO
-    return {"name": "Klaus", "group": "TU Dresden", "email": "test@best.com", "token": token}
+    return {
+        "name": "Klaus",
+        "group": "TU Dresden",
+        "email": "test@best.com",
+        "token": token,
+    }
 
 
 @app.get("/shepherd/{type_name}/ids")  # items?skip=10&limit=100
@@ -128,6 +134,10 @@ async def read_item_by_id(
 @app.post("/shepherd/{type_name}/add")
 async def write_item(type_name: str, item: Wrapper):
     pass
+
+
+if __name__ == "__main__":
+    uvicorn.run("prototype_server:app", reload=True)  # host="0.0.0.0")
 
 """
 

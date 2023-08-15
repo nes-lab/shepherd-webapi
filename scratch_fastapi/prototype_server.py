@@ -1,21 +1,20 @@
-import uvicorn
-from fastapi import HTTPException
 from typing import Optional
 
-from fastapi import Depends
+import shepherd_core.data_models.content as scn
+import shepherd_core.data_models.testbed as stb
+import uvicorn
 from fastapi import FastAPI
 from fastapi import Form
+from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
-import shepherd_core.data_models.testbed as stb
-import shepherd_core.data_models.content as scn
 from shepherd_core.data_models import Wrapper
-from shepherd_core.data_models.content.firmware import fixtures as fix_fw
 from shepherd_core.data_models.content.energy_environment import fixtures as fix_eenv
-from shepherd_core.data_models.content.virtual_source import fixtures as fix_vsrc
+from shepherd_core.data_models.content.firmware import fixtures as fix_fw
 from shepherd_core.data_models.content.virtual_harvester import fixtures as fix_vhrv
+from shepherd_core.data_models.content.virtual_source import fixtures as fix_vsrc
 from shepherd_core.data_models.testbed.cape import fixtures as fix_cape
-from shepherd_core.data_models.testbed.mcu import fixtures as fix_mcu
 from shepherd_core.data_models.testbed.gpio import fixtures as fix_gpio
+from shepherd_core.data_models.testbed.mcu import fixtures as fix_mcu
 from shepherd_core.data_models.testbed.observer import fixtures as fix_observer
 from shepherd_core.data_models.testbed.target import fixtures as fix_target
 from shepherd_core.data_models.testbed.testbed import fixtures as fix_testbed
@@ -36,7 +35,7 @@ tag_metadata = [
             "description": "**inner** workings",
             "url": "https://orgua.github.io/shepherd/user/basics.html#emulator",
         },
-    }
+    },
 ]
 
 
@@ -115,7 +114,9 @@ async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40):
 
 @app.get("/shepherd/{type_name}/item")
 async def read_item_by_id(
-    type_name: str, item_id: Optional[int] = None, item_name: Optional[str] = None
+    type_name: str,
+    item_id: Optional[int] = None,
+    item_name: Optional[str] = None,
 ):
     if type_name not in interface_items:
         raise HTTPException(status_code=404, detail="item-name not found")

@@ -8,7 +8,7 @@
   - test lists
 
 - create forms from model
-- 
+-
 
 - tests with
   - from fastapi.testclient import TestClient

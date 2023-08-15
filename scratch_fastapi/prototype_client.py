@@ -1,21 +1,18 @@
 import json
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
+from datetime import timedelta
 
 import requests
-
 from fastapi.encoders import jsonable_encoder
-from shepherd_core.data_models import (
-    Experiment,
-    VirtualHarvester,
-    TargetConfig,
-    EnergyEnvironment,
-    VirtualSource,
-    Firmware,
-)
-from shepherd_core.data_models import PowerTracing
-from shepherd_core.data_models.testbed import Testbed
 from pydantic import BaseModel
+from shepherd_core.data_models import EnergyEnvironment
+from shepherd_core.data_models import Experiment
+from shepherd_core.data_models import Firmware
+from shepherd_core.data_models import PowerTracing
+from shepherd_core.data_models import TargetConfig
+from shepherd_core.data_models import VirtualHarvesterConfig
+from shepherd_core.data_models import VirtualSourceConfig
+from shepherd_core.data_models.testbed import Testbed
 
 do_send_power = False
 do_send_exper = False
@@ -39,7 +36,7 @@ def get_data(url: str):
     )
 
 
-hrv = VirtualHarvester(name="mppt_bq_thermoelectric")
+hrv = VirtualHarvesterConfig(name="mppt_bq_thermoelectric")
 
 target_cfgs = [
     # first init similar to yaml
@@ -55,7 +52,7 @@ target_cfgs = [
         target_IDs=list(range(2001, 2005)),
         custom_IDs=list(range(7, 18)),
         energy_env=EnergyEnvironment(name="ThermoelectricWashingMachine"),
-        virtual_source=VirtualSource(name="BQ25570-Schmitt", harvester=hrv),
+        virtual_source=VirtualSourceConfig(name="BQ25570-Schmitt", harvester=hrv),
         firmware1=Firmware(name="nrf52_demo_rf"),
         firmware2=Firmware(name="msp430_deep_sleep"),
     ),

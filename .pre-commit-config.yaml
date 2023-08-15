@@ -21,7 +21,7 @@ repos:
       - id: fix-byte-order-marker
 
   - repo: https://github.com/asottile/add-trailing-comma
-    rev: v2.4.0
+    rev: v3.0.1
     hooks:
       - id: add-trailing-comma
 
@@ -31,7 +31,7 @@ repos:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
       - id: black
 
@@ -47,13 +47,13 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    rev: v3.10.1
     hooks:
       - id: pyupgrade
         args: ["--py38-plus"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
+    rev: 6.1.0
     hooks:
       - id: flake8
         additional_dependencies:
@@ -84,13 +84,13 @@ repos:
           - flake8-assertive
 
   - repo: https://github.com/ansible-community/ansible-lint.git
-    rev: v6.16.2
+    rev: v6.17.2
     hooks:
       - id: ansible-lint
         files: \.(yaml|yml)$
 
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.2.4"
+    rev: "v2.2.5"
     hooks:
       - id: codespell
         exclude: \.(sch|brd|lbr)$

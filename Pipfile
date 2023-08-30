@@ -24,7 +24,11 @@ fastapi = "*"
 uvicorn = "*"
 python-multipart = "*"
 jinja2 = "*"
-shepherd-data = "*"
+shepherd-core = {subdirectory = "shepherd_core", egg="shepherd_core", ref = "dev", git = "https://github.com/orgua/shepherd-datalib.git"}
+shepherd-data = {subdirectory = "shepherd_data", egg="shepherd_data", ref = "dev", git = "https://github.com/orgua/shepherd-datalib.git"}
+shepherd-herd = {subdirectory = "software/shepherd-herd", egg="shepherd_herd", ref = "dev", git = "https://github.com/orgua/shepherd.git"}
+setuptools = "*"
+typer = "*"
 
 [dev-packages]
 pylint = "*"

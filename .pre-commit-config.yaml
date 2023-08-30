@@ -50,7 +50,7 @@ repos:
     rev: v3.10.1
     hooks:
       - id: pyupgrade
-        args: ["--py38-plus"]
+        args: ["--py310-plus"]
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0

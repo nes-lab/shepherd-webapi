@@ -1,7 +1,8 @@
+from subprocess import Popen
 from typing import Optional
 
-import shepherd_core.data_models.content as scn
-import shepherd_core.data_models.testbed as stb
+from shepherd_core.data_models import content as shp_cnt
+from shepherd_core.data_models import testbed as shp_tb
 import uvicorn
 from fastapi import FastAPI
 from fastapi import Form
@@ -9,15 +10,7 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from shepherd_core.data_models import Wrapper
 from shepherd_core.testbed_client import tb_client
-from shepherd_core.data_models.content.firmware import fixtures as fix_fw
-from shepherd_core.data_models.content.virtual_harvester import fixtures as fix_vhrv
-from shepherd_core.data_models.content.virtual_source import fixtures as fix_vsrc
-from shepherd_core.data_models.testbed.cape import fixtures as fix_cape
-from shepherd_core.data_models.testbed.gpio import fixtures as fix_gpio
-from shepherd_core.data_models.testbed.mcu import fixtures as fix_mcu
-from shepherd_core.data_models.testbed.observer import fixtures as fix_observer
-from shepherd_core.data_models.testbed.target import fixtures as fix_target
-from shepherd_core.data_models.testbed.testbed import fixtures as fix_testbed
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 # from fastapi import Form
 
@@ -26,6 +19,8 @@ from shepherd_core.data_models.testbed.testbed import fixtures as fix_testbed
 # -> open interface http://127.0.0.1:8000
 # -> open docs      http://127.0.0.1:8000/docs
 # -> open docs      http://127.0.0.1:8000/redoc -> long load, but interactive / better
+
+use_ssl = False
 
 tag_metadata = [
     {
@@ -49,6 +44,9 @@ app = FastAPI(
     openapi_tags=tag_metadata,
 )
 
+if use_ssl:
+    app.add_middleware(HTTPSRedirectMiddleware)
+
 # @app.get("/")
 # async def root():
 #    return {"message": "Hello World - from FastApi-Server-Prototype"}
@@ -63,19 +61,19 @@ async def login(username: str = Form(), password: str = Form()):
 
 # white-list for data-models
 # TODO: implement a generator -> nicer documentation needed
-interface_items = {
+name2model = {
     # testbed-components
-    "Cape": {"model": stb.Cape, "db": tb_client.fi},
-    "GPIO": {"model": stb.GPIO, "db": fix_gpio},
-    "MCU": {"model": stb.MCU, "db": fix_mcu},
-    "Observer": {"model": stb.Observer, "db": fix_observer},
-    "Target": {"model": stb.Target, "db": fix_target},
-    "Testbed": {"model": stb.Testbed, "db": fix_testbed},
+    "Cape": shp_tb.Cape,
+    "GPIO": shp_tb.GPIO,
+    "MCU": shp_tb.MCU,
+    "Observer": shp_tb.Observer,
+    "Target": shp_tb.Target,
+    "Testbed": shp_tb.Testbed,
     # content
-    "EnergyEnvironment": {"model": scn.EnergyEnvironment, "db": fix_eenv},
-    "Firmware": {"model": scn.Firmware, "db": fix_fw},
-    "VirtualHarvesterConfig": {"model": scn.VirtualHarvesterConfig, "db": fix_vhrv},
-    "VirtualSourceConfig": {"model": scn.VirtualSourceConfig, "db": fix_vsrc},
+    "EnergyEnvironment": shp_cnt.EnergyEnvironment,
+    "Firmware": shp_cnt.Firmware,
+    "VirtualHarvesterConfig": shp_cnt.VirtualHarvesterConfig,
+    "VirtualSourceConfig": shp_cnt.VirtualSourceConfig,
 }
 
 
@@ -98,17 +96,17 @@ async def read_userdata(token: str):
 
 @app.get("/shepherd/{type_name}/ids")  # items?skip=10&limit=100
 async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40):
-    if type_name not in interface_items:
+    if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
-    elems = interface_items[type_name]["db"].elements_by_id.keys()
-    return {"message": list(elems)[skip : skip + limit]}
+    elems = tb_client.query_ids(type_name)
+    return {"message": elems[skip : skip + limit]}
 
 
 @app.get("/shepherd/{type_name}/names")  # items?skip=10&limit=100
-async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40):
-    if type_name not in interface_items:
+async def read_item_names_list(type_name: str, skip: int = 0, limit: int = 40):
+    if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
-    elems = interface_items[type_name]["db"].elements_by_name.keys()
+    elems = tb_client.query_names(type_name)
     return {"message": list(elems)[skip : skip + limit]}
 
 
@@ -118,17 +116,21 @@ async def read_item_by_id(
     item_id: Optional[int] = None,
     item_name: Optional[str] = None,
 ):
-    if type_name not in interface_items:
+    if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
-    interface = interface_items[type_name]
+
     if item_id:
-        if item_id not in interface["db"].elements_by_id:
+        try:
+            return name2model[type_name](id=item_id).dict()
+        except ValueError:
             raise HTTPException(status_code=404, detail="item-id not found")
-        return interface["model"](id=item_id).dict()
+
     elif item_name:
-        if item_name not in interface["db"].elements_by_name:
+        try:
+            return name2model[type_name](name=item_name).dict()
+        except ValueError:
             raise HTTPException(status_code=404, detail="item-name not found")
-        return interface["model"](name=item_name).dict()
+
     raise HTTPException(status_code=404, detail="neither item-id or -name provided")
 
 
@@ -138,7 +140,18 @@ async def write_item(type_name: str, item: Wrapper):
 
 
 if __name__ == "__main__":
-    uvicorn.run("prototype_server:app", reload=True)  # host="0.0.0.0")
+    uvi_args = {
+        "app": "prototype_server:app",
+        "reload": True,
+        # "host": "0.0.0.0",
+    }
+    if use_ssl:
+        uvi_args["ssl_keyfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3-key.pem"
+        uvi_args["ssl_certfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3.pem"
+        # Popen(['python', '-m', 'prototype_redirect'])
+
+    uvicorn.run(**uvi_args)
+
 
 """
 

@@ -20,7 +20,7 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 # -> open docs      http://127.0.0.1:8000/docs
 # -> open docs      http://127.0.0.1:8000/redoc -> long load, but interactive / better
 
-use_ssl = False
+use_ssl = True
 
 tag_metadata = [
     {
@@ -45,6 +45,7 @@ app = FastAPI(
 )
 
 if use_ssl:
+    # seems to work, TODO: remove prototype_redirect
     app.add_middleware(HTTPSRedirectMiddleware)
 
 # @app.get("/")
@@ -143,11 +144,12 @@ if __name__ == "__main__":
     uvi_args = {
         "app": "prototype_server:app",
         "reload": True,
-        # "host": "0.0.0.0",
+
     }
     if use_ssl:
         uvi_args["ssl_keyfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3-key.pem"
         uvi_args["ssl_certfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3.pem"
+        uvi_args["host"] = "shepherd.cfaed.tu-dresden.de"
         # Popen(['python', '-m', 'prototype_redirect'])
 
     uvicorn.run(**uvi_args)

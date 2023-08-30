@@ -24,3 +24,11 @@
     - api-documentation from fastapi
     - FAST
     - fastapi style integrated into django
+  
+# Install Dummy API
+
+cd /opt
+sudo git clone https://github.com/orgua/shepherd_webservice
+sudo cp /opt/shepherd_webservice/scratch_fastapi/shepherd-web.service /etc/systemd/system/
+sudo systemctl start shepherd-web
+sudo systemctl enable shepherd-web

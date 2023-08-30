@@ -8,6 +8,9 @@ RestartSec=1
 ExecStart=/usr/bin/python3 /opt/shepherd_webservice/scratch_fastapi/prototype_server.py
 Restart=on-failure
 
+[Install]
+WantedBy=multi-user.target
+
 # systemctl status shepherd-web
 # systemctl restart shepherd-web
 # journalctl --follow -u shepherd-web.service

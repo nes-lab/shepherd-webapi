@@ -8,7 +8,7 @@ from fastapi import Form
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from shepherd_core.data_models import Wrapper
-from shepherd_core.data_models.content.energy_environment import fixtures as fix_eenv
+from shepherd_core.testbed_client import tb_client
 from shepherd_core.data_models.content.firmware import fixtures as fix_fw
 from shepherd_core.data_models.content.virtual_harvester import fixtures as fix_vhrv
 from shepherd_core.data_models.content.virtual_source import fixtures as fix_vsrc
@@ -65,7 +65,7 @@ async def login(username: str = Form(), password: str = Form()):
 # TODO: implement a generator -> nicer documentation needed
 interface_items = {
     # testbed-components
-    "Cape": {"model": stb.Cape, "db": fix_cape},
+    "Cape": {"model": stb.Cape, "db": tb_client.fi},
     "GPIO": {"model": stb.GPIO, "db": fix_gpio},
     "MCU": {"model": stb.MCU, "db": fix_mcu},
     "Observer": {"model": stb.Observer, "db": fix_observer},

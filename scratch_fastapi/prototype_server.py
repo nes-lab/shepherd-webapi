@@ -1,4 +1,3 @@
-from subprocess import Popen
 from typing import Optional
 
 from shepherd_core.data_models import content as shp_cnt
@@ -45,7 +44,6 @@ app = FastAPI(
 )
 
 if use_ssl:
-    # seems to work, TODO: remove prototype_redirect
     app.add_middleware(HTTPSRedirectMiddleware)
 
 # @app.get("/")
@@ -150,10 +148,8 @@ if __name__ == "__main__":
         uvi_args["ssl_keyfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3-key.pem"
         uvi_args["ssl_certfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3.pem"
         uvi_args["host"] = "shepherd.cfaed.tu-dresden.de"
-        # Popen(['python', '-m', 'prototype_redirect'])
 
     uvicorn.run(**uvi_args)
-
 
 """
 

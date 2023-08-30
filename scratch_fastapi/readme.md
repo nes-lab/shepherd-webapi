@@ -28,9 +28,20 @@
 # Install Dummy API
 
 ```Shell
+sudo pip install fastapi uvicorn shepherd-core python-multipart -U
+
 cd /opt
 sudo git clone https://github.com/orgua/shepherd_webservice
 sudo cp /opt/shepherd_webservice/scratch_fastapi/shepherd-web.service /etc/systemd/system/
 sudo systemctl start shepherd-web
 sudo systemctl enable shepherd-web
+
+# check with
+sudo systemctl enable shepherd-web
 ```
+
+TODO:
+
+- create minimal user for service
+- get nfs-rigts-management straigt
+- integrate all that into python-package

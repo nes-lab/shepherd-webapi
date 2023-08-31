@@ -1,15 +1,15 @@
 from typing import Optional
 
-from shepherd_core.data_models import content as shp_cnt
-from shepherd_core.data_models import testbed as shp_tb
 import uvicorn
 from fastapi import FastAPI
 from fastapi import Form
 from fastapi import HTTPException
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from shepherd_core.data_models import Wrapper
+from shepherd_core.data_models import content as shp_cnt
+from shepherd_core.data_models import testbed as shp_tb
 from shepherd_core.testbed_client import tb_client
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 # from fastapi import Form
 
@@ -82,6 +82,7 @@ async def read_session_key():
     return {"value": b"this_will_be_a_asym_pubkey"}
 
 
+"""
 @app.get("/shepherd/user")
 async def read_userdata(token: str):
     # TODO
@@ -91,6 +92,7 @@ async def read_userdata(token: str):
         "email": "test@best.com",
         "token": token,
     }
+"""
 
 
 @app.get("/shepherd/{type_name}/ids")  # items?skip=10&limit=100
@@ -112,8 +114,8 @@ async def read_item_names_list(type_name: str, skip: int = 0, limit: int = 40):
 @app.get("/shepherd/{type_name}/item")
 async def read_item_by_id(
     type_name: str,
-    item_id: Optional[int] = None,
-    item_name: Optional[str] = None,
+    item_id: int | None = None,
+    item_name: str | None = None,
 ):
     if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
@@ -142,11 +144,11 @@ if __name__ == "__main__":
     uvi_args = {
         "app": "prototype_server:app",
         "reload": True,
-
     }
     if use_ssl:
-        uvi_args["ssl_keyfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3-key.pem"
-        uvi_args["ssl_certfile"] = "/etc/shepherd/shepherd.cfaed.tu-dresden.de+3.pem"
+        uvi_args["ssl_keyfile"] = "/etc/shepherd/ssl_private_key.pem"
+        uvi_args["ssl_certfile"] = "/etc/shepherd/ssl_certificate.pem"
+        uvi_args["ssl_ca_certs"] = "/etc/shepherd/ssl_ca_certs.pem"
         uvi_args["host"] = "shepherd.cfaed.tu-dresden.de"
 
     uvicorn.run(**uvi_args)

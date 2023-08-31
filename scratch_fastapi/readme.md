@@ -44,5 +44,5 @@ sudo journalctl -n 20 -u shepherd-web
 TODO:
 
 - create minimal user for service
-- get nfs-rigts-management straigt
+- get nfs-rigts-management straight
 - integrate all that into python-package

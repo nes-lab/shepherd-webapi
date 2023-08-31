@@ -1,5 +1,3 @@
-from typing import Optional
-
 import uvicorn
 from fastapi import FastAPI
 from fastapi import Form
@@ -143,7 +141,7 @@ async def write_item(type_name: str, item: Wrapper):
 if __name__ == "__main__":
     uvi_args = {
         "app": "prototype_server:app",
-        "reload": True,
+        "reload": False,
     }
     if use_ssl:
         uvi_args["ssl_keyfile"] = "/etc/shepherd/ssl_private_key.pem"

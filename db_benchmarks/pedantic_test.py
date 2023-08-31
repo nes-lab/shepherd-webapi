@@ -23,7 +23,7 @@ class Data(BaseModel):
 
 
 class Model(BaseModel):
-    __root__: Dict[int, Dict[int, Data]]
+    __root__: dict[int, dict[int, Data]]
 
 
 print(Model.parse_obj(sample))

@@ -22,7 +22,7 @@ VLAN with nodes
 
 Centreon warns:
 
-ICMP Timestamp Reply Information Disclosure 
+ICMP Timestamp Reply Information Disclosure
 SEVERITY: Low (2.1)
 PORT: general/icmp
 DESCR: The following response / ICMP packet has been received:
@@ -93,15 +93,15 @@ or, following [this source](https://www.cyberciti.biz/tips/linux-iptables-how-to
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
- 
+
 # Flush All Iptables Chains/Firewall rules #
 iptables -F
- 
+
 # Delete all Iptables Chains #
 iptables -X
- 
+
 # Flush all counters too #
-iptables -Z 
+iptables -Z
 # Flush and delete all nat and  mangle #
 iptables -t nat -F
 iptables -t nat -X
@@ -119,7 +119,7 @@ Domain: <shepherd.cfaed.tu-dresden.de>
 
 Start with [LetsEncrypt](https://letsencrypt.org/getting-started/)
 
-### Certbot 
+### Certbot
 
 [installation for ubuntu](https://certbot.eff.org/instructions?ws=other&os=ubuntufocal&tab=standard)
 
@@ -168,6 +168,6 @@ add arguments
 --ssl-certfile=/etc/shepherd/shepherd.cfaed.tu-dresden.de+3.pem
 ```
 
-also add http-redirect, see </scratch_fastapi> 
+also add http-redirect, see </scratch_fastapi>
 
 [try in browser](shepherd.cfaed.tu-dresden.de:8000)

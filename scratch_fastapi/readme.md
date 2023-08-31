@@ -24,7 +24,7 @@
     - api-documentation from fastapi
     - FAST
     - fastapi style integrated into django
-  
+
 # Install Dummy API
 
 ```Shell
@@ -37,7 +37,8 @@ sudo systemctl start shepherd-web
 sudo systemctl enable shepherd-web
 
 # check with
-sudo systemctl enable shepherd-web
+sudo systemctl status shepherd-web
+sudo journalctl -n 20 -u shepherd-web
 ```
 
 TODO:

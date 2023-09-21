@@ -33,7 +33,7 @@ tag_metadata = [
 
 app = FastAPI(
     title="shepherd-api",
-    version="23.06.17",
+    version="2023.09.21",
     description="The web-api for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/",
     # contact="https://github.com/orgua/shepherd",

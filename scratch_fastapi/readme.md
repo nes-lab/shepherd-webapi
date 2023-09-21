@@ -32,12 +32,18 @@ sudo pip install fastapi uvicorn shepherd-core python-multipart -U
 
 cd /opt
 sudo git clone https://github.com/orgua/shepherd_webservice
+
 sudo cp /opt/shepherd_webservice/scratch_fastapi/shepherd-web.service /etc/systemd/system/
 sudo systemctl start shepherd-web
 sudo systemctl enable shepherd-web
 
+sudo cp /opt/shepherd_webservice/scratch_fastapi/shepherd-redirect.service /etc/systemd/system/
+sudo systemctl start shepherd-redirect
+sudo systemctl enable shepherd-redirect
+
 # check with
 sudo systemctl status shepherd-web
+sudo systemctl status shepherd-redirect
 sudo journalctl -n 20 -u shepherd-web
 ```
 

@@ -142,6 +142,7 @@ if __name__ == "__main__":
     uvi_args = {
         "app": "prototype_server:app",
         "reload": False,
+        "port": 8000,
     }
     if use_ssl:
         uvi_args["ssl_keyfile"] = "/etc/shepherd/ssl_private_key.pem"

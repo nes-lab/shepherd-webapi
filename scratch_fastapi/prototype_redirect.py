@@ -23,18 +23,18 @@ if use_ssl:
 
 @app.get("/")
 async def redir():
-     return RedirectResponse("https://orgua.github.io/shepherd/external/testbed.html")
+    return RedirectResponse("https://orgua.github.io/shepherd/external/testbed.html")
 
 if __name__ == "__main__":
     uvi_args = {
         "app": "prototype_redirect:app",
         "reload": False,
         "port": 443 if use_ssl else 80,
+        "host": "shepherd.cfaed.tu-dresden.de"
     }
     if use_ssl:
         uvi_args["ssl_keyfile"] = "/etc/shepherd/ssl_private_key.pem"
         uvi_args["ssl_certfile"] = "/etc/shepherd/ssl_certificate.pem"
         uvi_args["ssl_ca_certs"] = "/etc/shepherd/ssl_ca_certs.pem"
-        uvi_args["host"] = "shepherd.cfaed.tu-dresden.de"
 
     uvicorn.run(**uvi_args)

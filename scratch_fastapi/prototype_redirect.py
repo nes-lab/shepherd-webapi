@@ -4,7 +4,6 @@ run with: python3 ./prototype_redirect.py
 """
 import uvicorn
 from fastapi import FastAPI
-
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
 
@@ -25,12 +24,13 @@ if use_ssl:
 async def redir():
     return RedirectResponse("https://orgua.github.io/shepherd/external/testbed.html")
 
+
 if __name__ == "__main__":
     uvi_args = {
         "app": "prototype_redirect:app",
         "reload": False,
         "port": 443 if use_ssl else 80,
-        "host": "shepherd.cfaed.tu-dresden.de"
+        "host": "shepherd.cfaed.tu-dresden.de",
     }
     if use_ssl:
         uvi_args["ssl_keyfile"] = "/etc/shepherd/ssl_private_key.pem"

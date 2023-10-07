@@ -13,6 +13,7 @@ from shepherd_core.data_models import TargetConfig
 from shepherd_core.data_models import VirtualHarvesterConfig
 from shepherd_core.data_models import VirtualSourceConfig
 from shepherd_core.data_models.testbed import Testbed
+from shepherd_core.logger import logger
 
 do_send_power = False
 do_send_exper = False
@@ -25,14 +26,15 @@ def post_data(mdata: BaseModel, url: str):
     # jsonable_encoder(data)    fastapi receives dict instead of Baseclass
     # data.json()               fastapi does fail to parse at all
     #                           different parser like orjson also fails
-    print(f"Will post: {mdata.dict()}")
-    response = requests.post(url, json=jsonable_encoder(mdata))
-    print(response)
+    logger.debug("Will post: %s", mdata.dict())
+    response = requests.post(url, json=jsonable_encoder(mdata), timeout=5)
+    logger.debug("  -> response: %s", response)
 
 
 def get_data(url: str):
     return requests.get(
         url,
+        timeout=5,
     )
 
 
@@ -77,4 +79,4 @@ if do_recv_testb:
     resp = get_data("http://127.0.0.1:8000/testbed/1337")
     data = json.loads(resp.text)
     tb = Testbed(**data)
-    print(tb.name)
+    logger.info("name of TB: %s", tb.name)

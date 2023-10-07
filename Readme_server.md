@@ -61,7 +61,7 @@ sudo sysctl -p
 
 [Source](https://www.golinuxcloud.com/disable-icmp-timestamp-responses-in-linux/)
 
-**Changes** (Methode 1 von vielen)
+**Changes** (Method 1 of many)
 
 ```Shell
 sudo iptables -A INPUT -p icmp --icmp-type timestamp-request -j DROP

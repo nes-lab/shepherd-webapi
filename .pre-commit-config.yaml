@@ -4,7 +4,7 @@
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -31,7 +31,7 @@ repos:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 23.9.1
+    rev: 23.10.0
     hooks:
       - id: black
 
@@ -47,7 +47,7 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.14.0
+    rev: v3.15.0
     hooks:
       - id: pyupgrade
         args: ["--py310-plus"]
@@ -84,7 +84,7 @@ repos:
           - flake8-assertive
 
   - repo: https://github.com/ansible-community/ansible-lint.git
-    rev: v6.20.3
+    rev: v6.21.0
     hooks:
       - id: ansible-lint
         files: \.(yaml|yml)$

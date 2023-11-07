@@ -17,7 +17,7 @@ Ciphers                 -arcfour*
 MACs                    -*umac-64*
 ```
 
-restart with 
+restart with
 
 ```Shell
 sudo systemctl restart sshd

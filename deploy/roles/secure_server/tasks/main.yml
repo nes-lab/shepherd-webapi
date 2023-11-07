@@ -93,7 +93,7 @@
 
 - name: INFO - check for port-listeners (look for open ports beside of SSHd)
   ansible.builtin.shell:
-    cmd: 'netstat -apn | grep LISTEN'
+    cmd: 'set -o pipefail && netstat -apn | grep LISTEN'
   changed_when: false
   register: netstat
 

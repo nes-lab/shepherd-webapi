@@ -1,6 +1,4 @@
-from pydantic import constr
 from shepherd_core.data_models.content import EnergyEnvironment as EnergyEnvironmentCore
-from shepherd_core.data_models.content import Firmware as FirmwareCore
 from shepherd_core.data_models.content import (
     VirtualHarvesterConfig as VirtualHarvesterConfigCore,
 )
@@ -9,9 +7,7 @@ from shepherd_core.data_models.content import (
 )
 from shepherd_core.data_models.testbed import GPIO as GPIOCore
 from shepherd_core.data_models.testbed import MCU as MCUCore
-from shepherd_core.data_models.testbed import Cape as CapeCore
 from shepherd_core.data_models.testbed import Observer as ObserverCore
-from shepherd_core.data_models.testbed import Target as TargetCore
 from shepherd_core.data_models.testbed import Testbed as TestbedCore
 from shepherd_core.testbed_client import tb_client
 

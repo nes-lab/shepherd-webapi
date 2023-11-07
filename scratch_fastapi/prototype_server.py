@@ -80,8 +80,7 @@ async def read_session_key():
     return {"value": b"this_will_be_a_asym_pubkey"}
 
 
-"""
-@app.get("/shepherd/user")
+@app.get("/shepherd/uuuser")
 async def read_userdata(token: str):
     # TODO
     return {
@@ -90,7 +89,6 @@ async def read_userdata(token: str):
         "email": "test@best.com",
         "token": token,
     }
-"""
 
 
 @app.get("/shepherd/{type_name}/ids")  # items?skip=10&limit=100

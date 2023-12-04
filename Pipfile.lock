@@ -502,10 +502,10 @@
         },
         "fontawesomefree": {
             "hashes": [
-                "sha256:ceaff7efc4fc39dadff3c3ff7298a7a1095403110d373f22456bb1c34ab6db02"
+                "sha256:8dec4a2ee37bf8e53379ebbf0d38cefec4e06c7c9227f59af39dbb7b1632817b"
             ],
             "index": "pypi",
-            "version": "==6.4.2"
+            "version": "==6.5.1"
         },
         "fonttools": {
             "hashes": [

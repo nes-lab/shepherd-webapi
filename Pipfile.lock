@@ -2025,11 +2025,12 @@
         },
         "pyright": {
             "hashes": [
-                "sha256:3adaf10f1f4209575dc022f9c897f7ef024639b7ea5b3cbe49302147e6949cd4",
-                "sha256:dcb13e8358e021189672c4d6ebcad192ab061e4c7225036973ec493183c6da68"
+                "sha256:132aa74d2d58d4d27a5b922672b5b4d2be7f3931e7276a2b231d15af6e45daad",
+                "sha256:28231a3c81ec738b3e1b02489eea5b67fb425a9be0717a32b2e075984623b3ff"
             ],
             "index": "pypi",
-            "version": "==1.1.334"
+            "markers": "python_version >= '3.7'",
+            "version": "==1.1.338"
         },
         "pyyaml": {
             "hashes": [
@@ -2089,11 +2090,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:4ac1475276d2f1c48684874089fefcd83bd7162ddaafb81fac866ba0db282a87",
-                "sha256:b454a35605876da60632df1a60f736524eb73cc47bbc9f3f1ef1b644de74fd2a"
+                "sha256:1e8fdff6797d3865f37397be788a4e3cba233608e9b509382a2777d25ebde7f2",
+                "sha256:735896e78a4742605974de002ac60562d286fa8051a7e2299445e8e8fbb01aa6"
             ],
-            "index": "pypi",
-            "version": "==68.2.2"
+            "markers": "python_version >= '3.8'",
+            "version": "==69.0.2"
         },
         "tomli": {
             "hashes": [

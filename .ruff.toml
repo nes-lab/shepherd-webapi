@@ -48,10 +48,14 @@ ignore = [
     "N815", # mixedCase Variables
     # TODO: reduce here:
     "ERA001", # commented-out code
-    "ANN", # type-anotations
+    "ANN001", "ANN101",
+    "ANN201", "ANN204", # type-anotations
     "INP001",  # namespace
     "ARG001",  # unused args
-
+    "DTZ00",
+    "SLF001",
+    "N811", "N999",
+    "RUF012",
 ]
 
 [lint.per-file-ignores]

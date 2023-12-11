@@ -150,50 +150,46 @@ if __name__ == "__main__":
 
     uvicorn.run(**uvi_args)
 
-"""
-
-@app.post("/emulator_set", tags=["emulator"])
-async def set_emulator(item: Emulator):
-    # async def set_emulator(item: Emulator, token: str = Depends(oauth2_scheme)):
-    if isinstance(item, dict):
-        print(f"Emulator had to be casted from dict")
-        item = Emulator.parse_obj(item)
-    print(f"Received new emulator - ipath = '{item.input_path}'")
-    return {"status": "SUCCESS", "data": item.dict()}
-
-
-@app.post("/json_set")
-async def set_json(data: Wrapper):
-    if isinstance(data, dict):
-        data = Emulator.parse_obj(data)
-    getattr("models", data.type).parse_obj(data.parameters)
-    # item = await data.json()
-    print(f"Received new json {data}")
-    item = Emulator.parse_obj(data)  # TODO: dynamic casting would be needed
-    return {"status": "SUCCESS", "data": item.dict()}
-
-
-@app.post("/virtualSource_set")
-async def set_virtual_source(item: VirtualSource):
-    print(f"Received new VirtualSource - name = '{item.name}'")
-    return item.dict()
-
-
-@app.post("/virtualHarvester_set")
-async def set_virtual_harvester(item: VirtualHarvester):
-    print(f"Received new VirtualHarvester - name = '{item.name}'")
-    return item.dict()
-
-
-@app.get("/virtualHarvester_items")
-async def read_virtual_harvester_items(skip: int = 0, limit: int = 40):
-    print(f"Request for VirtualHarvester [{skip} : {skip + limit}]")
-    return {"message": list(vharvesters.keys())[skip: skip + limit]}
-
-
-@app.get("/virtualHarvester_item/{item_id}")
-async def read_virtual_harvester_item(item_id: str):
-    print(f"Request for VirtualHarvester [{item_id}]")
-    return VirtualSource(name=item_id).dict()
-
-"""
+# @app.post("/emulator_set", tags=["emulator"])
+# async def set_emulator(item: Emulator):
+#     # async def set_emulator(item: Emulator, token: str = Depends(oauth2_scheme)):
+#     if isinstance(item, dict):
+#         print(f"Emulator had to be casted from dict")
+#         item = Emulator.parse_obj(item)
+#     print(f"Received new emulator - ipath = '{item.input_path}'")
+#     return {"status": "SUCCESS", "data": item.dict()}
+#
+#
+# @app.post("/json_set")
+# async def set_json(data: Wrapper):
+#     if isinstance(data, dict):
+#         data = Emulator.parse_obj(data)
+#     getattr("models", data.type).parse_obj(data.parameters)
+#     # item = await data.json()
+#     print(f"Received new json {data}")
+#     item = Emulator.parse_obj(data)  # TODO: dynamic casting would be needed
+#     return {"status": "SUCCESS", "data": item.dict()}
+#
+#
+# @app.post("/virtualSource_set")
+# async def set_virtual_source(item: VirtualSource):
+#     print(f"Received new VirtualSource - name = '{item.name}'")
+#     return item.dict()
+#
+#
+# @app.post("/virtualHarvester_set")
+# async def set_virtual_harvester(item: VirtualHarvester):
+#     print(f"Received new VirtualHarvester - name = '{item.name}'")
+#     return item.dict()
+#
+#
+# @app.get("/virtualHarvester_items")
+# async def read_virtual_harvester_items(skip: int = 0, limit: int = 40):
+#     print(f"Request for VirtualHarvester [{skip} : {skip + limit}]")
+#     return {"message": list(vharvesters.keys())[skip: skip + limit]}
+#
+#
+# @app.get("/virtualHarvester_item/{item_id}")
+# async def read_virtual_harvester_item(item_id: str):
+#     print(f"Request for VirtualHarvester [{item_id}]")
+#     return VirtualSource(name=item_id).dict()

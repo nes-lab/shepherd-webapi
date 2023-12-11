@@ -5,7 +5,6 @@ from pathlib import Path
 
 import h5py
 import pandas as pd
-import psycopg2
 from config_secrets import pg
 from sqlalchemy import create_engine
 
@@ -26,7 +25,7 @@ def ds_to_phys(dataset: h5py.Dataset):
 
 def extract_hdf(hdf_file: Path) -> pd.DataFrame:
     with h5py.File(hdf_file, "r") as hf:
-        data = dict()
+        data = {}
         for var in df_header[1:]:
             sig_phys = ds_to_phys(hf["data"][var])
             data[var] = sig_phys
@@ -37,10 +36,10 @@ def extract_hdf(hdf_file: Path) -> pd.DataFrame:
         data["time"] = hf["data"]["time"][:].astype(float) / 1e9
         data["current"] = data["current"][:data_len]
         data["voltage"] = data["voltage"][:data_len]
-        df = pd.DataFrame(data=data, columns=df_header, index=time_index)
-        df["time"] = df["time"].apply(lambda x: datetime.fromtimestamp(x))
+        data_df = pd.DataFrame(data=data, columns=df_header, index=time_index)
+        data_df["time"] = data_df["time"].apply(lambda x: datetime.fromtimestamp(x))
         print("HDF extracted..")
-    return df
+    return data_df
 
 
 def put_in_timescale(data: pd.DataFrame, node_id: int):
@@ -49,7 +48,7 @@ def put_in_timescale(data: pd.DataFrame, node_id: int):
     )
     data.insert(1, "node_id", node_id)
     batch_size = 1000
-    print(f"writing dataframe to database")
+    print("writing dataframe to database")
     data.to_sql(
         pg["table"],
         engine,
@@ -77,9 +76,9 @@ if __name__ == "__main__":
     print(data.iloc[0:5, :])
     time_start = time.time()
 
-    procs = list()
-    for iter in range(proc_num):
-        process = Process(target=put_in_timescale, args=(data, iter))
+    procs = []
+    for _iter in range(proc_num):
+        process = Process(target=put_in_timescale, args=(data, _iter))
         process.start()
         procs.append(process)
     print("Processes created")

@@ -45,10 +45,13 @@ select = [
 ]
 ignore = [
     "PLR2004", # magic values
+    "N815", # mixedCase Variables
     # TODO: reduce here:
     "ERA001", # commented-out code
     "ANN", # type-anotations
     "INP001",  # namespace
+    "ARG001",  # unused args
+
 ]
 
 [lint.per-file-ignores]

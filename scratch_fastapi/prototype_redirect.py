@@ -2,6 +2,7 @@
 run with: uvicorn prototype_redirect:app --reload
 run with: python3 ./prototype_redirect.py
 """
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware

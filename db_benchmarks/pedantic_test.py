@@ -1,9 +1,4 @@
-from typing import Dict
-from typing import Literal
-from typing import Union
-
 from pydantic import BaseModel
-from pydantic import StrictInt
 
 sample = {
     0: {0: {"S": "str1", "T": 4, "V": 0x3FF}, 1: {"S": "str2", "T": 5, "V": 0x2FF}},

@@ -56,13 +56,13 @@ class Harvester(models.Model):
         verbose_name="Voltage Min [mV]",
         help_text="",
         blank=True,
-        validators=voltage_valid + [MaxValueValidator(voltage_mV)],
+        validators=[*voltage_valid, MaxValueValidator(voltage_mV)],
     )
     voltage_max_mV = models.IntegerField(
         verbose_name="Voltage Max [mV]",
         help_text="",
         blank=True,
-        validators=voltage_valid + [MinValueValidator(voltage_mV)],
+        validators=[*voltage_valid, MinValueValidator(voltage_mV)],
     )
 
     current_limit_uA = models.IntegerField(

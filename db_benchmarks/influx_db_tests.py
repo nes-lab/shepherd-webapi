@@ -1,6 +1,5 @@
 import time
 from datetime import datetime
-from datetime import timedelta
 
 import pandas as pd
 from config_secrets import bucket
@@ -8,9 +7,7 @@ from config_secrets import client
 from config_secrets import org
 
 # from influxdb_client.client.bucket_api import
-from influxdb_client import InfluxDBClient
 from influxdb_client import Point
-from influxdb_client import WriteOptions
 from influxdb_client import WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.client.write_api import PointSettings
@@ -45,17 +42,15 @@ point_setting.add_default_tag("start", "210404200000")
 write_client = client.write_api(point_settings=point_setting, write_options=SYNCHRONOUS)
 
 # each point separate
-for iter in range(100):
+for _iter in range(100):
     ts = round(time.time() * 1e9)  # returns nanosecond timestamp
-    data = f"my_meas1 voltage={23 + iter/100} {ts}"  # line protocol
+    data = f"my_meas1 voltage={23 + _iter / 100} {ts}"  # line protocol
     write_client.write(bucket, org, data, write_precision=WritePrecision.NS)
 
 print(f"separate Point VarA: {data}")
 
 # alternative: use api, but previous raw should be faster
-data = (
-    Point("my_meas2").tag("location", "lab").field("voltage", 40.0).time(datetime.now())
-)
+data = Point("my_meas2").tag("location", "lab").field("voltage", 40.0).time(datetime.now())
 write_client.write(bucket, org, data, write_precision=WritePrecision.NS)
 print(f"separate Point VarB: {data}")
 

@@ -10,4 +10,4 @@ from model_Target import Target
 # - determine how to show model of -> :model:`testbed.Observer`
 
 
-__all__ = [Controller, Gpio, Observer, Target]
+__all__ = ["Controller", "Gpio", "Observer", "Target"]

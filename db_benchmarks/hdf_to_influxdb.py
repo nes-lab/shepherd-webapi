@@ -24,7 +24,7 @@ def ds_to_phys(dataset: h5py.Dataset):
 
 def extract_hdf(hdf_file: Path) -> pd.DataFrame:
     with h5py.File(hdf_file, "r") as hf:
-        data = dict()
+        data = []
         for var in df_header:
             sig_phys = ds_to_phys(hf["data"][var])
             data[var] = sig_phys
@@ -34,9 +34,9 @@ def extract_hdf(hdf_file: Path) -> pd.DataFrame:
         time_index = time_index[:data_len]
         data["current"] = data["current"][:data_len]
         data["voltage"] = data["voltage"][:data_len]
-        df = pd.DataFrame(data=data, columns=df_header, index=time_index)
+        data_df = pd.DataFrame(data=data, columns=df_header, index=time_index)
         print("HDF extracted..")
-    return df
+    return data_df
 
 
 def put_in_influx(data: pd.DataFrame, client_id: int):
@@ -57,13 +57,13 @@ def put_in_influx(data: pd.DataFrame, client_id: int):
     )  # Asynch makes no big difference
     batch_size = 50000  # link states optimum at 5k lines, https://docs.influxdata.com/influxdb/v2.0/write-data/best-practices/optimize-writes/
     sample_size = data.shape[0]
-    for iter in range(0, sample_size, batch_size):
-        iter_stop = max(iter, min(iter + batch_size, sample_size - 1))
-        print(f"writing part: id{client_id} {iter}:{iter_stop}")
+    for _iter in range(0, sample_size, batch_size):
+        _i_end = max(_iter, min(_iter + batch_size, sample_size - 1))
+        print(f"writing part: id{client_id} {_iter}:{_i_end}")
         write_client.write(
             bucket,
             org,
-            record=data.iloc[iter:iter_stop, :],
+            record=data.iloc[_iter:_i_end, :],
             data_frame_measurement_name="my_meas5",
             write_precision=WritePrecision.NS,
         )
@@ -77,7 +77,6 @@ if __name__ == "__main__":
     data = extract_hdf(Path("rec.6.h5"))
     data = data.head(sample_size)
     print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
-    print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
     print(
         f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}",
     )
@@ -85,9 +84,9 @@ if __name__ == "__main__":
 
     time_start = time.time()
 
-    procs = list()
-    for iter in range(proc_num):
-        process = Process(target=put_in_influx, args=(data, iter))
+    procs = []
+    for _iter in range(proc_num):
+        process = Process(target=put_in_influx, args=(data, _iter))
         process.start()
         procs.append(process)
     print("Processes created")

@@ -120,13 +120,13 @@ async def read_item_by_id(
         try:
             return name2model[type_name](id=item_id).dict()
         except ValueError:
-            raise HTTPException(status_code=404, detail="item-id not found")
+            raise HTTPException(status_code=404, detail="item-id not found") from None
 
     elif item_name:
         try:
             return name2model[type_name](name=item_name).dict()
         except ValueError:
-            raise HTTPException(status_code=404, detail="item-name not found")
+            raise HTTPException(status_code=404, detail="item-name not found") from None
 
     raise HTTPException(status_code=404, detail="neither item-id or -name provided")
 

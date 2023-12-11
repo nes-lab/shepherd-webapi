@@ -1,10 +1,6 @@
 from shepherd_core.data_models.content import EnergyEnvironment as EnergyEnvironmentCore
-from shepherd_core.data_models.content import (
-    VirtualHarvesterConfig as VirtualHarvesterConfigCore,
-)
-from shepherd_core.data_models.content import (
-    VirtualSourceConfig as VirtualSourceConfigCore,
-)
+from shepherd_core.data_models.content import VirtualHarvesterConfig as VirtualHarvesterConfigCore
+from shepherd_core.data_models.content import VirtualSourceConfig as VirtualSourceConfigCore
 from shepherd_core.data_models.testbed import GPIO as GPIOCore
 from shepherd_core.data_models.testbed import MCU as MCUCore
 from shepherd_core.data_models.testbed import Observer as ObserverCore

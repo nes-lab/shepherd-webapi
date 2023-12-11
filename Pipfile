@@ -31,8 +31,6 @@ setuptools = "*"
 typer = "*"
 
 [dev-packages]
-pylint = "*"
-black = "*"
 pre-commit = "*"
 pyright = "*"
 pandas-stubs = "*"  # as long as pandas has to type hints

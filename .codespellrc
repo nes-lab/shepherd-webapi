@@ -1,0 +1,10 @@
+[codespell]
+
+builtin = clear,rare,informal,usage,code,en-GB_to_en-US
+
+skip = *.svg,*.css,*.js,flocklab_template.xml
+ignore-words-list = jupyter,fram,ws,astroid,ro
+
+# options without argument
+check-filenames =
+check-hidden =

@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-shepherd-wsvr = {editable = true, extras = ["dev","test"], path = "shepherd_wsvr/."}
+shepherd-wsvr = {editable = true, extras = ["dev","test"], path = "."}
 shepherd-core = {subdirectory = "shepherd_core", egg="shepherd_core", ref = "dev", git = "https://github.com/orgua/shepherd-datalib.git"}
 shepherd-data = {subdirectory = "shepherd_data", egg="shepherd_data", ref = "dev", git = "https://github.com/orgua/shepherd-datalib.git"}
 shepherd-herd = {subdirectory = "software/shepherd-herd", egg="shepherd_herd", ref = "dev", git = "https://github.com/orgua/shepherd.git"}

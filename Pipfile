@@ -4,36 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
-pandas = "*"
-h5py = "*"
-pyyaml = "*"
-django-crispy-forms = "*"
-django-tables2 = "*"
-crispy-bootstrap5 = "*"
-# under-test:
-social-auth-app-django = "*"
-fontawesomefree = "<7.0"
-psycopg2-binary = "*"
-dash-bootstrap-components = "*"
-sqlalchemy = "*"
-flask = "*"
-influxdb-client = "*"
-docutils = "*"
-fastapi = "*"
-uvicorn = "*"
-python-multipart = "*"
-jinja2 = "*"
+shepherd-wsvr = {editable = true, extras = ["dev","test"], path = "shepherd_wsvr/."}
 shepherd-core = {subdirectory = "shepherd_core", egg="shepherd_core", ref = "dev", git = "https://github.com/orgua/shepherd-datalib.git"}
 shepherd-data = {subdirectory = "shepherd_data", egg="shepherd_data", ref = "dev", git = "https://github.com/orgua/shepherd-datalib.git"}
 shepherd-herd = {subdirectory = "software/shepherd-herd", egg="shepherd_herd", ref = "dev", git = "https://github.com/orgua/shepherd.git"}
-setuptools = "*"
-typer = "*"
 
 [dev-packages]
-pre-commit = "*"
-pyright = "*"
-pandas-stubs = "*"  # as long as pandas has to type hints
 
 [pipenv]
 allow_prereleases = false

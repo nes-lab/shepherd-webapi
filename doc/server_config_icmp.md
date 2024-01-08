@@ -1,26 +1,8 @@
-# Testbed Setup
-
-## constraints
-
-Server
-
-- needs access to large datastorage with > 50 MB/s read/write speed
-- internet-access (port 80, 443)
-- ssh access (port 22) from outside and VLAN
-- ptp (port 319, 320)
-
-VLAN with nodes
-
-- internet-access (port 80, 443)
-- ssh access (port 22) from outside and VLAN
-- ptp (port 319, 320)
-
-
-## ICMP-Warnings
+# ICMP Config to avoid Warnings
 
 **Problem**
 
-Centreon warns:
+Server-Monitoring-Service warns:
 
 ICMP Timestamp Reply Information Disclosure
 SEVERITY: Low (2.1)
@@ -29,8 +11,9 @@ DESCR: The following response / ICMP packet has been received:
 - ICMP Type: 14
 - ICMP Code: 0
 
+Below are some attempts to fix this - but all failed so far.
 
-### Abschaltung des ICMP-Systems
+## Disable ICMP-System
 
 [Source](https://askubuntu.com/questions/1182407/icmp-is-not-getting-disabled)
 
@@ -110,64 +93,3 @@ iptables -t mangle -X
 iptables -t raw -F
 iptables -t raw -X
 ```
-
-## SSL / HTTPs for FastApi
-
-Fastapi has [documentation about https](https://fastapi.tiangolo.com/deployment/https/)
-
-Domain: <shepherd.cfaed.tu-dresden.de>
-
-Start with [LetsEncrypt](https://letsencrypt.org/getting-started/)
-
-### Certbot
-
-[installation for ubuntu](https://certbot.eff.org/instructions?ws=other&os=ubuntufocal&tab=standard)
-
-**fails**: needs accessible port 80
-
-```Shell
-# pre-reqs
-sudo apt install snapd
-# cleanup
-sudo apt remove certbot
-# install
-sudo snap install --classic certbot
-# test
-sudo ln -s /snap/bin/certbot /usr/bin/certbot
-# spin webserver and get certificate (needs domain-name & email-address)
-sudo certbot certonly --standalone
-sudo certbot certonly --webroot
-```
-
-### Self-signed SSL with mkcert
-
-```Shell
-# prereqs
-sudo apt install libnss3-tools mkcert
-
-mkcert -install
-cd /etc/shepherd/
-mkcert shepherd.cfaed.tu-dresden.de localhost 127.0.0.1 ::1
-```
-
-profiles (valid 2+ years) now at
-
-```Shell
-/etc/shepherd/shepherd.cfaed.tu-dresden.de+3-key.pem
-/etc/shepherd/shepherd.cfaed.tu-dresden.de+3.pem
-```
-
-### Uvicorn + fastApi
-
-<https://www.uvicorn.org/deployment/#running-with-https>
-
-add arguments
-
-```Shell
---ssl-keyfile=/etc/shepherd/shepherd.cfaed.tu-dresden.de+3-key.pem
---ssl-certfile=/etc/shepherd/shepherd.cfaed.tu-dresden.de+3.pem
-```
-
-also add http-redirect, see </scratch_fastapi>
-
-[try in browser](shepherd.cfaed.tu-dresden.de:8000)

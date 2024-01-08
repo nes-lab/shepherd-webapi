@@ -2,12 +2,83 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "shepherd_wsrv"
+description = "Web-Server & -API for the Shepherd-Testbed"
+keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "solar"]
+
+authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
+maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
+
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+dynamic = ["version"]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Natural Language :: English"
+]
+
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "pyaml",
+    "fastapi",
+    "typer[all]",
+    "uvicorn[standard]",
+    "python-multipart",
+    "pydantic[email]",
+    "shepherd_core==2023.12.1",
+#   "shepherd_herd", # TODO
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pyright",
+    "pandas-stubs",  # for pyright with pandas
+    # as long as pandas has to type hints
+]
+test = [
+    "pytest",
+    "pytest-click",
+    "coverage",
+]
+
+[project.urls]
+Documentation = "https://github.com/orgua/shepherd_webservice/blob/main/README.md"
+Issues = "https://github.com/orgua/shepherd_webservice/issues"
+Source = "https://github.com/orgua/shepherd_webservice"
+
+[project.scripts]
+shepherd-wsrv = "shepherd_wsrv.cli:cli"
+
+[tool.setuptools]
+packages = ["shepherd_wsrv"]
+platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
+zip-safe = true
+
+[tool.setuptools.dynamic]
+version = {attr = "shepherd_wsrv.__version__"}
+
 [tool.pyright]
 root = "./"
-include = ['./sratch_models',]
+include = ['./sratch_models',]  # TODO
 pythonVersion = "3.10"
 pythonPlatform = "All"
 reportMissingParameterType = true
 
-# TODO: switch fully to this config: https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
-# TODO: build a light version with basic support for reading, writing (only libs that run on beaglebone)
+[tool.pytest.ini_options]
+addopts = ["-vvv"]
+
+[tool.coverage.run]
+source = ["shepherd_wsrv"]
+# TODO: add something like "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"

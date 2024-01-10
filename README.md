@@ -82,12 +82,26 @@ Internally the webservices utilizes the [herd-lib](https://pypi.org/project/shep
 
 ## install
 
-tbd
+- set up a local MongoDB instance
+- install package
+- config .env, by either bringing in a backup or starting fresh
+  - backup: repopulate database by using ´shepherd_wsrv init file´
+  - fresh start: generate a [fresh salt](./scripts/salt_generator.py) and initialize database with `shepherd_wsrv init`
 
 ## run server
 
-tbd
+```Shell
+shepherd_wsrv run
+```
+
+or to switch to the offline-mode activate the redirect to the docs
+
+```Shell
+shepherd_wsrv redirect
+```
 
 ## save state
 
-tbd
+```Shell
+shepherd_wsrv backup file_name
+```

@@ -1,1 +1,3 @@
-__version__ = "24.1.1"
+from .version import __version__
+
+__all__ = ["__version__"]

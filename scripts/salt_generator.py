@@ -10,6 +10,6 @@ target = 'SALT="'
 start = env.find(target) + len(target)
 prefix, postfix = env[:start], env[start:]
 end = postfix.find('"')
-output = prefix + str(bcrypt.gensalt())[2:-1] + postfix[end:]
+output = prefix + str(bcrypt.gensalt()) + postfix[end:]
 with path_env.open("w") as out:
     out.write(output)

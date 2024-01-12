@@ -18,6 +18,9 @@ class Cfg(BaseModel):
     ssl_keyfile: Path = Path("/etc/shepherd/ssl_private_key.pem")
     ssl_certfile: Path = Path("/etc/shepherd/ssl_certificate.pem")
     ssl_ca_certs: Path = Path("/etc/shepherd/ssl_ca_certs.pem")
+    # user auth
+    auth_salt: str = config("SALT", default="and_pepper")  # will raise if missing default
+
     # api redirect
     redirect_url: str = "https://orgua.github.io/shepherd/external/testbed.html"
 

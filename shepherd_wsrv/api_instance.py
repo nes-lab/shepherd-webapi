@@ -41,7 +41,7 @@ app = FastAPI(
     title="shepherd-api",
     version=str(__version__),
     description="The web-api for the shepherd-testbed for energy harvesting CPS",
-    redoc_url="/",
+    redoc_url="/doc",
     # contact="https://github.com/orgua/shepherd",
     docs_url=None,
     openapi_tags=tag_metadata,
@@ -64,7 +64,7 @@ app.add_middleware(
 
 
 app.include_router(auth_router)
-app.include_router(testbed_router)
+#app.include_router(testbed_router)
 app.include_router(user_router)
 app.include_router(product_router)
 

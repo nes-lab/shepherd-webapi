@@ -1,10 +1,13 @@
 """User models."""
 
 from datetime import datetime
+from hashlib import sha512, sha3_512
 from typing import Annotated, Any, Optional
 
 from beanie import Document, Indexed
 from pydantic import BaseModel, EmailStr
+
+from shepherd_wsrv.config import CFG
 
 
 class UserAuth(BaseModel):
@@ -27,9 +30,10 @@ class UserUpdate(BaseModel):
 class UserOut(UserUpdate):
     """User fields returned to the client."""
 
+    disabled: bool = True
     email: Annotated[str, Indexed(EmailStr, unique=True)]
-    disabled: bool = False
     group: str = ""  # TODO: will come later
+    role: str | None = None  # TODO: enum? user, group_admin, sys_admin
 
 
 class User(Document, UserOut):
@@ -45,9 +49,6 @@ class User(Document, UserOut):
     def __str__(self) -> str:
         return self.email
 
-    def __hash__(self) -> int:
-        return hash(self.email)
-
     def __eq__(self, other: object) -> bool:
         if isinstance(other, User):
             return self.email == other.email
@@ -59,7 +60,7 @@ class User(Document, UserOut):
         return self.id.generation_time if self.id else None
 
     @property
-    def jwt_subject(self) -> dict[str, Any]:
+    def subject(self) -> dict[str, Any]:
         """JWT subject fields."""
         return {"username": self.email}
 

@@ -1,13 +1,10 @@
 """User models."""
 
 from datetime import datetime
-from hashlib import sha512, sha3_512
 from typing import Annotated, Any, Optional
 
 from beanie import Document, Indexed
 from pydantic import BaseModel, EmailStr
-
-from shepherd_wsrv.config import CFG
 
 
 class UserAuth(BaseModel):
@@ -42,6 +39,8 @@ class User(Document, UserOut):
     password: str
     email_confirmed_at: datetime | None = None
     group_confirmed_at: datetime | None = None
+    token_verification: str | None = None
+    token_pw_reset: str | None = None
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
@@ -65,9 +64,19 @@ class User(Document, UserOut):
         return {"username": self.email}
 
     @classmethod
-    async def by_email(cls, email: str) -> Optional["User"]:
+    async def by_email(cls, email: Optional[str]) -> Optional["User"]:
         """Get a user by email."""
+        if email is None:
+            return None
         return await cls.find_one(cls.email == email)
+
+    @classmethod
+    async def by_verification_token(cls, token: str) -> Optional["User"]:
+        return await cls.find_one(cls.token_verification == token)
+
+    @classmethod
+    async def by_reset_token(cls, token: str) -> Optional["User"]:
+        return await cls.find_one(cls.token_pw_reset == token)
 
     def update_email(self, new_email: str) -> None:
         """Update email logging and replace."""

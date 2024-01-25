@@ -8,11 +8,11 @@ from typing import Optional
 
 import typer
 
-from .logger import log, set_verbosity
 from .api_instance import run as web_api_run
+from .db_instance import db_insert_test
+from .logger import log
+from .logger import set_verbosity
 from .redirect_instance import run as web_redirect_run
-from .db_instance import db_init, db_insert_test
-
 
 cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
 
@@ -24,7 +24,7 @@ def exit_gracefully(_signum: int, _frame: FrameType | None) -> None:
 
 @cli.callback()
 def cli_callback(verbose: bool = False) -> None:
-    """ enable verbosity and add exit-handlers
+    """enable verbosity and add exit-handlers
     this gets executed prior to the other sub-commands"""
     signal.signal(signal.SIGTERM, exit_gracefully)
     signal.signal(signal.SIGINT, exit_gracefully)
@@ -57,8 +57,8 @@ def run() -> None:
     """default functionality with web api, frontend and demons / schedulers to coordinate the testbed"""
     with ProcessPoolExecutor() as ppe:
         ppe.submit(web_api_run)
-        #"web_ui": asyncio.create_task(web_frontend_run()),
-    # TODO: starts frontent, api, other demons?
+        # "web_ui": asyncio.create_task(web_frontend_run()),
+    # TODO: starts frontend, api, other demons?
     # TODO: interface for observers
     # TODO: scheduler, job-handler
 

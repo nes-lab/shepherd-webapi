@@ -32,7 +32,7 @@ def run() -> None:
         "app": f"{run.__module__}:app",
         "reload": False,
         "port": 443 if CFG.ssl_enabled else 80,
-        "host": CFG.host_url,
+        "host": CFG.root_url,
     }
     if CFG.ssl_enabled:
         uvi_args["ssl_keyfile"] = CFG.ssl_keyfile.as_posix()

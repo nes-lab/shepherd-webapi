@@ -1,15 +1,15 @@
 from contextlib import asynccontextmanager
 
-from motor.motor_asyncio import AsyncIOMotorClient
-
 from beanie import init_beanie
 from fastapi import FastAPI
+from motor.motor_asyncio import AsyncIOMotorClient
 from shepherd_core import local_now
 from typing_extensions import deprecated
 
-from .data_models.auth import calculate_hash
-from .data_models.product import Product, Category
-from .data_models.user import User
+from .api_user.models import User
+from .api_user.utils import calculate_password_hash
+from .data_models.product import Category
+from .data_models.product import Product
 
 
 @deprecated("use context-manager instead")
@@ -36,8 +36,8 @@ async def db_insert_test():
 
     # add temporary super-user -> NOTE: NOT SECURE
     admin = User(
-        email="admin@admin.org",
-        password=calculate_hash("admin"),
+        email="alter_Verwalter@admin.org",
+        password=calculate_password_hash("""So-@khY"pdM_P/GK--='G?3Bsqg;WC,QuSQH=DCKL4"""),
         role="admin",
         disabled=False,
         email_confirmed_at=local_now(),
@@ -45,12 +45,15 @@ async def db_insert_test():
     )
     await User.insert_one(admin)
 
-    chocolate = Category(name="Chocolate", description="A preparation of roasted and ground cacao seeds.")
+    chocolate = Category(
+        name="Chocolate",
+        description="A preparation of roasted and ground cacao seeds.",
+    )
     tonybar = Product(name="Tony's", price=5.95, category=chocolate)
     marsbar = Product(name="Mars", price=1, category=chocolate)
 
-    #await tonybar.insert()
-    #await Product.insert_one(marsbar)
+    # await tonybar.insert()
+    # await Product.insert_one(marsbar)
 
     result = await Product.find(Product.price < 2).to_list()
     # _ = Product.find(In(Product.category.name, ["Chocolate", "Fruits"])).to_list()
@@ -61,9 +64,9 @@ async def db_insert_test():
     # TODO: filtering is awesome! https://beanie-odm.dev/tutorial/finding-documents/
     print(result)
 
-    #await Product.find(Product.name == "Mars").set(Product.price >= 1)
-    #await Product.find(Product.name == "Tony's").delete()
-    #await Product.find(Product.name == "Tony's").upsert() -> when nothing found insert new one
+    # await Product.find(Product.name == "Mars").set(Product.price >= 1)
+    # await Product.find(Product.name == "Tony's").delete()
+    # await Product.find(Product.name == "Tony's").upsert() -> when nothing found insert new one
 
 
 # TODO: dump to file, restore from it - can beanie or motor do it?

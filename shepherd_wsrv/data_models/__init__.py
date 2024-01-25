@@ -1,4 +1,4 @@
-from .product import Category, Product
-from .user import User
+from .product import Category
+from .product import Product
 
-__all__ = ["User", "Product", "Category"]
+__all__ = ["Product", "Category"]

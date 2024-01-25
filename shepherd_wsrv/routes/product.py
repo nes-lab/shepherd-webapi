@@ -1,25 +1,23 @@
-from fastapi import APIRouter, Depends
-from fastui import FastUI, AnyComponent, components as cs, prebuilt_html
-from fastui.components.display import DisplayLookup
-from fastui.events import GoToEvent, BackEvent
+from fastapi import APIRouter
+from fastapi import Depends
+from fastui import prebuilt_html
 from starlette.responses import HTMLResponse
 
+from shepherd_wsrv.api_user.utils import current_active_user
 from shepherd_wsrv.data_models.product import Product
-from shepherd_wsrv.routes.auth import oauth2_scheme
 
 router = APIRouter(prefix="/product", tags=["Product"])
 
 
-@router.get("/items")
-async def read_products(token: str = Depends(oauth2_scheme)):
+@router.get("/items", dependencies=[Depends(current_active_user)])
+async def read_products():
     # TODO
-    #products = await Product.find(Product.price > 0).to_list()
+    # products = await Product.find(Product.price > 0).to_list()
     products = await Product.find().to_list()
-    #products_j = [_p.model_dump_json() for _p in products]
-    #Product().model_dump_json()
-    return {"token": token,
-        "value": products,
-            }
+    # products_j = [_p.model_dump_json() for _p in products]
+    # Product().model_dump_json()
+    return {"value": products}
+
 
 """
 @router.get("/witems", response_model=FastUI, response_model_exclude=None)
@@ -59,8 +57,7 @@ async def get_product(product_id: str) -> list[AnyComponent]:
 """
 
 
-@router.get('/{path:path}')
+@router.get("/{path:path}")
 async def html_landing() -> HTMLResponse:
     """Simple HTML page which serves the React app, comes last as it matches all paths."""
-    return HTMLResponse(prebuilt_html(title='FastUI Demo'))
-
+    return HTMLResponse(prebuilt_html(title="FastUI Demo"))

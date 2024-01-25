@@ -4,19 +4,17 @@ Software Interface ie. shepherd_data.testbed_client
 """
 import uvicorn
 from fastapi import FastAPI
-
 from starlette.middleware.cors import CORSMiddleware
-
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from .routes.auth import router as auth_router
-#from .routes.mail import router as MailRouter
-#from .routes.register import router as RegisterRouter
-from .routes.user import router as user_router
-from .routes.product import router as product_router
-from .routes.testbed import router as testbed_router
+from .api_auth.routes import router as auth_router
+
+# from .routes.mail import router as MailRouter
+# from .routes.register import router as RegisterRouter
+from .api_user.routes import router as user_router
 from .config import CFG
 from .db_instance import db_context
+from .routes.product import router as product_router
 from .version import __version__
 
 # run with: uvicorn shepherd_wsrv.webapi:app --reload
@@ -43,7 +41,7 @@ app = FastAPI(
     description="The web-api for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/doc",
     # contact="https://github.com/orgua/shepherd",
-    docs_url=None,
+    docs_url="/doc0",  # None,  # this one allows login
     openapi_tags=tag_metadata,
     lifespan=db_context,
 )
@@ -64,7 +62,7 @@ app.add_middleware(
 
 
 app.include_router(auth_router)
-#app.include_router(testbed_router)
+# app.include_router(testbed_router)
 app.include_router(user_router)
 app.include_router(product_router)
 
@@ -80,7 +78,7 @@ def run() -> None:
         "app": f"{run.__module__}:app",
         "reload": False,
         "port": 8000,
-        "host": CFG.host_url,
+        "host": CFG.root_url,
     }
     if CFG.ssl_enabled:
         uvi_args["ssl_keyfile"] = CFG.ssl_keyfile.as_posix()

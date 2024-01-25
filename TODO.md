@@ -17,3 +17,20 @@
 - OneToOneField does not appear in form
 - even cleaner form from model? `editable` is there
 - dark mode toggle?
+
+
+- observer-status & management
+  - is online
+  - last relative timedelta
+  - software versions
+- schedule & control
+  - users hand in jobs
+  - observers ask for something to do
+  -
+- postprocessing and download
+- user-management
+  - register, but unlocked by admin
+  - user can change pw & delete account
+- contend
+  - (re-) index and use / serve
+  -

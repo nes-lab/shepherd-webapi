@@ -1,6 +1,6 @@
 # Django TODO
 
-Keept in here for the time beeing - because 2nd half has thoughts about datastructures.
+Kept in here for the time being - because 2nd half has thoughts about datastructures.
 
 ## Short-term
 
@@ -59,7 +59,7 @@ Alternative Bases:
   - Param, https://param.holoviz.org/
     - Param for django https://pypi.org/project/django-param/
   - Pydantic, https://pydantic-docs.helpmanual.io/
-- 
+-
 
 
 ## Data-Structures

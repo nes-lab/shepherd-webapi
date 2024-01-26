@@ -1,8 +1,7 @@
 """Generate a new bcrypt password salt and updates to local .env file."""
-from datetime import datetime
 from hashlib import sha3_512
 from pathlib import Path
-import bcrypt
+
 from shepherd_core.data_models.base.timezone import local_iso_date
 
 path_project = Path(__file__).parent.parent

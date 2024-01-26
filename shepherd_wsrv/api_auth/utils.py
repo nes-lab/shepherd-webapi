@@ -1,8 +1,14 @@
-from datetime import timedelta, datetime, timezone
-from jose import JWTError, jwt
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+
+from fastapi import HTTPException
+from fastapi import status
+from jose import JWTError
+from jose import jwt
 
 from shepherd_wsrv.config import CFG
-from fastapi import HTTPException, status
+
 from .models import AccessToken
 
 
@@ -28,6 +34,6 @@ def decode_access_token(token: str) -> str:
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+    except JWTError as xpt:
+        raise credentials_exception from xpt
     return username

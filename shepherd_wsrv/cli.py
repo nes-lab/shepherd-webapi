@@ -4,7 +4,6 @@ import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from types import FrameType
-from typing import Optional
 
 import typer
 
@@ -38,7 +37,7 @@ def redirect() -> None:
 
 
 @cli.command()
-def init(file: Optional[Path] = None) -> None:
+def init(file: Path | None = None) -> None:
     """creates structures in database, can also recover data from a backup"""
     # asyncio.run(db_init())
     asyncio.run(db_insert_test())
@@ -46,7 +45,7 @@ def init(file: Optional[Path] = None) -> None:
 
 
 @cli.command()
-def backup(file: Optional[Path] = None) -> None:
+def backup(file: Path | None = None) -> None:
     """dumps content of database to a file"""
     # TODO implement
     # TODO: also dump default config or keep it in DB?
@@ -54,7 +53,8 @@ def backup(file: Optional[Path] = None) -> None:
 
 @cli.command()
 def run() -> None:
-    """default functionality with web api, frontend and demons / schedulers to coordinate the testbed"""
+    """default functionality with web api, frontend and demons / schedulers
+    to coordinate the testbed"""
     with ProcessPoolExecutor() as ppe:
         ppe.submit(web_api_run)
         # "web_ui": asyncio.create_task(web_frontend_run()),

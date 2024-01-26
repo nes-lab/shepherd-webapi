@@ -1,12 +1,15 @@
 import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+
+from shepherd_wsrv.api_user.models import User
+from shepherd_wsrv.api_user.utils import verify_password_hash
 
 from .models import AccessToken
 from .utils import create_access_token
-from shepherd_wsrv.api_user.utils import verify_password_hash
-from shepherd_wsrv.api_user.models import User
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

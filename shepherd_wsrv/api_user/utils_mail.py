@@ -1,6 +1,9 @@
 """Mail server config."""
 
-from fastapi_mail import FastMail, ConnectionConfig, MessageSchema, MessageType
+from fastapi_mail import ConnectionConfig
+from fastapi_mail import FastMail
+from fastapi_mail import MessageSchema
+from fastapi_mail import MessageType
 
 from shepherd_wsrv.config import CFG
 
@@ -28,7 +31,8 @@ async def send_verification_email(email: str, token: str) -> None:
         message = MessageSchema(
             recipients=[email],
             subject="Shepherd Testbed Email Verification",
-            body=f"Welcome to the Shepherd Testbed! We just need to verify your email to begin: {_url}",
+            body="Welcome to the Shepherd Testbed! "
+            f"We just need to verify your email to begin: {_url}",
             subtype=MessageType.plain,
         )
         await mail.send_message(message)
@@ -44,7 +48,8 @@ async def send_password_reset_email(email: str, token: str) -> None:
         message = MessageSchema(
             recipients=[email],
             subject="Shepherd Testbed Password Reset",
-            body=f"Click the link to reset your Shepherd Testbed account password: {_url}\nIf you did not request this, please ignore this email",
+            body="Click the link to reset your Shepherd Testbed account password: "
+            f"{_url}\nIf you did not request this, please ignore this email",
             subtype=MessageType.plain,
         )
         await mail.send_message(message)

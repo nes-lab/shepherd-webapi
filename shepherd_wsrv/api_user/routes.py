@@ -1,12 +1,22 @@
 import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Body
+from fastapi import APIRouter
+from fastapi import Body
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Response
 from pydantic import EmailStr
 from shepherd_core import local_now
 
-from .models import UserOut, User, UserUpdate, UserAuth
-from .utils import current_active_user, calculate_password_hash, calculate_hash
-from .utils_mail import send_password_reset_email, send_verification_email
+from .models import User
+from .models import UserAuth
+from .models import UserOut
+from .models import UserUpdate
+from .utils import calculate_hash
+from .utils import calculate_password_hash
+from .utils import current_active_user
+from .utils_mail import send_password_reset_email
+from .utils_mail import send_verification_email
 
 router = APIRouter(prefix="/user", tags=["User"])
 
@@ -14,6 +24,7 @@ router = APIRouter(prefix="/user", tags=["User"])
 # ###############################################################
 # Own Data Access
 # ###############################################################
+
 
 @router.get("", response_model=UserOut)
 async def user_info(user: User = Depends(current_active_user)):
@@ -24,11 +35,11 @@ async def user_info(user: User = Depends(current_active_user)):
 async def update_user(update: UserUpdate, user: User = Depends(current_active_user)):
     """Update allowed user fields."""
     fields = update.model_dump(exclude_unset=True)
-    if new_email := fields.pop("email", None):
-        if new_email is not None and new_email != user.email:
-            if await User.by_email(new_email) is not None:
-                raise HTTPException(400, "Email already exists")
-            user.update_email(new_email)
+    new_email = fields.pop("email", None)
+    if isinstance(new_email, str) and new_email != user.email:
+        if await User.by_email(new_email) is not None:
+            raise HTTPException(400, "Email already exists")
+        user.update_email(new_email)
     user = user.model_copy(update=fields)
     await user.save()
     return user
@@ -36,7 +47,7 @@ async def update_user(update: UserUpdate, user: User = Depends(current_active_us
 
 @router.delete("")
 async def delete_user(
-    user: User = Depends(current_active_user)
+    user: User = Depends(current_active_user),
 ) -> Response:
     """Delete current user."""
     await User.find_one(User.email == user.email).delete()
@@ -60,7 +71,12 @@ async def user_registration(user_auth: UserAuth):
     pw_hash = calculate_password_hash(user_auth.password)
     token_verification = calculate_hash(user_auth.email + str(local_now()))[:10]
     await send_verification_email(user_auth.email, token_verification)
-    user = User(email=user_auth.email, password=pw_hash, token_verification=token_verification, disabled=True)
+    user = User(
+        email=user_auth.email,
+        password=pw_hash,
+        token_verification=token_verification,
+        disabled=True,
+    )
     await user.create()
     return user
 
@@ -102,9 +118,10 @@ async def reset_password(token: str, password: str = embed):
 # Verification
 # ###############################################################
 
+
 @router.post("/verify")
 async def request_verification_email(
-    email: EmailStr = embed
+    email: EmailStr = embed,
 ) -> Response:
     """Send the user a verification email."""
     # TODO: should come right after registration
@@ -138,4 +155,3 @@ async def verify_email(token: str) -> Response:
     user.token_verification = None
     await user.save()
     return Response(status_code=200)
-

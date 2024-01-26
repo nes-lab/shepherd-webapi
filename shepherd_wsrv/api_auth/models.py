@@ -19,4 +19,3 @@ class RefreshToken(AccessToken):
     refresh_token: str
     token_type: str
     refresh_token_expires: timedelta = timedelta(days=30)
-

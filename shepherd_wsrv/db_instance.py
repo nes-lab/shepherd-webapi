@@ -49,8 +49,9 @@ async def db_insert_test():
         name="Chocolate",
         description="A preparation of roasted and ground cacao seeds.",
     )
-    tonybar = Product(name="Tony's", price=5.95, category=chocolate)
-    marsbar = Product(name="Mars", price=1, category=chocolate)
+    # TODO: remove eval-code
+    # tonybar = Product(name="Tony's", price=5.95, category=chocolate)
+    # marsbar = Product(name="Mars", price=1, category=chocolate)
 
     # await tonybar.insert()
     # await Product.insert_one(marsbar)

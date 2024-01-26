@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "shepherd_wsrv"
 description = "Web-Server & -API for the Shepherd-Testbed"
@@ -68,6 +64,10 @@ Source = "https://github.com/orgua/shepherd_webservice"
 
 [project.scripts]
 shepherd-wsrv = "shepherd_wsrv.cli:cli"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]

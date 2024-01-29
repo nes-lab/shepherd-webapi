@@ -1,17 +1,25 @@
 """
 Software Interface ie. shepherd_data.testbed_client
 
+small excurse into what HTTP-Verb to use:
+- create -> POST
+- read -> GET
+- replace -> PUT
+- partial modification -> PATCH
+- delete -> DELETE
+
+
 """
 import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from .api_auth.routes import router as auth_router
+from .api_auth import router as auth_router
 
 # from .routes.mail import router as MailRouter
 # from .routes.register import router as RegisterRouter
-from .api_user.routes import router as user_router
+from .api_user import router as user_router
 from .config import CFG
 from .db_instance import db_context
 from .routes.product import router as product_router

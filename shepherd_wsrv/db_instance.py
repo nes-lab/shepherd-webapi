@@ -1,38 +1,39 @@
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from beanie import init_beanie
 from fastapi import FastAPI
+from motor.core import AgnosticDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
 from shepherd_core import local_now
 from typing_extensions import deprecated
 
+from .api_experiment.models import ExperimentDB
 from .api_user.models import User
-from .api_user.utils import calculate_password_hash
+from .api_user.utils_misc import calculate_password_hash
 from .data_models.product import Category
 from .data_models.product import Product
 
 
-@deprecated("use context-manager instead")
-async def db_init():
+async def db_client() -> AgnosticDatabase:
     """Call this from within your event loop to get beanie setup."""
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     # Note: if ".shp" does not exist, it will be created
-    await init_beanie(database=client.shp, document_models=[Product, User])
+    await init_beanie(database=client.shp, document_models=[Product, User, ExperimentDB])
+    return client.shp
 
 
 @asynccontextmanager
 async def db_context(app: FastAPI):
     """Initialize application services."""
-    # Note: if ".shp" does not exist, it will be created
-    app.db = AsyncIOMotorClient("mongodb://localhost:27017").shp
-    await init_beanie(app.db, document_models=[Product, User])
+    app.db = await db_client()
     print("DB-Startup complete")
     yield
     print("DB-Shutdown complete")
 
 
 async def db_insert_test():
-    await db_init()
+    await db_client()
 
     # add temporary super-user -> NOTE: NOT SECURE
     admin = User(

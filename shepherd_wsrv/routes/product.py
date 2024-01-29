@@ -3,7 +3,7 @@ from fastapi import Depends
 from fastui import prebuilt_html
 from starlette.responses import HTMLResponse
 
-from shepherd_wsrv.api_user.utils import current_active_user
+from shepherd_wsrv.api_user.utils_misc import current_active_user
 from shepherd_wsrv.data_models.product import Product
 
 router = APIRouter(prefix="/product", tags=["Product"])

@@ -2,6 +2,8 @@
 
 [![QA-Tests](https://github.com/orgua/shepherd_webservice/actions/workflows/qa_tests.yml/badge.svg)](https://github.com/orgua/shepherd_webservice/actions/workflows/qa_tests.yml)
 
+**Testbed-WebAPI**: <https://shepherd.cfaed.tu-dresden.de:8000>
+
 **Documentation**: <https://orgua.github.io/shepherd/external/shepherd_webservice.html>
 
 **Source Code**: <https://github.com/orgua/shepherd-webservice>
@@ -10,7 +12,7 @@
 
 ---
 
-The Webservice links the user to the testbed. It's written in Python and uses FastAPI to expose an interface to the internet. You can write your own tools or just use the tb-client integrated in the [Core-Datalib](https://pypi.org/project/shepherd_core).
+The Webservice links the user to the testbed. It's written in Python and uses FastAPI to expose an interface to the internet. You can write your own tools or just use the testbed-client integrated in the [Core-Datalib](https://pypi.org/project/shepherd_core).
 
 Internally the webservices utilizes the [herd-lib](https://pypi.org/project/shepherd_herd) to access the shepherd observers. Handling of data is done with Pydantic-Models that store the actual data in a database.
 
@@ -22,6 +24,11 @@ Internally the webservices utilizes the [herd-lib](https://pypi.org/project/shep
   - bring demo-application online
   - add [https to FastAPI](https://fastapi.tiangolo.com/deployment/https/)
 - TODO: allow service to start with reduced rights -> get nfs in order (access needs elevation)
+
+[API-Website](http://127.0.0.1:8000/)
+[ReDoc](http://127.0.0.1:8000/doc)
+[OpenApiDoc](http://127.0.0.1:8000/doc0)
+
 
 ----
 

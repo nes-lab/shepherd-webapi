@@ -18,19 +18,25 @@
 - even cleaner form from model? `editable` is there
 - dark mode toggle?
 
-
+- Measurement-Campaign
+  - validate & add
+  - activate / enqueue
+  - status: present, inactive, scheduled, active, postprocessing, finished
+  - download
+- scheduler
+  - observers ask for something to do
+  - enqueue-list gets worked on
+  - status: current queue length -
+  - delete data older than XYZ
 - observer-status & management
-  - is online
+  - status: is online, ready to work
   - last relative timedelta
   - software versions
-- schedule & control
-  - users hand in jobs
-  - observers ask for something to do
-  -
-- postprocessing and download
 - user-management
   - register, but unlocked by admin
   - user can change pw & delete account
 - contend
   - (re-) index and use / serve
   -
+
+Try: https://github.com/fastapi-users/fastapi-users

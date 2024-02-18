@@ -5,13 +5,14 @@ from typing import Annotated
 from typing import Any
 from typing import Optional
 
-from shepherd_core.data_models.base.content import id_default, IdInt
-from typing_extensions import Self
-
 from beanie import Document
 from beanie import Indexed
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import Field
+from shepherd_core.data_models.base.content import IdInt
+from shepherd_core.data_models.base.content import id_default
+from typing_extensions import Self
 
 
 class UserAuth(BaseModel):
@@ -42,10 +43,9 @@ class UserOut(UserUpdate):
 
 class User(Document, UserOut):
     """User DB representation."""
-    id: Annotated[IdInt, Indexed(IdInt, unique=True)] = Field(
-        description="Unique ID",
-        default_factory=id_default,
-    )
+
+    # id: UUID4 = Field(default_factory=uuid4)
+
     password: str
     email_confirmed_at: datetime | None = None
     group_confirmed_at: datetime | None = None

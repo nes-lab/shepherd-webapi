@@ -1,12 +1,10 @@
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from beanie import init_beanie
 from fastapi import FastAPI
 from motor.core import AgnosticDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
 from shepherd_core import local_now
-from typing_extensions import deprecated
 
 from .api_experiment.models import ExperimentDB
 from .api_user.models import User
@@ -19,7 +17,7 @@ async def db_client() -> AgnosticDatabase:
     """Call this from within your event loop to get beanie setup."""
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     # Note: if ".shp" does not exist, it will be created
-    await init_beanie(database=client.shp, document_models=[Product, User, ExperimentDB])
+    await init_beanie(database=client.shp, document_models=[User, ExperimentDB])
     return client.shp
 
 

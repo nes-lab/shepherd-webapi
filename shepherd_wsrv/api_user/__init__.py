@@ -12,11 +12,11 @@ from .models import User
 from .models import UserAuth
 from .models import UserOut
 from .models import UserUpdate
+from .utils_mail import send_password_reset_email
+from .utils_mail import send_verification_email
 from .utils_misc import calculate_hash
 from .utils_misc import calculate_password_hash
 from .utils_misc import current_active_user
-from .utils_mail import send_password_reset_email
-from .utils_mail import send_verification_email
 
 router = APIRouter(prefix="/user", tags=["User"])
 

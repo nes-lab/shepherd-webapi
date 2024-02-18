@@ -37,7 +37,8 @@ def redirect() -> None:
 
 
 @cli.command()
-def init(file: Path | None = None) -> None:
+# def init(file: Path | None = None) -> None:
+def init() -> None:
     """creates structures in database, can also recover data from a backup"""
     # asyncio.run(db_init())
     asyncio.run(db_insert_test())
@@ -45,7 +46,8 @@ def init(file: Path | None = None) -> None:
 
 
 @cli.command()
-def backup(file: Path | None = None) -> None:
+# def backup(file: Path | None = None) -> None:
+def backup() -> None:
     """dumps content of database to a file"""
     # TODO implement
     # TODO: also dump default config or keep it in DB?

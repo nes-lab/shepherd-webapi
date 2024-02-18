@@ -20,6 +20,7 @@ from .api_auth import router as auth_router
 # from .routes.mail import router as MailRouter
 # from .routes.register import router as RegisterRouter
 from .api_user import router as user_router
+from .api_experiment import router as xp_router
 from .config import CFG
 from .db_instance import db_context
 from .routes.product import router as product_router
@@ -72,7 +73,7 @@ app.add_middleware(
 app.include_router(auth_router)
 # app.include_router(testbed_router)
 app.include_router(user_router)
-app.include_router(product_router)
+app.include_router(xp_router)
 
 
 @app.get("/")

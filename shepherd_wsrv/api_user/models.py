@@ -9,9 +9,6 @@ from beanie import Document
 from beanie import Indexed
 from pydantic import BaseModel
 from pydantic import EmailStr
-from pydantic import Field
-from shepherd_core.data_models.base.content import IdInt
-from shepherd_core.data_models.base.content import id_default
 from typing_extensions import Self
 
 

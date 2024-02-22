@@ -1,21 +1,17 @@
-from importlib import import_module
 from pathlib import Path
-from typing import Optional
 from typing import TypedDict
-from typing import Union
 
 from pydantic import validate_call
+from shepherd_core.data_models.base.shepherd import ShpModel
+from shepherd_core.data_models.base.wrapper import Wrapper
 from typing_extensions import Self
 from typing_extensions import Unpack
 
-from shepherd_core.data_models.base.shepherd import ShpModel
-from shepherd_core.data_models.base.wrapper import Wrapper
-
 
 class DBClient:
-    _instance: Optional[Self] = None
+    _instance: Self | None = None
 
-    def __init__(self, server: Optional[str] = None, token: Union[str, Path, None] = None) -> None:
+    def __init__(self, server: str | None = None, token: str | Path | None = None) -> None:
         if server is not None:
             raise ValueError("Server not applicable for the DB-Client")
         if token is not None:
@@ -31,7 +27,7 @@ class DBClient:
         DBClient._instance = None
 
     @validate_call
-    def connect(self, server: Optional[str] = None, token: Union[str, Path, None] = None) -> bool:
+    def connect(self, server: str | None = None, token: str | Path | None = None) -> bool:
         """
         server: either "local" to use demo-fixtures or something like "https://HOST:PORT"
         token: your account validation
@@ -61,7 +57,10 @@ class DBClient:
         return list(self._fixtures[model_type].elements_by_name.keys())
 
     def query_item(
-        self, model_type: str, uid: Optional[int] = None, name: Optional[str] = None
+        self,
+        model_type: str,
+        uid: int | None = None,
+        name: str | None = None,
     ) -> dict:
         if self._connected:
             raise RuntimeError("Not Implemented, TODO")

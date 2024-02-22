@@ -1,12 +1,11 @@
 from enum import Enum
-from typing import Annotated, Optional
 from uuid import uuid4
 
-from beanie import Indexed
-from pydantic import Field, BaseModel, UUID4
-from shepherd_core.data_models import Experiment
-from shepherd_core.data_models.base.content import IdInt, id_default
 from beanie import Document
+from pydantic import UUID4
+from pydantic import BaseModel
+from pydantic import Field
+from shepherd_core.data_models import Experiment
 
 from shepherd_wsrv.api_user import User
 
@@ -30,13 +29,12 @@ class ExperimentShort(BaseModel):
 
 class ExperimentDB(Document, Experiment):
     id: UUID4 = Field(default_factory=uuid4)
-    #uid: Annotated[int, Field(ge=0, lt=2**128, default_factory=id_default), Indexed(unique=True)]
+    # uid: Annotated[int, Field(ge=0, lt=2**128, default_factory=id_default), Indexed(unique=True)]
 
     status: StatusXP = StatusXP.inactive
 
     # TODO: temporary bugfixing
     # owner_id: Optional[IdInt] = None
-
 
     @classmethod
     async def activate(cls, xp_id: int, user: User) -> bool:

@@ -2,7 +2,6 @@ import asyncio
 import signal
 import sys
 from concurrent.futures import ProcessPoolExecutor
-from pathlib import Path
 from types import FrameType
 
 import typer

@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
+from fastapi import Depends
 from shepherd_core.data_models import Experiment
 
 from shepherd_wsrv.api_experiment.models import ExperimentDB
@@ -41,5 +42,3 @@ async def get_experiment(xp_id: int, user: Annotated[User, Depends(current_activ
 async def delete_experiment(xp_id: int, user: Annotated[User, Depends(current_active_user)]):
     result = await ExperimentDB.set_to_delete(xp_id, user)
     return {"successful": result}
-
-

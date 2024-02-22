@@ -4,7 +4,7 @@
 
 **Testbed-WebAPI**: <https://shepherd.cfaed.tu-dresden.de:8000>
 
-**Documentation**: <https://orgua.github.io/shepherd/external/shepherd_webservice.html>
+**Main Documentation**: <https://orgua.github.io/shepherd>
 
 **Source Code**: <https://github.com/orgua/shepherd-webservice>
 

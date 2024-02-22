@@ -16,14 +16,13 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from .api_auth import router as auth_router
+from .api_experiment import router as xp_router
 
 # from .routes.mail import router as MailRouter
 # from .routes.register import router as RegisterRouter
 from .api_user import router as user_router
-from .api_experiment import router as xp_router
 from .config import CFG
 from .db_instance import db_context
-from .routes.product import router as product_router
 from .version import __version__
 
 # run with: uvicorn shepherd_wsrv.webapi:app --reload

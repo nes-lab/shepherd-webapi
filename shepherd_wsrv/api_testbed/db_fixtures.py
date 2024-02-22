@@ -1,14 +1,9 @@
 import copy
-import os
 import pickle
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
 
 import yaml
 from pydantic import validate_call
@@ -33,8 +28,8 @@ class Fixture:
 
     def __init__(self, model_type: str) -> None:
         self.model_type: str = model_type.lower()
-        self.elements_by_name: Dict[str, dict] = {}
-        self.elements_by_id: Dict[int, dict] = {}
+        self.elements_by_name: dict[str, dict] = {}
+        self.elements_by_id: dict[int, dict] = {}
         # Iterator reset
         self._iter_index: int = 0
         self._iter_list: list = list(self.elements_by_name.values())
@@ -55,7 +50,7 @@ class Fixture:
         # update iterator
         self._iter_list: list = list(self.elements_by_name.values())
 
-    def __getitem__(self, key: Union[str, int]) -> dict:
+    def __getitem__(self, key: str | int) -> dict:
         if isinstance(key, str):
             key = key.lower()
             if key in self.elements_by_name:
@@ -77,13 +72,13 @@ class Fixture:
             return member
         raise StopIteration
 
-    def keys(self):  # noqa: ANN201
+    def keys(self):
         return self.elements_by_name.keys()
 
     def refs(self) -> dict:
         return {_i["id"]: _i["name"] for _i in self.elements_by_id.values()}
 
-    def inheritance(self, values: dict, chain: Optional[list] = None) -> (dict, list):
+    def inheritance(self, values: dict, chain: list | None = None) -> (dict, list):
         if chain is None:
             chain = []
         values = copy.copy(values)
@@ -169,12 +164,12 @@ class Fixtures:
     suffix = ".yaml"
 
     @validate_call
-    def __init__(self, file_path: Optional[Path] = None, *, reset: bool = False) -> None:
+    def __init__(self, file_path: Path | None = None, *, reset: bool = False) -> None:
         if file_path is None:
             self.file_path = Path(__file__).parent.parent.resolve() / "data_models"
         else:
             self.file_path = file_path
-        self.components: Dict[str, Fixture] = {}
+        self.components: dict[str, Fixture] = {}
         save_path = cache_user_path / "fixtures.pickle"
 
         if save_path.exists() and not file_older_than(save_path, timedelta(hours=24)) and not reset:
@@ -219,7 +214,7 @@ class Fixtures:
             return self.components[key]
         raise ValueError(f"Component '{key}' not found!")
 
-    def keys(self):  # noqa: ANN201
+    def keys(self):
         return self.components.keys()
 
     @staticmethod

@@ -23,7 +23,7 @@ if use_ssl:
 
 @app.get("/")
 async def redir():
-    return RedirectResponse("https://orgua.github.io/shepherd/external/testbed.html")
+    return RedirectResponse("https://orgua.github.io/shepherd/testbed/instance_tud.html")
 
 
 if __name__ == "__main__":

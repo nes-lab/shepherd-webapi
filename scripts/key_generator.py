@@ -1,4 +1,5 @@
 """Generate a new bcrypt password salt and updates to local .env file."""
+
 from hashlib import sha3_512
 from pathlib import Path
 

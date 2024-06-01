@@ -38,7 +38,7 @@ dependencies = [
     "python-secrets",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd_core==2024.4.2",
+    "shepherd_core==2024.5.1",
     "python-decouple",
 #   "shepherd_herd", # TODO
 ]

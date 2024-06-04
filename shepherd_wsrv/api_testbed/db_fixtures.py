@@ -3,16 +3,17 @@ import pickle
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
-from typing import Any
 
 import yaml
 from pydantic import validate_call
+from shepherd.shepherd.software.time_sync_analyzer.sync_analysis.filesystem import get_files
 from typing_extensions import Self
 
-from ..data_models.base.timezone import local_now
-from ..data_models.base.timezone import local_tz
-from ..data_models.base.wrapper import Wrapper
-from ..logger import logger
+from shepherd_wsrv.data_models.base.timezone import local_now
+from shepherd_wsrv.data_models.base.timezone import local_tz
+from shepherd_wsrv.data_models.base.wrapper import Wrapper
+from shepherd_wsrv.logger import logger
+
 from .cache_path import cache_user_path
 
 # Proposed field-name:
@@ -65,7 +66,7 @@ class Fixture:
         self._iter_list = list(self.elements_by_name.values())
         return self
 
-    def __next__(self) -> Any:
+    def __next__(self):
         if self._iter_index < len(self._iter_list):
             member = self._iter_list[self._iter_index]
             self._iter_index += 1

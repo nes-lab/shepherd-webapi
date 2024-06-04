@@ -7,6 +7,8 @@ from shepherd_core.data_models.base.wrapper import Wrapper
 from typing_extensions import Self
 from typing_extensions import Unpack
 
+from shepherd_wsrv.api_user.models import User
+
 
 class DBClient:
     _instance: Self | None = None
@@ -27,7 +29,7 @@ class DBClient:
         DBClient._instance = None
 
     @validate_call
-    def connect(self, server: str | None = None, token: str | Path | None = None) -> bool:
+    def connect(self, _server: str | None = None, _token: str | Path | None = None) -> bool:
         """
         server: either "local" to use demo-fixtures or something like "https://HOST:PORT"
         token: your account validation
@@ -123,6 +125,3 @@ class DBClient:
             values["group"] = "unknown"
 
         return values
-
-
-tb_client = TestbedClient()

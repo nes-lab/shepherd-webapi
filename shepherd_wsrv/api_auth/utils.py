@@ -18,7 +18,7 @@ def create_access_token(username: str, expires_delta: timedelta = timedelta(days
     to_encode.update({"exp": expire})
     return AccessToken(
         access_token=jwt.encode(to_encode, CFG.secret_key, algorithm="HS256"),
-        token_type="bearer",
+        token_type="bearer",  # noqa: S106, not a secret
         access_token_expires=expires_delta,
     )
 

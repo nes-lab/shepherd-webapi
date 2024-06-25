@@ -28,10 +28,10 @@ from influxdb_client.client.write_api import PointSettings
 # TODO: try asynchronous, but don't forget to flush
 
 
-### Creating a bucket
+# Creating a bucket
 
 
-### Writing
+# Writing
 
 # take load off, this can also come from a toml-file
 point_setting = PointSettings()

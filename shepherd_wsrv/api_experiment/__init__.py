@@ -5,7 +5,7 @@ from fastapi import Depends
 from shepherd_core.data_models import Experiment
 
 from shepherd_wsrv.api_experiment.models import ExperimentDB
-from shepherd_wsrv.api_user import User
+from shepherd_wsrv.api_user.models import User
 from shepherd_wsrv.api_user.utils_misc import current_active_user
 
 router = APIRouter(prefix="/experiment", tags=["Experiment"])

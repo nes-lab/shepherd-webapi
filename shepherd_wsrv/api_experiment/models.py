@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from shepherd_core.data_models import Experiment
 
-from shepherd_wsrv.api_user import User
+from shepherd_wsrv.api_user.models import User
 
 
 class StatusXP(int, Enum):

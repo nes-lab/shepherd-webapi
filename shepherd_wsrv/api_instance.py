@@ -16,12 +16,12 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from shepherd_wsrv.api_auth import router as auth_router
+from shepherd_wsrv.api_auth.router import router as auth_router
 from shepherd_wsrv.api_experiment import router as xp_router
 
 # from shepherd_wsrv.routes.mail import router as MailRouter
 # from shepherd_wsrv.routes.register import router as RegisterRouter
-from shepherd_wsrv.api_user import router as user_router
+from shepherd_wsrv.api_user.router import router as user_router
 from shepherd_wsrv.config import CFG
 from shepherd_wsrv.db_instance import db_context
 from shepherd_wsrv.version import __version__

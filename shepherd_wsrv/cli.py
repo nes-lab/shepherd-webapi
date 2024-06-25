@@ -6,11 +6,11 @@ from types import FrameType
 
 import typer
 
-from .api_instance import run as web_api_run
-from .db_instance import db_insert_test
-from .logger import log
-from .logger import set_verbosity
-from .redirect_instance import run as web_redirect_run
+from shepherd_wsrv.api_instance import run as web_api_run
+from shepherd_wsrv.db_instance import db_insert_test
+from shepherd_wsrv.logger import log
+from shepherd_wsrv.logger import set_verbosity
+from shepherd_wsrv.redirect_instance import run as web_redirect_run
 
 cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
 

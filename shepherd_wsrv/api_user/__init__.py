@@ -6,16 +6,16 @@ from fastapi import Response
 from pydantic import EmailStr
 from shepherd_core import local_now
 
-from .models import User
-from .models import UserAuth
-from .models import UserOut
-from .models import UserUpdate
-from .utils_mail import MailEngine
-from .utils_mail import mail_engine
-from .utils_misc import active_user_is_admin
-from .utils_misc import calculate_hash
-from .utils_misc import calculate_password_hash
-from .utils_misc import current_active_user
+from shepherd_wsrv.api_user.models import User
+from shepherd_wsrv.api_user.models import UserAuth
+from shepherd_wsrv.api_user.models import UserOut
+from shepherd_wsrv.api_user.models import UserUpdate
+from shepherd_wsrv.api_user.utils_mail import MailEngine
+from shepherd_wsrv.api_user.utils_mail import mail_engine
+from shepherd_wsrv.api_user.utils_misc import active_user_is_admin
+from shepherd_wsrv.api_user.utils_misc import calculate_hash
+from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
+from shepherd_wsrv.api_user.utils_misc import current_active_user
 
 router = APIRouter(prefix="/user", tags=["User"])
 

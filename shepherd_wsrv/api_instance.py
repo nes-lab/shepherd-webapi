@@ -16,15 +16,15 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from .api_auth import router as auth_router
-from .api_experiment import router as xp_router
+from shepherd_wsrv.api_auth import router as auth_router
+from shepherd_wsrv.api_experiment import router as xp_router
 
-# from .routes.mail import router as MailRouter
-# from .routes.register import router as RegisterRouter
-from .api_user import router as user_router
-from .config import CFG
-from .db_instance import db_context
-from .version import __version__
+# from shepherd_wsrv.routes.mail import router as MailRouter
+# from shepherd_wsrv.routes.register import router as RegisterRouter
+from shepherd_wsrv.api_user import router as user_router
+from shepherd_wsrv.config import CFG
+from shepherd_wsrv.db_instance import db_context
+from shepherd_wsrv.version import __version__
 
 # run with: uvicorn shepherd_wsrv.webapi:app --reload
 # -> open interface http://127.0.0.1:8000

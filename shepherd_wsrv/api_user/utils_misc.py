@@ -57,3 +57,8 @@ async def current_active_user(user: User = Depends(current_user)) -> User:
     if user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
+
+
+def active_user_is_admin(user: User = Depends(current_user)) -> None:
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")

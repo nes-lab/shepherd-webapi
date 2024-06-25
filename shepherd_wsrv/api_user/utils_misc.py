@@ -44,7 +44,6 @@ async def query_user(token: str | None = Depends(oauth2_scheme)) -> User | None:
 async def current_user(token: str | None = Depends(oauth2_scheme)) -> User:
     _user = await query_user(token)
     if not _user:
-        await asyncio.sleep(1)  # rate limit
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",

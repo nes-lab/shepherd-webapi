@@ -92,7 +92,6 @@ async def forgot_password(
     mail_engine: MailEngine = Depends(mail_engine),
 ) -> Response:
     """Send password reset email."""
-    await asyncio.sleep(1)  # rate limit
     user = await User.by_email(email)
     if user is None:
         raise HTTPException(404, "No user found with that email")
@@ -109,7 +108,6 @@ async def forgot_password(
 @router.post("/reset-password/{token}", response_model=UserOut)
 async def reset_password(token: str, password: str = embed):
     """Reset user password from token value."""
-    await asyncio.sleep(1)  # rate limit
     user = await User.by_reset_token(token)
     if user is None:
         raise HTTPException(404, "No user found with that email")
@@ -134,7 +132,6 @@ async def request_verification_email(
 ) -> Response:
     """Send the user a verification email."""
     # TODO: should come right after registration
-    await asyncio.sleep(1)  # rate limit
     user = await User.by_email(email)
     if user is None:
         raise HTTPException(404, "No user found with that email")
@@ -153,10 +150,8 @@ async def verify_email(token: str) -> Response:
     """Verify the user's email with the supplied token."""
     user = await User.by_verification_token(token)
     if user is None:
-        await asyncio.sleep(1)  # rate limit
         raise HTTPException(404, "Token not found")
     if user.email_confirmed_at is not None:
-        await asyncio.sleep(1)  # rate limit
         raise HTTPException(400, "Email is already verified")
     # if user.disabled:
     #     raise HTTPException(400, "Your account is disabled")

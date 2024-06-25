@@ -1,4 +1,3 @@
-import asyncio
 from hashlib import sha3_512
 
 from fastapi import Depends

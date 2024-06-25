@@ -82,7 +82,7 @@ def test_login_with_wrong_password_is_rejected(client: TestClient):
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 401
 
 
 def test_login_rejects_non_existing_user(client: TestClient):
@@ -94,7 +94,7 @@ def test_login_rejects_non_existing_user(client: TestClient):
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 401
 
 
 def test_login_rejects_if_mail_is_unconfirmed(client: TestClient):
@@ -106,7 +106,7 @@ def test_login_rejects_if_mail_is_unconfirmed(client: TestClient):
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 401
 
 
 def test_login_rejects_disabled_user(client: TestClient):
@@ -118,4 +118,4 @@ def test_login_rejects_disabled_user(client: TestClient):
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 401

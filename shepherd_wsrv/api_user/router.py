@@ -90,9 +90,7 @@ async def forgot_password(
     """Send password reset email."""
     user = await User.by_email(email)
     if user is None:
-        raise HTTPException(404, "No user found with that email")
-    if user.disabled:
-        raise HTTPException(400, "Your account is disabled")
+        return Response(status_code=200)
     user.token_pw_reset = calculate_hash(user.email + str(local_now()))[:10]
     await mail_engine.send_password_reset_email(email, user.token_pw_reset)
     await user.save()

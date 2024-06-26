@@ -115,5 +115,25 @@ def test_email_verification_process(
     assert login_response.status_code == 200
 
 
-# TODO return code on reset password should always be 200, so it does not leak email information
+def test_forgot_password_endpoint_yields_success_for_invalid_email(
+    client: TestClient,
+):
+    forgot_response = client.post(
+        "/user/forgot-password",
+        json={"email": "non-existing-user@test.com"},
+    )
+    assert forgot_response.status_code == 200
+
+
+def test_forgot_password_endpoint_yields_success_for_disabled_account(
+    client: TestClient,
+):
+    """Regression test motivated by previously existing issue."""
+    forgot_response = client.post(
+        "/user/forgot-password",
+        json={"email": "disabled@test.com"},
+    )
+    assert forgot_response.status_code == 200
+
+
 # TODO Reset password return codes are similarly questionable

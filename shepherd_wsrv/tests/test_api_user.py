@@ -53,6 +53,21 @@ def test_admin_can_register_user(
     mail_engine_mock.send_verification_email.assert_called_once()
 
 
+def test_register_user_rejects_duplicate_email(
+    authenticated_admin_client: TestClient,
+    mail_engine_mock,
+):
+    response = authenticated_admin_client.post(
+        "/user/register",
+        json={
+            "email": "user@test.com",
+            "password": "new_pw",
+        },
+    )
+    assert response.status_code == 409
+    mail_engine_mock.send_verification_email.assert_not_called()
+
+
 def test_forgot_password_process(
     client: TestClient,
     mail_engine_mock,

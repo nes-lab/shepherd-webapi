@@ -86,5 +86,34 @@ def test_forgot_password_process(
     assert login_response.status_code == 200
 
 
+def test_email_verification_process(
+    client: TestClient,
+    mail_engine_mock,
+):
+    verify_request_response = client.post(
+        "/user/verify",
+        json={"email": "unconfirmed_mail@test.com"},
+    )
+    assert verify_request_response.status_code == 200
+
+    mail_engine_mock.send_verification_email.assert_called_once()
+    _, token = mail_engine_mock.send_verification_email.call_args.args
+
+    verification_response = client.post(
+        f"/user/verify/{token}",
+    )
+    assert verification_response.status_code == 200
+
+    login_response = client.post(
+        "/auth/token",
+        data={
+            "username": "unconfirmed_mail@test.com",
+            "password": "password",
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert login_response.status_code == 200
+
+
 # TODO return code on reset password should always be 200, so it does not leak email information
 # TODO Reset password return codes are similarly questionable

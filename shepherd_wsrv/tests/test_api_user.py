@@ -57,6 +57,16 @@ def test_forgot_password_process(
     client: TestClient,
     mail_engine_mock,
 ):
+    login_response = client.post(
+        "/auth/token",
+        data={
+            "username": "user@test.com",
+            "password": "forgotten-password",
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert login_response.status_code == 401
+
     forgot_response = client.post(
         "/user/forgot-password",
         json={"email": "user@test.com"},
@@ -115,25 +125,38 @@ def test_email_verification_process(
     assert login_response.status_code == 200
 
 
-def test_forgot_password_endpoint_yields_success_for_invalid_email(
+def test_forgot_password_endpoint_returns_success_for_invalid_email(
     client: TestClient,
 ):
-    forgot_response = client.post(
+    response = client.post(
         "/user/forgot-password",
         json={"email": "non-existing-user@test.com"},
     )
-    assert forgot_response.status_code == 200
+    assert response.status_code == 200
 
 
-def test_forgot_password_endpoint_yields_success_for_disabled_account(
+def test_forgot_password_endpoint_returns_success_for_disabled_account(
     client: TestClient,
 ):
     """Regression test motivated by previously existing issue."""
-    forgot_response = client.post(
+    response = client.post(
         "/user/forgot-password",
         json={"email": "disabled@test.com"},
     )
-    assert forgot_response.status_code == 200
+    assert response.status_code == 200
+
+
+def test_invalid_password_reset_tokens_return_error(
+    client: TestClient,
+):
+    response = client.post(
+        "/user/reset-password",
+        json={
+            "token": "some-invalid-token",
+            "password": "new-password",
+        },
+    )
+    assert response.status_code == 404
 
 
 # TODO Reset password return codes are similarly questionable

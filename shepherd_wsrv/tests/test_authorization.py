@@ -23,11 +23,12 @@ def test_access_token_unlocks_authenticated_endpoints(client: TestClient):
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    response = client.get(
+    assert response.status_code == 200
+    response2 = client.get(
         "/user",
         headers={"Authorization": f"Bearer {response.json()["access_token"]}"},
     )
-    assert response.status_code == 200
+    assert response2.status_code == 200
 
 
 def test_login_with_wrong_password_is_rejected(client: TestClient):

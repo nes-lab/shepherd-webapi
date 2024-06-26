@@ -161,7 +161,7 @@ def test_forgot_password_endpoint_returns_success_for_disabled_account(
     assert response.status_code == 200
 
 
-def test_invalid_password_reset_tokens_return_error(
+def test_invalid_password_reset_token_returns_error(
     client: TestClient,
 ):
     response = client.post(
@@ -170,6 +170,15 @@ def test_invalid_password_reset_tokens_return_error(
             "token": "some-invalid-token",
             "password": "new-password",
         },
+    )
+    assert response.status_code == 404
+
+
+def test_invalid_email_verification_token_returns_error(
+    client: TestClient,
+):
+    response = client.post(
+        "/user/verify/some-invalid-token",
     )
     assert response.status_code == 404
 

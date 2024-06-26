@@ -124,14 +124,11 @@ async def request_verification_email(
     mail_engine: MailEngine = Depends(mail_engine),
 ) -> Response:
     """Send the user a verification email."""
-    # TODO: should come right after registration
     user = await User.by_email(email)
     if user is None:
         raise HTTPException(404, "No user found with that email")
     if user.email_confirmed_at is not None:
-        raise HTTPException(400, "Email is already verified")
-    # if user.disabled:
-    #     raise HTTPException(400, "Your account is disabled")
+        raise HTTPException(409, "Email is already verified")
     user.token_verification = calculate_hash(user.email + str(local_now()))[:10]
     await mail_engine.send_verification_email(email, user.token_verification)
     await user.save()
@@ -145,9 +142,9 @@ async def verify_email(token: str) -> Response:
     if user is None:
         raise HTTPException(404, "Token not found")
     if user.email_confirmed_at is not None:
-        raise HTTPException(400, "Email is already verified")
-    # if user.disabled:
-    #     raise HTTPException(400, "Your account is disabled")
+        # This should never happen,
+        # because no verification token can be generated for verified accounts
+        raise HTTPException(412, "Email is already verified")
     user.email_confirmed_at = local_now()
     user.token_verification = None
     await user.save()

@@ -20,4 +20,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     if _user.email_confirmed_at is None:
         raise HTTPException(status_code=401, detail="Email is not yet verified")
+    if _user.disabled:
+        raise HTTPException(status_code=401, detail="Account is disabled")
     return create_access_token(_user.email)

@@ -1,15 +1,19 @@
 from datetime import datetime
+from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 
 from shepherd_wsrv.api_instance import app
 from shepherd_wsrv.api_user.models import User
+from shepherd_wsrv.api_user.utils_mail import MailEngine
+from shepherd_wsrv.api_user.utils_mail import mail_engine
 from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
 from shepherd_wsrv.db_instance import db_client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def database_for_tests():
     await db_client()
 
@@ -27,6 +31,11 @@ async def database_for_tests():
     working_user = user.model_copy(deep=True)
     await User.insert_one(working_user)
 
+    admin_user = user.model_copy(deep=True)
+    admin_user.email = "admin@test.com"
+    admin_user.role = "admin"
+    await User.insert_one(admin_user)
+
     unconfirmed_user = user.model_copy(deep=True)
     unconfirmed_user.email = "unconfirmed_mail@test.com"
     unconfirmed_user.email_confirmed_at = None
@@ -39,7 +48,7 @@ async def database_for_tests():
 
 
 @pytest.fixture
-def client(database_for_tests):
+def client(database_for_tests: None):
     with TestClient(app) as client:
         yield client
 
@@ -60,3 +69,32 @@ def authenticated_client(client: TestClient):
     client.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
 
     return client
+
+
+@pytest.fixture
+def authenticated_admin_client(client: TestClient):
+    response = client.post(
+        "/auth/token",
+        data={
+            "username": "admin@test.com",
+            "password": "password",
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert response.status_code == 200
+    client.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
+
+    return client
+
+
+class MockMailEngine(MailEngine):
+    def __init__(self):
+        self.send_verification_email = AsyncMock()
+        self.send_password_reset_email = AsyncMock()
+
+
+@pytest.fixture
+def mail_engine_mock():
+    mock = MockMailEngine()
+    app.dependency_overrides[mail_engine] = lambda: mock
+    return mock

@@ -1,11 +1,4 @@
-from unittest.mock import AsyncMock
-
-import pytest
 from fastapi.testclient import TestClient
-
-from shepherd_wsrv.api_instance import app
-from shepherd_wsrv.api_user.utils_mail import MailEngine
-from shepherd_wsrv.api_user.utils_mail import mail_engine
 
 
 def test_create_user_endpoint_requires_authentication(client: TestClient):
@@ -19,22 +12,8 @@ def test_create_user_endpoint_requires_authentication(client: TestClient):
     assert response.status_code == 401
 
 
-class MockMailEngine(MailEngine):
-    def __init__(self):
-        self.send_verification_email = AsyncMock()
-        self.send_password_reset_email = AsyncMock()
-
-
-@pytest.fixture
-def mail_engine_mock():
-    mock = MockMailEngine()
-    app.dependency_overrides[mail_engine] = lambda: mock
-    return mock
-
-
 def test_unprivileged_user_cannot_create_new_users(
     authenticated_client: TestClient,
-    mail_engine_mock,
 ):
     response = authenticated_client.post(
         "/user/register",
@@ -57,3 +36,55 @@ def test_user_can_query_account_data(authenticated_client: TestClient):
 def test_user_account_data_endpoint_is_authenticated(client: TestClient):
     response = client.get("/user")
     assert response.status_code == 401
+
+
+def test_admin_can_register_user(
+    authenticated_admin_client: TestClient,
+    mail_engine_mock,
+):
+    response = authenticated_admin_client.post(
+        "/user/register",
+        json={
+            "email": "new@test.com",
+            "password": "new_pw",
+        },
+    )
+    assert response.status_code == 200
+    mail_engine_mock.send_verification_email.assert_called_once()
+
+
+def test_forgot_password_process(
+    client: TestClient,
+    mail_engine_mock,
+):
+    forgot_response = client.post(
+        "/user/forgot-password",
+        json={"email": "user@test.com"},
+    )
+    assert forgot_response.status_code == 200
+
+    mail_engine_mock.send_password_reset_email.assert_called_once()
+    _, token = mail_engine_mock.send_password_reset_email.call_args.args
+
+    reset_response = client.post(
+        "/user/reset-password",
+        json={
+            "token": token,
+            "password": "some-new-password",
+        },
+    )
+    assert reset_response.status_code == 200
+
+    login_response = client.post(
+        "/auth/token",
+        data={
+            "username": "user@test.com",
+            "password": "some-new-password",
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert login_response.status_code == 200
+
+
+# TODO return code on reset password should always be 200, so it does not leak email information
+# TODO Reset password return codes are similarly questionable

@@ -57,8 +57,6 @@ async def delete_user(
 # Registration
 # ###############################################################
 
-embed = Body(..., embed=True)
-
 
 @router.post("/register", response_model=UserOut)
 async def user_registration(
@@ -86,15 +84,13 @@ async def user_registration(
 
 @router.post("/forgot-password")
 async def forgot_password(
-    email: EmailStr = embed,
+    email: EmailStr = Body(embed=True),
     mail_engine: MailEngine = Depends(mail_engine),
 ) -> Response:
     """Send password reset email."""
     user = await User.by_email(email)
     if user is None:
         raise HTTPException(404, "No user found with that email")
-    if user.email_confirmed_at is not None:
-        raise HTTPException(400, "Email is already verified")
     if user.disabled:
         raise HTTPException(400, "Your account is disabled")
     user.token_pw_reset = calculate_hash(user.email + str(local_now()))[:10]
@@ -103,8 +99,11 @@ async def forgot_password(
     return Response(status_code=200)
 
 
-@router.post("/reset-password/{token}", response_model=UserOut)
-async def reset_password(token: str, password: str = embed):
+@router.post("/reset-password", response_model=UserOut)
+async def reset_password(
+    token: str = Body(embed=True),
+    password: str = Body(embed=True),
+):
     """Reset user password from token value."""
     user = await User.by_reset_token(token)
     if user is None:
@@ -123,9 +122,11 @@ async def reset_password(token: str, password: str = embed):
 # ###############################################################
 
 
+# why does this endpoint exist???
+# TODO remove endpoint
 @router.post("/verify")
 async def request_verification_email(
-    email: EmailStr = embed,
+    email: EmailStr = Body(embed=True),
     mail_engine: MailEngine = Depends(mail_engine),
 ) -> Response:
     """Send the user a verification email."""

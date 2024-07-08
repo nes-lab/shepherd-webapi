@@ -17,7 +17,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from shepherd_wsrv.api_auth.router import router as auth_router
-from shepherd_wsrv.api_experiment import router as xp_router
+from shepherd_wsrv.api_experiment.router import router as experiment_router
 
 # from shepherd_wsrv.routes.mail import router as MailRouter
 # from shepherd_wsrv.routes.register import router as RegisterRouter
@@ -73,7 +73,7 @@ app.add_middleware(
 app.include_router(auth_router)
 # app.include_router(testbed_router)
 app.include_router(user_router)
-app.include_router(xp_router)
+app.include_router(experiment_router)
 
 
 @app.get("/")

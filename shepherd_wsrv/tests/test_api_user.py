@@ -119,6 +119,40 @@ def test_verified_but_unapproved_user_cannot_login(
     assert login_response.status_code == 401
 
 
+def test_approved_but_unverified_user_cannot_login(
+    client: TestClient,
+    authenticated_admin_client: TestClient,
+    mail_engine_mock,
+):
+    response = authenticated_admin_client.post(
+        "/user/register",
+        json={
+            "email": "some_new_user@test.com",
+            "password": "new_pw",
+        },
+    )
+    assert response.status_code == 200
+    mail_engine_mock.send_verification_email.assert_called_once()
+
+    approve_response = authenticated_admin_client.post(
+        "/user/approve",
+        json={
+            "email": "some_new_user@test.com",
+        },
+    )
+    assert approve_response.status_code == 200
+
+    login_response = client.post(
+        "/auth/token",
+        data={
+            "username": "some_new_user@test.com",
+            "password": "new_pw",
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert login_response.status_code == 401
+
+
 def test_verified_and_approved_user_can_login(
     client: TestClient,
     authenticated_admin_client: TestClient,

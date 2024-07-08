@@ -113,14 +113,17 @@ def test_forgot_password_process(
 
 def test_email_verification_process(
     client: TestClient,
+    authenticated_admin_client: TestClient,
     mail_engine_mock,
 ):
-    verify_request_response = client.post(
-        "/user/verify",
-        json={"email": "unconfirmed_mail@test.com"},
+    response = authenticated_admin_client.post(
+        "/user/register",
+        json={
+            "email": "some_new_user@test.com",
+            "password": "new_pw",
+        },
     )
-    assert verify_request_response.status_code == 200
-
+    assert response.status_code == 200
     mail_engine_mock.send_verification_email.assert_called_once()
     _, token = mail_engine_mock.send_verification_email.call_args.args
 
@@ -129,11 +132,19 @@ def test_email_verification_process(
     )
     assert verification_response.status_code == 200
 
+    approve_response = authenticated_admin_client.post(
+        "/user/approve",
+        json={
+            "email": "some_new_user@test.com",
+        },
+    )
+    assert approve_response.status_code == 200
+
     login_response = client.post(
         "/auth/token",
         data={
-            "username": "unconfirmed_mail@test.com",
-            "password": "password",
+            "username": "some_new_user@test.com",
+            "password": "new_pw",
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

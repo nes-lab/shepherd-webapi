@@ -89,6 +89,7 @@ reportMissingParameterType = true
 
 [tool.pytest.ini_options]
 addopts = ["-vvv"]
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["shepherd_wsrv"]

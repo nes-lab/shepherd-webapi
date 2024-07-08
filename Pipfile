@@ -8,9 +8,9 @@ shepherd-core = "2024.4.2"
 shepherd-data = "2024.4.2"
 shepherd-herd = "0.7.0"
 shepherd-wsvr = {editable = true, extras = ["dev","test"], path = "."}
-pytest-asyncio = "*"
 
 [dev-packages]
+pytest-asyncio = "*"
 
 [pipenv]
 allow_prereleases = false

@@ -149,3 +149,15 @@ async def verify_email(token: str) -> Response:
     user.token_verification = None
     await user.save()
     return Response(status_code=200)
+
+@router.post("/approve")
+async def approve(
+    active_user_is_admin: None = Depends(active_user_is_admin),
+    email: EmailStr = Body(embed=True),
+):
+    user = await User.by_email(email)
+    if user is None:
+        return Response(status_code=404)
+    user.disabled = False
+    await user.save()
+    return Response(status_code=200)

@@ -116,25 +116,6 @@ async def reset_password(
 # ###############################################################
 
 
-# why does this endpoint exist???
-# TODO remove endpoint
-@router.post("/verify")
-async def request_verification_email(
-    email: EmailStr = Body(embed=True),
-    mail_engine: MailEngine = Depends(mail_engine),
-) -> Response:
-    """Send the user a verification email."""
-    user = await User.by_email(email)
-    if user is None:
-        raise HTTPException(404, "No user found with that email")
-    if user.email_confirmed_at is not None:
-        raise HTTPException(409, "Email is already verified")
-    user.token_verification = calculate_hash(user.email + str(local_now()))[:10]
-    await mail_engine.send_verification_email(email, user.token_verification)
-    await user.save()
-    return Response(status_code=200)
-
-
 @router.post("/verify/{token}")
 async def verify_email(token: str) -> Response:
     """Verify the user's email with the supplied token."""
@@ -149,6 +130,7 @@ async def verify_email(token: str) -> Response:
     user.token_verification = None
     await user.save()
     return Response(status_code=200)
+
 
 @router.post("/approve")
 async def approve(

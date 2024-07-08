@@ -1,30 +1,6 @@
 from fastapi.testclient import TestClient
 
 
-def test_create_user_endpoint_requires_authentication(client: TestClient):
-    response = client.post(
-        "/user/register",
-        json={
-            "email": "new@test.com",
-            "password": "password",
-        },
-    )
-    assert response.status_code == 401
-
-
-def test_unprivileged_user_cannot_create_new_users(
-    authenticated_client: TestClient,
-):
-    response = authenticated_client.post(
-        "/user/register",
-        json={
-            "email": "new@test.com",
-            "password": "password",
-        },
-    )
-    assert response.status_code == 403
-
-
 def test_user_can_query_account_data(authenticated_client: TestClient):
     response = authenticated_client.get("/user")
     assert response.status_code == 200
@@ -38,11 +14,11 @@ def test_user_account_data_endpoint_is_authenticated(client: TestClient):
     assert response.status_code == 401
 
 
-def test_admin_can_register_user(
-    authenticated_admin_client: TestClient,
+def test_register_user_sends_verification_mail(
+    client: TestClient,
     mail_engine_mock,
 ):
-    response = authenticated_admin_client.post(
+    response = client.post(
         "/user/register",
         json={
             "email": "new@test.com",
@@ -54,10 +30,10 @@ def test_admin_can_register_user(
 
 
 def test_register_user_rejects_duplicate_email(
-    authenticated_admin_client: TestClient,
+    client: TestClient,
     mail_engine_mock,
 ):
-    response = authenticated_admin_client.post(
+    response = client.post(
         "/user/register",
         json={
             "email": "user@test.com",
@@ -111,7 +87,39 @@ def test_forgot_password_process(
     assert login_response.status_code == 200
 
 
-def test_email_verification_process(
+def test_verified_but_unapproved_user_cannot_login(
+    client: TestClient,
+    authenticated_admin_client: TestClient,
+    mail_engine_mock,
+):
+    response = authenticated_admin_client.post(
+        "/user/register",
+        json={
+            "email": "some_new_user@test.com",
+            "password": "new_pw",
+        },
+    )
+    assert response.status_code == 200
+    mail_engine_mock.send_verification_email.assert_called_once()
+    _, token = mail_engine_mock.send_verification_email.call_args.args
+
+    verification_response = client.post(
+        f"/user/verify/{token}",
+    )
+    assert verification_response.status_code == 200
+
+    login_response = client.post(
+        "/auth/token",
+        data={
+            "username": "some_new_user@test.com",
+            "password": "new_pw",
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert login_response.status_code == 401
+
+
+def test_verified_and_approved_user_can_login(
     client: TestClient,
     authenticated_admin_client: TestClient,
     mail_engine_mock,
@@ -192,6 +200,3 @@ def test_invalid_email_verification_token_returns_error(
         "/user/verify/some-invalid-token",
     )
     assert response.status_code == 404
-
-
-# TODO Reset password return codes are similarly questionable

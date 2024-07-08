@@ -61,8 +61,6 @@ async def delete_user(
 @router.post("/register", response_model=UserOut)
 async def user_registration(
     user_auth: UserAuth,
-    user: User = Depends(current_active_user),
-    active_user_is_admin: None = Depends(active_user_is_admin),
     mail_engine: MailEngine = Depends(mail_engine),
 ):
     """Create a new user."""

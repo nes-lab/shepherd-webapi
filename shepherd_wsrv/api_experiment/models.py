@@ -21,12 +21,6 @@ class StatusXP(int, Enum):
     # this leaves some wiggle room for extensions
 
 
-class ExperimentShort(BaseModel):
-    # TODO: omit target_configs
-    something: int = 5
-    # can be used with .find().project(ExperimentShort).to_list()
-
-
 class ExperimentDB(Document, Experiment):
     id: UUID4 = Field(default_factory=uuid4)
     # uid: Annotated[int, Field(ge=0, lt=2**128, default_factory=id_default), Indexed(unique=True)]

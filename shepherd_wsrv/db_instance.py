@@ -6,7 +6,7 @@ from motor.core import AgnosticDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
 from shepherd_core import local_now
 
-from shepherd_wsrv.api_experiment.models import ExperimentDB
+from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_user.models import User
 from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
 
@@ -15,7 +15,7 @@ async def db_client() -> AgnosticDatabase:
     """Call this from within your event loop to get beanie setup."""
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     # Note: if ".shp" does not exist, it will be created
-    await init_beanie(database=client.shp, document_models=[User, ExperimentDB])
+    await init_beanie(database=client.shp, document_models=[User, WebExperiment])
     return client.shp
 
 

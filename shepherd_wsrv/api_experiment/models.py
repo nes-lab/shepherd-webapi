@@ -3,7 +3,6 @@ from uuid import uuid4
 
 from beanie import Document
 from pydantic import UUID4
-from pydantic import BaseModel
 from pydantic import Field
 from shepherd_core.data_models import Experiment
 
@@ -21,9 +20,8 @@ class StatusXP(int, Enum):
     # this leaves some wiggle room for extensions
 
 
-class ExperimentDB(Document, Experiment):
+class WebExperiment(Document, Experiment):
     id: UUID4 = Field(default_factory=uuid4)
-    # uid: Annotated[int, Field(ge=0, lt=2**128, default_factory=id_default), Indexed(unique=True)]
 
     status: StatusXP = StatusXP.inactive
 
@@ -45,7 +43,7 @@ class ExperimentDB(Document, Experiment):
         return True
 
     @classmethod
-    async def get_by_id(cls, xp_id: int, user: User) -> None | Experiment:
+    async def get_by_id(cls, xp_id: int, user: User) -> "None | WebExperiment":
         return await cls.find_one(
             cls.id == xp_id,
             cls.owner_id == user.id,
@@ -53,7 +51,7 @@ class ExperimentDB(Document, Experiment):
         )
 
     @classmethod
-    async def get_by_user(cls, user: User) -> list[Experiment]:
+    async def get_by_user(cls, user: User) -> list["WebExperiment"]:
         return await cls.find(
             cls.owner_id == user.id,
             cls.status != StatusXP.to_be_deleted,

@@ -42,11 +42,10 @@ class WebExperiment(Document):
         return True
 
     @classmethod
-    async def get_by_id(cls, xp_id: int, user: User) -> "None | WebExperiment":
+    async def get_by_id(cls, experiment_id: str) -> "None | WebExperiment":
         return await cls.find_one(
-            cls.id == xp_id,
-            cls.owner_id == user.id,
-            cls.status != StatusXP.to_be_deleted,
+            cls.id == experiment_id,
+            fetch_links=True,
         )
 
     @classmethod

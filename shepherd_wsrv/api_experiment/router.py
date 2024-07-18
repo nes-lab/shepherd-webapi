@@ -44,6 +44,8 @@ async def get_experiment(
     user: Annotated[User, Depends(current_active_user)],
 ):
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    if web_experiment is None:
+        raise HTTPException(404, "Not Found")
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
     return web_experiment.experiment

@@ -129,6 +129,11 @@ def test_get_experiment_by_id(
     assert response.json()["name"] == "test-experiment"
 
 
+def test_get_experiment_returns_not_found_for_invalid_id(authenticated_client: UserTestClient):
+    response = authenticated_client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
+    assert response.status_code == 404
+
+
 def test_get_experiment_is_authenticated(client: UserTestClient):
     response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
     assert response.status_code == 401

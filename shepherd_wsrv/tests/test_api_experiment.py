@@ -11,37 +11,34 @@ from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.data_models.experiment import TargetConfig
 from shepherd_core.data_models.testbed import MCU
 
-from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.tests.conftest import UserTestClient
 
 
 @pytest.fixture
 def sample_experiment():
     firmware_path = Path(__file__).parent / "data/test-firmware-nrf52.elf"
-    return WebExperiment(
-        experiment=Experiment(
-            name="test-experiment",
-            duration=30,
-            target_configs=[
-                TargetConfig(
-                    target_IDs=[42],
-                    custom_IDs=[42],
-                    energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
-                    firmware1=Firmware(
-                        name="FW_TestXYZ",
-                        data=fw_tools.file_to_base64(firmware_path),
-                        data_type=FirmwareDType.base64_elf,
-                        data_local=True,
-                        mcu=MCU(name="nRF52"),
-                    ),
-                    power_tracing=None,
-                    gpio_tracing=GpioTracing(
-                        uart_decode=True,
-                        uart_baudrate=115_200,
-                    ),
+    return Experiment(
+        name="test-experiment",
+        duration=30,
+        target_configs=[
+            TargetConfig(
+                target_IDs=[42],
+                custom_IDs=[42],
+                energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
+                firmware1=Firmware(
+                    name="FW_TestXYZ",
+                    data=fw_tools.file_to_base64(firmware_path),
+                    data_type=FirmwareDType.base64_elf,
+                    data_local=True,
+                    mcu=MCU(name="nRF52"),
                 ),
-            ],
-        ),
+                power_tracing=None,
+                gpio_tracing=GpioTracing(
+                    uart_decode=True,
+                    uart_baudrate=115_200,
+                ),
+            ),
+        ],
     )
 
 
@@ -52,7 +49,7 @@ def test_create_experiment_is_authenticated(client: TestClient):
 
 def test_create_experiment_succeeds(
     authenticated_client: TestClient,
-    sample_experiment: WebExperiment,
+    sample_experiment: Experiment,
 ):
     response = authenticated_client.post(
         "/experiment",
@@ -68,7 +65,7 @@ def test_list_experiments_is_authenticated(client: TestClient):
 
 def test_list_experiments(
     authenticated_client: TestClient,
-    sample_experiment: WebExperiment,
+    sample_experiment: Experiment,
 ):
     response = authenticated_client.get("/experiment")
     assert response.status_code == 200
@@ -87,7 +84,7 @@ def test_list_experiments(
 
 def test_experiments_are_private_to_user(
     client: UserTestClient,
-    sample_experiment: WebExperiment,
+    sample_experiment: Experiment,
 ):
     with client.authenticate_user():
         response = client.get("/experiment")
@@ -114,7 +111,7 @@ def test_experiments_are_private_to_user(
 @pytest.mark.dependency(depends=["test_create_experiment_succeeds", "test_list_experiments"])
 def test_get_experiment_by_id(
     authenticated_client: TestClient,
-    sample_experiment: WebExperiment,
+    sample_experiment: Experiment,
 ):
     # arrange
     authenticated_client.post(
@@ -122,14 +119,14 @@ def test_get_experiment_by_id(
         data=sample_experiment.model_dump_json(),
     )
     response = authenticated_client.get("/experiment")
-    experiment_id = response.json()[0]["_id"]
+    experiment_id = next(iter(response.json().keys()))
 
     # act
     response = authenticated_client.get(f"/experiment/{experiment_id}")
 
     # assert
     assert response.status_code == 200
-    assert response.json()["experiment"]["name"] == "test-experiment"
+    assert response.json()["name"] == "test-experiment"
 
 
 def test_get_experiment_is_authenticated(client: UserTestClient):
@@ -140,7 +137,7 @@ def test_get_experiment_is_authenticated(client: UserTestClient):
 @pytest.mark.dependency(depends=["test_create_experiment_succeeds", "test_list_experiments"])
 def test_get_experiment_is_private_to_user(
     client: UserTestClient,
-    sample_experiment: WebExperiment,
+    sample_experiment: Experiment,
 ):
     experiment_id = None
     with client.authenticate_user():
@@ -149,7 +146,7 @@ def test_get_experiment_is_private_to_user(
             data=sample_experiment.model_dump_json(),
         )
         response = client.get("/experiment")
-        experiment_id = response.json()[0]["_id"]
+        experiment_id = next(iter(response.json().keys()))
 
     with client.authenticate_admin():
         response = client.get(f"/experiment/{experiment_id}")

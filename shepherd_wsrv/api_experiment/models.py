@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from uuid import uuid4
 
@@ -26,6 +27,7 @@ class WebExperiment(Document):
     owner: Link[User] | None = None
     status: StatusXP = StatusXP.inactive
     experiment: Experiment
+    scheduled_at: datetime | None = None
 
     @classmethod
     async def activate(cls, xp_id: int, user: User) -> bool:

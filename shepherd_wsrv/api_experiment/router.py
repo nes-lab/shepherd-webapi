@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from pydantic import UUID4
 from shepherd_core.data_models import Experiment
 
@@ -49,3 +51,20 @@ async def get_experiment(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
     return web_experiment.experiment
+
+
+@router.post("/{experiment_id}/schedule")
+async def schedule_experiment(
+    experiment_id: str,
+    user: Annotated[User, Depends(current_active_user)],
+):
+    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    if web_experiment is None:
+        raise HTTPException(404, "Not Found")
+    if web_experiment.owner.email != user.email:
+        raise HTTPException(403, "Forbidden")
+
+    web_experiment.scheduled_at = datetime.now()
+    await web_experiment.save()
+
+    return Response(status_code=204)

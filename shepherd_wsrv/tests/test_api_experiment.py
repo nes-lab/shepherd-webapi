@@ -151,3 +151,8 @@ def test_get_experiment_is_private_to_user(
     with client.authenticate_admin():
         response = client.get(f"/experiment/{experiment_id}")
         assert response.status_code == 403
+
+
+def test_schedule_experiment(client: UserTestClient, created_experiment_id: str):
+    response = client.post(f"/experiment/{created_experiment_id}/schedule")
+    assert response.status_code == 204

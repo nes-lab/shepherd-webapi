@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from datetime import datetime
 from unittest.mock import AsyncMock
 
@@ -47,44 +48,54 @@ async def database_for_tests():
     await User.insert_one(disabled_user)
 
 
+class UserTestClient(TestClient):
+    @contextmanager
+    def authenticate_admin(self):
+        response = self.post(
+            "/auth/token",
+            data={
+                "username": "admin@test.com",
+                "password": "password",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert response.status_code == 200
+        self.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
+        yield self
+        self.headers["Authorization"] = ""
+
+    @contextmanager
+    def authenticate_user(self):
+        response = self.post(
+            "/auth/token",
+            data={
+                "username": "user@test.com",
+                "password": "password",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert response.status_code == 200
+        self.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
+        yield self
+        self.headers["Authorization"] = ""
+
+
 @pytest.fixture
 def client(database_for_tests: None):
-    with TestClient(app) as client:
+    with UserTestClient(app) as client:
         yield client
 
 
 @pytest.fixture
-def authenticated_client(client: TestClient):
-    # TODO might be more elegant to rework this into a different setup structure/process
-    # instead of using a simple fixture
-    response = client.post(
-        "/auth/token",
-        data={
-            "username": "user@test.com",
-            "password": "password",
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    assert response.status_code == 200
-    client.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
-
-    return client
+def authenticated_client(client: UserTestClient):
+    with client.authenticate_user():
+        yield client
 
 
 @pytest.fixture
-def authenticated_admin_client(client: TestClient):
-    response = client.post(
-        "/auth/token",
-        data={
-            "username": "admin@test.com",
-            "password": "password",
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    assert response.status_code == 200
-    client.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
-
-    return client
+def authenticated_admin_client(client: UserTestClient):
+    with client.authenticate_admin():
+        yield client
 
 
 class MockMailEngine(MailEngine):

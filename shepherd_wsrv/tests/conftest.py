@@ -6,6 +6,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 
+from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_instance import app
 from shepherd_wsrv.api_user.models import User
 from shepherd_wsrv.api_user.utils_mail import MailEngine
@@ -19,6 +20,7 @@ async def database_for_tests():
     await db_client()
 
     await User.delete_all()
+    await WebExperiment.delete_all()
 
     user = User(
         email="user@test.com",

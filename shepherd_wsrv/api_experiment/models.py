@@ -2,6 +2,7 @@ from enum import Enum
 from uuid import uuid4
 
 from beanie import Document
+from beanie import Link
 from pydantic import UUID4
 from pydantic import Field
 from shepherd_core.data_models import Experiment
@@ -20,13 +21,11 @@ class StatusXP(int, Enum):
     # this leaves some wiggle room for extensions
 
 
-class WebExperiment(Document, Experiment):
+class WebExperiment(Document):
     id: UUID4 = Field(default_factory=uuid4)
-
+    owner: Link[User] | None = None
     status: StatusXP = StatusXP.inactive
-
-    # TODO: temporary bugfixing
-    # owner_id: Optional[IdInt] = None
+    experiment: Experiment
 
     @classmethod
     async def activate(cls, xp_id: int, user: User) -> bool:
@@ -53,8 +52,9 @@ class WebExperiment(Document, Experiment):
     @classmethod
     async def get_by_user(cls, user: User) -> list["WebExperiment"]:
         return await cls.find(
-            cls.owner_id == user.id,
+            cls.owner.email == user.email,
             cls.status != StatusXP.to_be_deleted,
+            fetch_links=True,
         ).to_list()
 
     @classmethod

@@ -66,20 +66,13 @@ def test_list_experiments_is_authenticated(client: TestClient):
 def test_list_experiments(
     authenticated_client: TestClient,
     sample_experiment: Experiment,
+    created_experiment_id: str,
 ):
     response = authenticated_client.get("/experiment")
     assert response.status_code == 200
-    assert len(response.json()) == 0
-
-    create_response_1 = authenticated_client.post(
-        "/experiment",
-        data=sample_experiment.model_dump_json(),
-    )
-    assert create_response_1.status_code == 200
-
-    response = authenticated_client.get("/experiment")
-    assert response.status_code == 200
     assert len(response.json()) == 1
+    assert response.json()[created_experiment_id] is not None
+    assert response.json()[created_experiment_id]["name"] == "test-experiment"
 
 
 def test_experiments_are_private_to_user(
@@ -108,23 +101,25 @@ def test_experiments_are_private_to_user(
         assert len(response.json()) == 0
 
 
-@pytest.mark.dependency(depends=["test_create_experiment_succeeds", "test_list_experiments"])
-def test_get_experiment_by_id(
+@pytest.fixture
+def created_experiment_id(
     authenticated_client: TestClient,
     sample_experiment: Experiment,
 ):
-    # arrange
-    authenticated_client.post(
+    response = authenticated_client.post(
         "/experiment",
         data=sample_experiment.model_dump_json(),
     )
-    response = authenticated_client.get("/experiment")
-    experiment_id = next(iter(response.json().keys()))
+    assert response.status_code == 200
+    return response.json()
 
-    # act
-    response = authenticated_client.get(f"/experiment/{experiment_id}")
 
-    # assert
+@pytest.mark.dependency(depends=["test_create_experiment_succeeds", "test_list_experiments"])
+def test_get_experiment_by_id(
+    authenticated_client: TestClient,
+    created_experiment_id: str,
+):
+    response = authenticated_client.get(f"/experiment/{created_experiment_id}")
     assert response.status_code == 200
     assert response.json()["name"] == "test-experiment"
 

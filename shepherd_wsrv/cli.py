@@ -22,8 +22,9 @@ def exit_gracefully(_signum: int, _frame: FrameType | None) -> None:
 
 @cli.callback()
 def cli_callback(verbose: bool = False) -> None:
-    """enable verbosity and add exit-handlers
-    this gets executed prior to the other sub-commands"""
+    """Enable verbosity and add exit-handlers
+    this gets executed prior to the other sub-commands
+    """
     signal.signal(signal.SIGTERM, exit_gracefully)
     signal.signal(signal.SIGINT, exit_gracefully)
     set_verbosity(verbose)
@@ -31,14 +32,14 @@ def cli_callback(verbose: bool = False) -> None:
 
 @cli.command()
 def redirect() -> None:
-    """take webserver offline and only redirect to github-documentation"""
+    """Take webserver offline and only redirect to github-documentation"""
     web_redirect_run()
 
 
 @cli.command()
 # def init(file: Path | None = None) -> None:
 def init() -> None:
-    """creates structures in database, can also recover data from a backup"""
+    """Creates structures in database, can also recover data from a backup"""
     # asyncio.run(db_init())
     asyncio.run(db_insert_test())
     # TODO implement
@@ -47,15 +48,16 @@ def init() -> None:
 @cli.command()
 # def backup(file: Path | None = None) -> None:
 def backup() -> None:
-    """dumps content of database to a file"""
+    """Dumps content of database to a file"""
     # TODO implement
     # TODO: also dump default config or keep it in DB?
 
 
 @cli.command()
 def run() -> None:
-    """default functionality with web api, frontend and demons / schedulers
-    to coordinate the testbed"""
+    """Default functionality with web api, frontend and demons / schedulers
+    to coordinate the testbed
+    """
     with ProcessPoolExecutor() as ppe:
         ppe.submit(web_api_run)
         # "web_ui": asyncio.create_task(web_frontend_run()),

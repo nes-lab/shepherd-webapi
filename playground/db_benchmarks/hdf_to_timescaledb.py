@@ -57,7 +57,7 @@ def put_in_timescale(data: pd.DataFrame, node_id: int):
         if_exists="replace",
         method=None,
     )
-    # todo: adding a scheme can help transparency
+    # TODO: adding a scheme can help transparency
     # method="multi" OR None
     # method="single"
     # schema="(time, node_id, current, voltage)"  # WRONG

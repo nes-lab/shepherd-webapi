@@ -16,7 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")  # Url = full route
 
 
 def calculate_password_hash(pw: str) -> str:
-    """automatically salts & hashes a password"""
+    """Automatically salts & hashes a password"""
     if not CFG.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
     return pbkdf2_sha512.using(salt=CFG.auth_salt).hash(pw)

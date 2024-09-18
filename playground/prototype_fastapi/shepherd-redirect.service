@@ -5,7 +5,7 @@ Description=Redirect for http/https to get to the documentation
 Type=simple
 Restart=always
 RestartSec=3
-ExecStart=/usr/bin/python3 /opt/shepherd_webservice/scratch_fastapi/prototype_redirect.py
+ExecStart=/usr/bin/python3 /opt/shepherd_webservice/playground/prototype_fastapi/prototype_redirect.py
 
 [Install]
 WantedBy=multi-user.target

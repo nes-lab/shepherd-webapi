@@ -13,5 +13,3 @@ shepherd-wsvr = {editable = true, extras = ["dev","test"], path = "."}
 
 [pipenv]
 allow_prereleases = false
-#[requires]
-#python_version = "3"

@@ -1,3 +1,10 @@
+# project-specific
+*.pem
+*.key
+*.cer
+*.crt
+*.p7b
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

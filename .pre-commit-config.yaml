@@ -51,11 +51,11 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.4.2'
+    rev: 'v0.6.5'
     hooks:
+      - id: ruff-format
       - id: ruff
         args: ["--fix", "--exit-non-zero-on-fix"]
-      - id: ruff-format
         # manual run: ruff check . --preview
 
 #  - repo: https://github.com/ansible-community/ansible-lint.git
@@ -65,7 +65,7 @@ repos:
 #        files: \.(yaml|yml)$
 
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.2.6"
+    rev: "v2.3.0"
     hooks:
       - id: codespell
         exclude: \.(sch|brd|lbr)$

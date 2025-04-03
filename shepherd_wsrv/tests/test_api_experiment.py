@@ -116,6 +116,54 @@ def test_get_experiment_is_private_to_user(
         assert response.status_code == 403
 
 
-def test_schedule_experiment(client: UserTestClient, created_experiment_id: str):
-    response = client.post(f"/experiment/{created_experiment_id}/schedule")
+# TODO schedule idempotency
+
+
+def test_schedule_experiment(authenticated_client: UserTestClient, created_experiment_id: str):
+    response = authenticated_client.post(f"/experiment/{created_experiment_id}/schedule")
     assert response.status_code == 204
+
+
+def test_state_of_fresh_experiments(
+    authenticated_client: UserTestClient, created_experiment_id: str
+):
+    response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
+    assert response.status_code == 200
+    assert response.json() == "created"
+
+
+def test_state_of_scheduled_experiments(
+    authenticated_client: UserTestClient, created_experiment_id: str
+):
+    response = authenticated_client.post(f"/experiment/{created_experiment_id}/schedule")
+    response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
+    assert response.status_code == 200
+    assert response.json() == "scheduled"
+
+
+def test_experiment_state_not_found(authenticated_client: UserTestClient):
+    response = authenticated_client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029/state")
+    assert response.status_code == 404
+
+
+def test_experiment_state_requires_authentication(client: UserTestClient):
+    response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
+    assert response.status_code == 401
+
+
+def test_experiment_state_is_private_to_owner(
+    client: UserTestClient,
+    sample_experiment: Experiment,
+):
+    experiment_id = None
+    with client.authenticate_user():
+        client.post(
+            "/experiment",
+            data=sample_experiment.model_dump_json(),
+        )
+        response = client.get("/experiment")
+        experiment_id = next(iter(response.json().keys()))
+
+    with client.authenticate_admin():
+        response = client.get(f"/experiment/{experiment_id}/state")
+        assert response.status_code == 403

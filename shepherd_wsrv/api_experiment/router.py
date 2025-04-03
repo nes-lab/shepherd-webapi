@@ -76,8 +76,6 @@ async def get_experiment_state(
     experiment_id: str,
     user: Annotated[User, Depends(current_active_user)],
 ):
-    print(user)
-
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
@@ -86,7 +84,13 @@ async def get_experiment_state(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
-    if web_experiment.scheduled_at is None:
-        return "created"
+    if web_experiment.finished_at is not None:
+        return "finished"
 
-    return "scheduled"
+    if web_experiment.started_at is not None:
+        return "running"
+
+    if web_experiment.scheduled_at is not None:
+        return "scheduled"
+
+    return "created"

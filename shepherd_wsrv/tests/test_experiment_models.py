@@ -6,6 +6,7 @@ async def test_get_next_scheduling(
     sample_experiment: Experiment,
     database_for_tests: None,
 ):
+    await WebExperiment.delete_all()
     assert await WebExperiment.get_next_scheduling() is None
 
     one = WebExperiment(experiment=sample_experiment)

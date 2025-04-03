@@ -33,7 +33,7 @@ def test_list_experiments(
 ):
     response = authenticated_client.get("/experiment")
     assert response.status_code == 200
-    assert len(response.json()) == 1
+    assert len(response.json()) == 4
     assert response.json()[created_experiment_id] is not None
     assert response.json()[created_experiment_id]["name"] == "test-experiment"
 
@@ -45,7 +45,7 @@ def test_experiments_are_private_to_user(
     with client.authenticate_user():
         response = client.get("/experiment")
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert len(response.json()) == 3
 
     with client.authenticate_admin():
         response = client.get("/experiment")
@@ -61,7 +61,7 @@ def test_experiments_are_private_to_user(
     with client.authenticate_user():
         response = client.get("/experiment")
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert len(response.json()) == 3
 
 
 @pytest.fixture
@@ -122,6 +122,8 @@ def test_get_experiment_is_private_to_user(
 def test_schedule_experiment(authenticated_client: UserTestClient, created_experiment_id: str):
     response = authenticated_client.post(f"/experiment/{created_experiment_id}/schedule")
     assert response.status_code == 204
+    response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
+    assert response.json() == "scheduled"
 
 
 def test_state_of_fresh_experiments(
@@ -130,16 +132,6 @@ def test_state_of_fresh_experiments(
     response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "created"
-
-
-def test_state_of_scheduled_experiments(
-    authenticated_client: UserTestClient, created_experiment_id: str
-):
-    response = authenticated_client.post(f"/experiment/{created_experiment_id}/schedule")
-    response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
-    assert response.status_code == 200
-    assert response.json() == "scheduled"
-
 
 def test_experiment_state_not_found(authenticated_client: UserTestClient):
     response = authenticated_client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029/state")
@@ -167,3 +159,19 @@ def test_experiment_state_is_private_to_owner(
     with client.authenticate_admin():
         response = client.get(f"/experiment/{experiment_id}/state")
         assert response.status_code == 403
+
+def test_experiment_state_scheduled(authenticated_client: UserTestClient, scheduled_experiment_id: str):
+    response = authenticated_client.get(f"/experiment/{scheduled_experiment_id}/state")
+    assert response.status_code == 200
+    assert response.json() == "scheduled"
+
+def test_experiment_state_running(authenticated_client: UserTestClient, running_experiment_id: str):
+    response = authenticated_client.get(f"/experiment/{running_experiment_id}/state")
+    assert response.status_code == 200
+    assert response.json() == "running"
+
+def test_experiment_state_finished(authenticated_client: UserTestClient, finished_experiment_id: str):
+    response = authenticated_client.get(f"/experiment/{finished_experiment_id}/state")
+    assert response.status_code == 200
+    assert response.json() == "finished"
+

@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock
+from uuid import UUID
 
 import pytest
 import pytest_asyncio
@@ -26,7 +27,12 @@ from shepherd_wsrv.db_instance import db_client
 
 # TODO convert to autofixture?
 @pytest_asyncio.fixture
-async def database_for_tests():
+async def database_for_tests(
+    scheduled_experiment_id: str,
+    running_experiment_id: str,
+    finished_experiment_id: str,
+    sample_experiment: Experiment,
+):
     await db_client()
 
     await User.delete_all()
@@ -59,6 +65,33 @@ async def database_for_tests():
     disabled_user.disabled = True
     await User.insert_one(disabled_user)
 
+    scheduled_web_experiment = WebExperiment(
+        id=UUID(scheduled_experiment_id),
+        experiment=sample_experiment,
+        owner=working_user,
+        scheduled_at=datetime.now(),
+    )
+    await WebExperiment.insert_one(scheduled_web_experiment)
+
+    running_web_experiment = WebExperiment(
+        id=UUID(running_experiment_id),
+        experiment=sample_experiment,
+        owner=working_user,
+        scheduled_at=datetime.now(),
+        started_at=datetime.now(),
+    )
+    await WebExperiment.insert_one(running_web_experiment)
+
+    finished_web_experiment = WebExperiment(
+        id=UUID(finished_experiment_id),
+        experiment=sample_experiment,
+        owner=working_user,
+        scheduled_at=datetime.now(),
+        started_at=datetime.now(),
+        finished_at=datetime.now(),
+    )
+    await WebExperiment.insert_one(finished_web_experiment)
+
 
 class UserTestClient(TestClient):
     @contextmanager
@@ -72,7 +105,7 @@ class UserTestClient(TestClient):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         assert response.status_code == 200
-        self.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
+        self.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
         yield self
         self.headers["Authorization"] = ""
 
@@ -87,7 +120,7 @@ class UserTestClient(TestClient):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         assert response.status_code == 200
-        self.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
+        self.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
         yield self
         self.headers["Authorization"] = ""
 
@@ -131,7 +164,7 @@ def sample_experiment():
         duration=30,
         target_configs=[
             TargetConfig(
-                target_IDs=[2], # must be some valid id from target_fixture.yaml
+                target_IDs=[2],  # must be some valid id from target_fixture.yaml
                 custom_IDs=[42],
                 energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
                 firmware1=Firmware(
@@ -149,3 +182,18 @@ def sample_experiment():
             ),
         ],
     )
+
+
+@pytest.fixture
+def scheduled_experiment_id():
+    return "00000000-0000-0000-0000-123400000001"
+
+
+@pytest.fixture
+def running_experiment_id():
+    return "00000000-0000-0000-0000-123400000002"
+
+
+@pytest.fixture
+def finished_experiment_id():
+    return "00000000-0000-0000-0000-123400000003"

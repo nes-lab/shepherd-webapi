@@ -1,10 +1,9 @@
 from datetime import datetime
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import pymongo
 from beanie import Document
 from beanie import Link
-from pydantic import UUID4
 from pydantic import Field
 from shepherd_core.data_models import Experiment
 
@@ -12,10 +11,12 @@ from shepherd_wsrv.api_user.models import User
 
 
 class WebExperiment(Document):
-    id: UUID4 = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=uuid4)
     owner: Link[User] | None = None
     experiment: Experiment
     scheduled_at: datetime | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
 
     @classmethod
     async def get_by_id(cls, experiment_id: str) -> "None | WebExperiment":

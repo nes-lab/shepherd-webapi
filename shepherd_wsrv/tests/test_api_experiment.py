@@ -1,45 +1,8 @@
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
-from shepherd_core import fw_tools
-from shepherd_core.data_models import FirmwareDType
-from shepherd_core.data_models import GpioTracing
-from shepherd_core.data_models.content import EnergyEnvironment
-from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment
-from shepherd_core.data_models.experiment import TargetConfig
-from shepherd_core.data_models.testbed import MCU
 
 from shepherd_wsrv.tests.conftest import UserTestClient
-
-
-@pytest.fixture
-def sample_experiment():
-    firmware_path = Path(__file__).parent / "data/test-firmware-nrf52.elf"
-    return Experiment(
-        name="test-experiment",
-        duration=30,
-        target_configs=[
-            TargetConfig(
-                target_IDs=[42],
-                custom_IDs=[42],
-                energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
-                firmware1=Firmware(
-                    name="FW_TestXYZ",
-                    data=fw_tools.file_to_base64(firmware_path),
-                    data_type=FirmwareDType.base64_elf,
-                    data_local=True,
-                    mcu=MCU(name="nRF52"),
-                ),
-                power_tracing=None,
-                gpio_tracing=GpioTracing(
-                    uart_decode=True,
-                    uart_baudrate=115_200,
-                ),
-            ),
-        ],
-    )
 
 
 def test_create_experiment_is_authenticated(client: TestClient):

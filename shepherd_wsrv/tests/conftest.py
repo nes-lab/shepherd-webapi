@@ -1,10 +1,19 @@
 from contextlib import contextmanager
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from shepherd_core import fw_tools
+from shepherd_core.data_models import FirmwareDType
+from shepherd_core.data_models import GpioTracing
+from shepherd_core.data_models.content import EnergyEnvironment
+from shepherd_core.data_models.content import Firmware
+from shepherd_core.data_models.experiment import Experiment
+from shepherd_core.data_models.experiment import TargetConfig
+from shepherd_core.data_models.testbed import MCU
 
 from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_instance import app
@@ -15,6 +24,7 @@ from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
 from shepherd_wsrv.db_instance import db_client
 
 
+# TODO convert to autofixture?
 @pytest_asyncio.fixture
 async def database_for_tests():
     await db_client()
@@ -111,3 +121,31 @@ def mail_engine_mock():
     mock = MockMailEngine()
     app.dependency_overrides[mail_engine] = lambda: mock
     return mock
+
+
+@pytest.fixture
+def sample_experiment():
+    firmware_path = Path(__file__).parent / "data/test-firmware-nrf52.elf"
+    return Experiment(
+        name="test-experiment",
+        duration=30,
+        target_configs=[
+            TargetConfig(
+                target_IDs=[2], # must be some valid id from target_fixture.yaml
+                custom_IDs=[42],
+                energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
+                firmware1=Firmware(
+                    name="FW_TestXYZ",
+                    data=fw_tools.file_to_base64(firmware_path),
+                    data_type=FirmwareDType.base64_elf,
+                    data_local=True,
+                    mcu=MCU(name="nRF52"),
+                ),
+                power_tracing=None,
+                gpio_tracing=GpioTracing(
+                    uart_decode=True,
+                    uart_baudrate=115_200,
+                ),
+            ),
+        ],
+    )

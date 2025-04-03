@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import uuid4
 
+import pymongo
 from beanie import Document
 from beanie import Link
 from pydantic import UUID4
@@ -70,3 +71,25 @@ class WebExperiment(Document):
         _xp.status = StatusXP.to_be_deleted
         await _xp.save()
         return True
+
+    @classmethod
+    async def get_next_scheduling(cls) -> "None | WebExperiment":
+        """
+        Finds the WebExperiment with the oldest scheduling_at datetime,
+        that has not been executed yet (status less than active).
+        """
+        next_experiments = (
+            await cls.find(
+                cls.scheduled_at != None,  # noqa: E711 beanie cannot handle 'is not None' expressions
+            )
+            .sort(
+                [
+                    (WebExperiment.scheduled_at, pymongo.ASCENDING),
+                ],
+            )
+            .limit(1)
+            .to_list()
+        )
+        if len(next_experiments) > 0:
+            return next_experiments[0]
+        return None

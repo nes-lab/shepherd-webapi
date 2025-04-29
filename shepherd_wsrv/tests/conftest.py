@@ -15,6 +15,8 @@ from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.data_models.experiment import TargetConfig
 from shepherd_core.data_models.testbed import MCU
+from shepherd_core.data_models.task import TestbedTasks
+from shepherd_core.data_models.testbed import Testbed
 
 from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_instance import app
@@ -82,9 +84,11 @@ async def database_for_tests(
     )
     await WebExperiment.insert_one(running_web_experiment)
 
+    testbed = Testbed(name="unit_testing_testbed")
     finished_web_experiment = WebExperiment(
         id=UUID(finished_experiment_id),
         experiment=sample_experiment,
+        testbed_tasks=TestbedTasks.from_xp(sample_experiment, testbed),
         owner=working_user,
         requested_execution_at=datetime.now(),
         started_at=datetime.now(),
@@ -164,7 +168,7 @@ def sample_experiment():
         duration=30,
         target_configs=[
             TargetConfig(
-                target_IDs=[2],  # must be some valid id from target_fixture.yaml
+                target_IDs=[42],
                 custom_IDs=[42],
                 energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
                 firmware1=Firmware(

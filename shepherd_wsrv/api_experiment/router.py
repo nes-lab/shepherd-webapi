@@ -102,3 +102,24 @@ async def get_experiment_state(
         return "scheduled"
 
     return "created"
+
+
+@router.get("/{experiment_id}/download")
+async def download(
+    experiment_id: str,
+    user: Annotated[User, Depends(current_active_user)],
+):
+    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    if web_experiment is None:
+        raise HTTPException(404, "Not Found")
+
+    # TODO route privacy should be modeled canonically
+    if web_experiment.owner.email != user.email:
+        raise HTTPException(403, "Forbidden")
+
+    if web_experiment.finished_at is None:
+        raise HTTPException(400, "Experiment not yet finished")
+
+    output_paths = web_experiment.testbed_tasks.get_output_paths()
+    return list(output_paths.keys())
+

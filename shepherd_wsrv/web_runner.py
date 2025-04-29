@@ -1,3 +1,4 @@
+from datetime import datetime
 from time import sleep
 
 from contextlib import asynccontextmanager
@@ -21,26 +22,33 @@ from pathlib import Path
 
 
 async def run_web_experiment(web_experiment: WebExperiment):
+    # mark as started
+    web_experiment.started_at = datetime.now()
+    await web_experiment.save()
 
     experiment = web_experiment.experiment
 
-    tb = Testbed(name="matthias-office")
-    tb_tasks = TestbedTasks.from_xp(experiment, tb)
-    print("converted to testbed task")
-    tb_tasks.to_file("experiment_generic_var1_tbt.yaml")
+    testbed = Testbed(name="matthias-office")
+    testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
+
+    # Sadly, we must materialize the tasks here, although this is redundant information.
+    # Yet it is necessary later to compute the download paths.
+    web_experiment.testbed_tasks = testbed_tasks
 
     # TODO move inventory file to environment variable
     herd = Herd(
         inventory="/home/matthias/dev/shepherd/repo/software/shepherd-webservice/herd.yml",
     )
     with herd:
-        remote_path = Path("/etc/shepherd/config.yaml")
-        print("trying to put task")
-        herd.put_task(tb_tasks, remote_path)
-        print("put task")
-        exit_code = herd.start_measurement()
-        print("started measurement")
-        print(exit_code)
+        print("starting testbed tasks through herd tool")
+
+        # herd.run_task(testbed_tasks, attach=True)
+        print("finished task execution")
+
+        # mark job as done in database
+        web_experiment.finished_at = datetime.now()
+        await web_experiment.save()
+
 
 async def main():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
@@ -48,22 +56,19 @@ async def main():
 
     while True:
         # TODO convert all prints to proper logs
-        print('Checking experiment scheduling FIFO')
+        print("Checking experiment scheduling FIFO")
 
         next_experiment = await WebExperiment.get_next_scheduling()
         if next_experiment is None:
-            print('No experiment scheduled')
-            print('Waiting 5 sec...')
+            print("No experiment scheduled")
+            print("Waiting 5 sec...")
             await asyncio.sleep(5)
             continue
 
-        print('scheduling experiment')
-        next_experiment.scheduled_at = None
-        await next_experiment.save()
-
+        print("scheduling experiment")
         await run_web_experiment(next_experiment)
 
-if __name__ ==  '__main__':
-    loop = asyncio.new_event_loop   ()
-    loop.run_until_complete(main())
 
+if __name__ == "__main__":
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(main())

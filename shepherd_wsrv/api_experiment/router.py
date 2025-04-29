@@ -20,6 +20,13 @@ async def create_experiment(
     experiment: Experiment,
     user: Annotated[User, Depends(current_active_user)],
 ):
+    if experiment.time_start is not None:
+        raise HTTPException(
+            400,
+            "time_start must be None,"
+            "the testbed will pick the start time after the experiment is scheduled.",
+        )
+
     web_experiment = WebExperiment(
         experiment=experiment,
         owner=user,
@@ -66,10 +73,11 @@ async def schedule_experiment(
 
     # TODO it would be possible to schedule the same experiment multiple times...
 
-    web_experiment.scheduled_at = datetime.now()
+    web_experiment.requested_execution_at = datetime.now()
     await web_experiment.save()
 
     return Response(status_code=204)
+
 
 @router.get("/{experiment_id}/state")
 async def get_experiment_state(
@@ -90,7 +98,7 @@ async def get_experiment_state(
     if web_experiment.started_at is not None:
         return "running"
 
-    if web_experiment.scheduled_at is not None:
+    if web_experiment.requested_execution_at is not None:
         return "scheduled"
 
     return "created"

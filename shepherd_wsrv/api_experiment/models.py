@@ -6,6 +6,7 @@ from beanie import Document
 from beanie import Link
 from pydantic import Field
 from shepherd_core.data_models import Experiment
+from shepherd_core.data_models.task import TestbedTasks
 
 from shepherd_wsrv.api_user.models import User
 
@@ -14,9 +15,24 @@ class WebExperiment(Document):
     id: UUID = Field(default_factory=uuid4)
     owner: Link[User] | None = None
     experiment: Experiment
-    scheduled_at: datetime | None = None
+
+    # None, if the experiment should not be executed.
+    # Set by the API to current wall-clock time when the user requests the experiment
+    # to be executed.
+    # This is NOT the time when the experiment should be run!
+    requested_execution_at: datetime | None = None
+
+    # None, when the experiment is not yet executing on the testbed.
+    # Set to current wall-clock time when the web runner picks to experiment and
+    # starts execution on the testbed.
     started_at: datetime | None = None
+
+    # None, when the experiment is not yet finished (still executing or not yet started).
+    # Set to current wall-clock time by the web runner when the testbed finished execution.
     finished_at: datetime | None = None
+
+    # TODO convert to paths?
+    testbed_tasks: TestbedTasks | None = None
 
     @classmethod
     async def get_by_id(cls, experiment_id: str) -> "None | WebExperiment":
@@ -40,11 +56,12 @@ class WebExperiment(Document):
         """
         next_experiments = (
             await cls.find(
-                cls.scheduled_at != None,  # noqa: E711 beanie cannot handle 'is not None' expressions
+                cls.requested_execution_at != None, # noqa: E711 beanie cannot handle 'is not None' expressions
+                cls.started_at == None, # noqa: E711 beanie cannot handle 'is not None' expressions
             )
             .sort(
                 [
-                    (WebExperiment.scheduled_at, pymongo.ASCENDING),
+                    (WebExperiment.requested_execution_at, pymongo.ASCENDING),
                 ],
             )
             .limit(1)

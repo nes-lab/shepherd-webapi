@@ -69,7 +69,7 @@ async def database_for_tests(
         id=UUID(scheduled_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        scheduled_at=datetime.now(),
+        requested_execution_at=datetime.now(),
     )
     await WebExperiment.insert_one(scheduled_web_experiment)
 
@@ -77,7 +77,7 @@ async def database_for_tests(
         id=UUID(running_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        scheduled_at=datetime.now(),
+        requested_execution_at=datetime.now(),
         started_at=datetime.now(),
     )
     await WebExperiment.insert_one(running_web_experiment)
@@ -86,7 +86,7 @@ async def database_for_tests(
         id=UUID(finished_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        scheduled_at=datetime.now(),
+        requested_execution_at=datetime.now(),
         started_at=datetime.now(),
         finished_at=datetime.now(),
     )

@@ -187,3 +187,12 @@ def test_download_lists_sheep_files(authenticated_client: UserTestClient, finish
     response = authenticated_client.get(f"/experiment/{finished_experiment_id}/download")
     assert response.status_code == 200
     assert response.json() == ["unit_testing_sheep"]
+
+def test_download_rejects_incorrect_sheeps(authenticated_client: UserTestClient, finished_experiment_id: str):
+    response = authenticated_client.get(f"/experiment/{finished_experiment_id}/download/invalid_sheep")
+    assert response.status_code == 404
+
+def test_download_sheep_sends_file(authenticated_client: UserTestClient, finished_experiment_id: str):
+    response = authenticated_client.get(f"/experiment/{finished_experiment_id}/download/unit_testing_sheep")
+    assert response.status_code == 200
+    assert int(response.headers['content-length']) == 42

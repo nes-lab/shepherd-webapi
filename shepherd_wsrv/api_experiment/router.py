@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Annotated
+from pathlib import PurePosixPath
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
+from starlette.responses import FileResponse
 from pydantic import UUID4
 from shepherd_core.data_models import Experiment
 
@@ -123,3 +125,31 @@ async def download(
     output_paths = web_experiment.testbed_tasks.get_output_paths()
     return list(output_paths.keys())
 
+
+@router.get("/{experiment_id}/download/{sheep}")
+async def download_sheep_file(
+    experiment_id: str,
+    sheep: str,
+    user: Annotated[User, Depends(current_active_user)],
+):
+    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    if web_experiment is None:
+        raise HTTPException(404, "Not Found")
+
+    # TODO route privacy should be modeled canonically
+    if web_experiment.owner.email != user.email:
+        raise HTTPException(403, "Forbidden")
+
+    output_paths = web_experiment.testbed_tasks.get_output_paths()
+
+    if sheep not in output_paths:
+        raise HTTPException(404, "Sheep not contained in observers of the experiment.")
+
+    output_path = str(output_paths[sheep])
+
+    def manipulate_output_path(path: str):
+        # TODO write final path manipulation
+        path = PurePosixPath(path)
+        return "./shepherd_wsrv/tests/data/" + path.name
+
+    return FileResponse(manipulate_output_path(output_path))

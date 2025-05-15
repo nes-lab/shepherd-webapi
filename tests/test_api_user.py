@@ -1,7 +1,9 @@
 from fastapi.testclient import TestClient
 
+from shepherd_wsrv.api_user.utils_mail import MailEngine
 
-def test_user_can_query_account_data(authenticated_client: TestClient):
+
+def test_user_can_query_account_data(authenticated_client: TestClient) -> None:
     response = authenticated_client.get("/user")
     assert response.status_code == 200
     assert response.json()["email"] == "user@test.com"
@@ -9,15 +11,15 @@ def test_user_can_query_account_data(authenticated_client: TestClient):
     assert response.json()["last_name"] == "last name"
 
 
-def test_user_account_data_endpoint_is_authenticated(client: TestClient):
+def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None:
     response = client.get("/user")
     assert response.status_code == 401
 
 
 def test_register_user_sends_verification_mail(
     client: TestClient,
-    mail_engine_mock,
-):
+    mail_engine_mock: MailEngine,
+) -> None:
     response = client.post(
         "/user/register",
         json={
@@ -31,8 +33,8 @@ def test_register_user_sends_verification_mail(
 
 def test_register_user_rejects_duplicate_email(
     client: TestClient,
-    mail_engine_mock,
-):
+    mail_engine_mock: MailEngine,
+) -> None:
     response = client.post(
         "/user/register",
         json={
@@ -46,8 +48,8 @@ def test_register_user_rejects_duplicate_email(
 
 def test_forgot_password_process(
     client: TestClient,
-    mail_engine_mock,
-):
+    mail_engine_mock: MailEngine,
+) -> None:
     login_response = client.post(
         "/auth/token",
         data={
@@ -90,8 +92,8 @@ def test_forgot_password_process(
 def test_verified_but_unapproved_user_cannot_login(
     client: TestClient,
     authenticated_admin_client: TestClient,
-    mail_engine_mock,
-):
+    mail_engine_mock: MailEngine,
+) -> None:
     response = authenticated_admin_client.post(
         "/user/register",
         json={
@@ -122,8 +124,8 @@ def test_verified_but_unapproved_user_cannot_login(
 def test_approved_but_unverified_user_cannot_login(
     client: TestClient,
     authenticated_admin_client: TestClient,
-    mail_engine_mock,
-):
+    mail_engine_mock: MailEngine,
+) -> None:
     response = authenticated_admin_client.post(
         "/user/register",
         json={
@@ -156,8 +158,8 @@ def test_approved_but_unverified_user_cannot_login(
 def test_verified_and_approved_user_can_login(
     client: TestClient,
     authenticated_admin_client: TestClient,
-    mail_engine_mock,
-):
+    mail_engine_mock: MailEngine,
+) -> None:
     response = authenticated_admin_client.post(
         "/user/register",
         json={
@@ -195,7 +197,7 @@ def test_verified_and_approved_user_can_login(
 
 def test_forgot_password_endpoint_returns_success_for_invalid_email(
     client: TestClient,
-):
+) -> None:
     response = client.post(
         "/user/forgot-password",
         json={"email": "non-existing-user@test.com"},
@@ -205,7 +207,7 @@ def test_forgot_password_endpoint_returns_success_for_invalid_email(
 
 def test_forgot_password_endpoint_returns_success_for_disabled_account(
     client: TestClient,
-):
+) -> None:
     """Regression test motivated by previously existing issue."""
     response = client.post(
         "/user/forgot-password",
@@ -216,7 +218,7 @@ def test_forgot_password_endpoint_returns_success_for_disabled_account(
 
 def test_invalid_password_reset_token_returns_error(
     client: TestClient,
-):
+) -> None:
     response = client.post(
         "/user/reset-password",
         json={
@@ -229,7 +231,7 @@ def test_invalid_password_reset_token_returns_error(
 
 def test_invalid_email_verification_token_returns_error(
     client: TestClient,
-):
+) -> None:
     response = client.post(
         "/user/verify/some-invalid-token",
     )

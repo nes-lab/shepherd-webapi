@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -8,8 +9,9 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from shepherd_core import fw_tools
-from shepherd_core.data_models import FirmwareDType, UartTracing
+from shepherd_core.data_models import FirmwareDType
 from shepherd_core.data_models import GpioTracing
+from shepherd_core.data_models import UartTracing
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment
@@ -27,14 +29,13 @@ from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
 from shepherd_wsrv.db_instance import db_client
 
 
-# TODO convert to autofixture?
 @pytest_asyncio.fixture
 async def database_for_tests(
     scheduled_experiment_id: str,
     running_experiment_id: str,
     finished_experiment_id: str,
     sample_experiment: Experiment,
-):
+) -> None:
     await db_client()
 
     await User.delete_all()
@@ -99,7 +100,7 @@ async def database_for_tests(
 
 class UserTestClient(TestClient):
     @contextmanager
-    def authenticate_admin(self):
+    def authenticate_admin(self) -> Generator[TestClient, None, None]:
         response = self.post(
             "/auth/token",
             data={
@@ -114,7 +115,7 @@ class UserTestClient(TestClient):
         self.headers["Authorization"] = ""
 
     @contextmanager
-    def authenticate_user(self):
+    def authenticate_user(self) -> Generator[TestClient, None, None]:
         response = self.post(
             "/auth/token",
             data={
@@ -130,38 +131,38 @@ class UserTestClient(TestClient):
 
 
 @pytest.fixture
-def client(database_for_tests: None):
+def client() -> Generator[TestClient, None, None]:
     with UserTestClient(app) as client:
         yield client
 
 
 @pytest.fixture
-def authenticated_client(client: UserTestClient):
+def authenticated_client(client: UserTestClient) -> Generator[TestClient, None, None]:
     with client.authenticate_user():
         yield client
 
 
 @pytest.fixture
-def authenticated_admin_client(client: UserTestClient):
+def authenticated_admin_client(client: UserTestClient) -> Generator[TestClient, None, None]:
     with client.authenticate_admin():
         yield client
 
 
 class MockMailEngine(MailEngine):
-    def __init__(self):
+    def __init__(self) -> None:
         self.send_verification_email = AsyncMock()
         self.send_password_reset_email = AsyncMock()
 
 
 @pytest.fixture
-def mail_engine_mock():
+def mail_engine_mock() -> MailEngine:
     mock = MockMailEngine()
     app.dependency_overrides[mail_engine] = lambda: mock
     return mock
 
 
 @pytest.fixture
-def sample_experiment():
+def sample_experiment() -> Experiment:
     firmware_path = Path(__file__).parent / "data/test-firmware-nrf52.elf"
     return Experiment(
         name="test-experiment",
@@ -187,15 +188,15 @@ def sample_experiment():
 
 
 @pytest.fixture
-def scheduled_experiment_id():
+def scheduled_experiment_id() -> str:
     return "00000000-0000-0000-0000-123400000001"
 
 
 @pytest.fixture
-def running_experiment_id():
+def running_experiment_id() -> str:
     return "00000000-0000-0000-0000-123400000002"
 
 
 @pytest.fixture
-def finished_experiment_id():
+def finished_experiment_id() -> str:
     return "00000000-0000-0000-0000-123400000003"

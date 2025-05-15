@@ -5,7 +5,7 @@ from shepherd_core.data_models.experiment import Experiment
 from tests.conftest import UserTestClient
 
 
-def test_create_experiment_is_authenticated(client: TestClient):
+def test_create_experiment_is_authenticated(client: TestClient) -> None:
     response = client.post("/experiment")
     assert response.status_code == 401
 
@@ -13,7 +13,7 @@ def test_create_experiment_is_authenticated(client: TestClient):
 def test_create_experiment_succeeds(
     authenticated_client: TestClient,
     sample_experiment: Experiment,
-):
+) -> None:
     response = authenticated_client.post(
         "/experiment",
         data=sample_experiment.model_dump_json(),
@@ -21,16 +21,16 @@ def test_create_experiment_succeeds(
     assert response.status_code == 200
 
 
-def test_list_experiments_is_authenticated(client: TestClient):
+def test_list_experiments_is_authenticated(client: TestClient) -> None:
     response = client.get("/experiment")
     assert response.status_code == 401
 
 
+@pytest.mark.usefixtures("sample_experiment")
 def test_list_experiments(
     authenticated_client: TestClient,
-    sample_experiment: Experiment,
     created_experiment_id: str,
-):
+) -> None:
     response = authenticated_client.get("/experiment")
     assert response.status_code == 200
     assert len(response.json()) == 4
@@ -41,7 +41,7 @@ def test_list_experiments(
 def test_experiments_are_private_to_user(
     client: UserTestClient,
     sample_experiment: Experiment,
-):
+) -> None:
     with client.authenticate_user():
         response = client.get("/experiment")
         assert response.status_code == 200
@@ -68,7 +68,7 @@ def test_experiments_are_private_to_user(
 def created_experiment_id(
     authenticated_client: TestClient,
     sample_experiment: Experiment,
-):
+) -> str:
     response = authenticated_client.post(
         "/experiment",
         data=sample_experiment.model_dump_json(),
@@ -81,18 +81,20 @@ def created_experiment_id(
 def test_get_experiment_by_id(
     authenticated_client: TestClient,
     created_experiment_id: str,
-):
+) -> None:
     response = authenticated_client.get(f"/experiment/{created_experiment_id}")
     assert response.status_code == 200
     assert response.json()["name"] == "test-experiment"
 
 
-def test_get_experiment_returns_not_found_for_invalid_id(authenticated_client: UserTestClient):
+def test_get_experiment_returns_not_found_for_invalid_id(
+    authenticated_client: UserTestClient,
+) -> None:
     response = authenticated_client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
     assert response.status_code == 404
 
 
-def test_get_experiment_is_authenticated(client: UserTestClient):
+def test_get_experiment_is_authenticated(client: UserTestClient) -> None:
     response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
     assert response.status_code == 401
 
@@ -101,7 +103,7 @@ def test_get_experiment_is_authenticated(client: UserTestClient):
 def test_get_experiment_is_private_to_user(
     client: UserTestClient,
     sample_experiment: Experiment,
-):
+) -> None:
     experiment_id = None
     with client.authenticate_user():
         client.post(
@@ -116,10 +118,12 @@ def test_get_experiment_is_private_to_user(
         assert response.status_code == 403
 
 
-# TODO schedule idempotency
+# TODO: schedule idempotency
 
 
-def test_schedule_experiment(authenticated_client: UserTestClient, created_experiment_id: str):
+def test_schedule_experiment(
+    authenticated_client: UserTestClient, created_experiment_id: str
+) -> None:
     response = authenticated_client.post(f"/experiment/{created_experiment_id}/schedule")
     assert response.status_code == 204
     response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
@@ -128,18 +132,18 @@ def test_schedule_experiment(authenticated_client: UserTestClient, created_exper
 
 def test_state_of_fresh_experiments(
     authenticated_client: UserTestClient, created_experiment_id: str
-):
+) -> None:
     response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "created"
 
 
-def test_experiment_state_not_found(authenticated_client: UserTestClient):
+def test_experiment_state_not_found(authenticated_client: UserTestClient) -> None:
     response = authenticated_client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029/state")
     assert response.status_code == 404
 
 
-def test_experiment_state_requires_authentication(client: UserTestClient):
+def test_experiment_state_requires_authentication(client: UserTestClient) -> None:
     response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
     assert response.status_code == 401
 
@@ -147,7 +151,7 @@ def test_experiment_state_requires_authentication(client: UserTestClient):
 def test_experiment_state_is_private_to_owner(
     client: UserTestClient,
     sample_experiment: Experiment,
-):
+) -> None:
     experiment_id = None
     with client.authenticate_user():
         client.post(
@@ -164,13 +168,15 @@ def test_experiment_state_is_private_to_owner(
 
 def test_experiment_state_scheduled(
     authenticated_client: UserTestClient, scheduled_experiment_id: str
-):
+) -> None:
     response = authenticated_client.get(f"/experiment/{scheduled_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "scheduled"
 
 
-def test_experiment_state_running(authenticated_client: UserTestClient, running_experiment_id: str):
+def test_experiment_state_running(
+    authenticated_client: UserTestClient, running_experiment_id: str
+) -> None:
     response = authenticated_client.get(f"/experiment/{running_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "running"
@@ -178,7 +184,7 @@ def test_experiment_state_running(authenticated_client: UserTestClient, running_
 
 def test_experiment_state_finished(
     authenticated_client: UserTestClient, finished_experiment_id: str
-):
+) -> None:
     response = authenticated_client.get(f"/experiment/{finished_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "finished"
@@ -186,7 +192,7 @@ def test_experiment_state_finished(
 
 def test_download_rejected_for_unfinished_experiments(
     authenticated_client: UserTestClient, scheduled_experiment_id: str, running_experiment_id: str
-):
+) -> None:
     response = authenticated_client.get(f"/experiment/{scheduled_experiment_id}/download")
     assert response.status_code == 400
 
@@ -196,7 +202,7 @@ def test_download_rejected_for_unfinished_experiments(
 
 def test_download_lists_sheep_files(
     authenticated_client: UserTestClient, finished_experiment_id: str
-):
+) -> None:
     response = authenticated_client.get(f"/experiment/{finished_experiment_id}/download")
     assert response.status_code == 200
     assert response.json() == ["unit_testing_sheep"]
@@ -204,7 +210,7 @@ def test_download_lists_sheep_files(
 
 def test_download_rejects_incorrect_sheeps(
     authenticated_client: UserTestClient, finished_experiment_id: str
-):
+) -> None:
     response = authenticated_client.get(
         f"/experiment/{finished_experiment_id}/download/invalid_sheep"
     )
@@ -213,7 +219,7 @@ def test_download_rejects_incorrect_sheeps(
 
 def test_download_sheep_sends_file(
     authenticated_client: UserTestClient, finished_experiment_id: str
-):
+) -> None:
     response = authenticated_client.get(
         f"/experiment/{finished_experiment_id}/download/unit_testing_sheep"
     )

@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 
-def test_login_yields_access_token(client: TestClient):
+def test_login_yields_access_token(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -14,7 +14,7 @@ def test_login_yields_access_token(client: TestClient):
     assert response.json()["access_token"] is not None
 
 
-def test_access_token_unlocks_authenticated_endpoints(client: TestClient):
+def test_access_token_unlocks_authenticated_endpoints(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -31,7 +31,7 @@ def test_access_token_unlocks_authenticated_endpoints(client: TestClient):
     assert response2.status_code == 200
 
 
-def test_login_with_wrong_password_is_rejected(client: TestClient):
+def test_login_with_wrong_password_is_rejected(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -43,7 +43,7 @@ def test_login_with_wrong_password_is_rejected(client: TestClient):
     assert response.status_code == 401
 
 
-def test_login_rejects_non_existing_user(client: TestClient):
+def test_login_rejects_non_existing_user(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -55,7 +55,7 @@ def test_login_rejects_non_existing_user(client: TestClient):
     assert response.status_code == 401
 
 
-def test_login_rejects_if_mail_is_unconfirmed(client: TestClient):
+def test_login_rejects_if_mail_is_unconfirmed(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -67,7 +67,7 @@ def test_login_rejects_if_mail_is_unconfirmed(client: TestClient):
     assert response.status_code == 401
 
 
-def test_login_rejects_disabled_user(client: TestClient):
+def test_login_rejects_disabled_user(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={

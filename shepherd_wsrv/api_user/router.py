@@ -27,12 +27,12 @@ router = APIRouter(prefix="/user", tags=["User"])
 # ###############################################################
 
 
-@router.get("", response_model=UserOut)
+@router.get("")
 async def user_info(user: Annotated[User, Depends(current_active_user)]) -> UserOut:
     return user
 
 
-@router.patch("", response_model=UserOut)
+@router.patch("")
 async def update_user(
     update: UserUpdate, user: Annotated[User, Depends(current_active_user)]
 ) -> UserOut:
@@ -62,7 +62,7 @@ async def delete_user(
 # ###############################################################
 
 
-@router.post("/register", response_model=UserOut)
+@router.post("/register")
 async def user_registration(
     user_auth: UserAuth,
     mail_engine: Annotated[MailEngine, Depends(mail_engine)],
@@ -99,7 +99,7 @@ async def forgot_password(
     return Response(status_code=200)
 
 
-@router.post("/reset-password", response_model=UserOut)
+@router.post("/reset-password")
 async def reset_password(
     token: Annotated[str, Body(embed=True)],
     password: Annotated[str, Body(embed=True)],
@@ -134,9 +134,8 @@ async def verify_email(token: str) -> Response:
     return Response(status_code=200)
 
 
-@router.post("/approve")
+@router.post("/approve", dependencies=[Depends(active_user_is_admin)])
 async def approve(
-    active_user_is_admin: Annotated[None, Depends(active_user_is_admin)],
     email: Annotated[EmailStr, Body(embed=True)],
 ) -> Response:
     user = await User.by_email(email)

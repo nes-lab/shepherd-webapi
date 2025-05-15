@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from beanie import init_beanie
@@ -20,7 +21,7 @@ async def db_client() -> AgnosticDatabase:
 
 
 @asynccontextmanager
-async def db_context(app: FastAPI):
+async def db_context(app: FastAPI) -> AsyncGenerator[None, None]:
     """Initialize application services."""
     app.db = await db_client()
     print("DB-Startup complete")
@@ -28,7 +29,7 @@ async def db_context(app: FastAPI):
     print("DB-Shutdown complete")
 
 
-async def db_insert_test():
+async def db_insert_test() -> None:
     await db_client()
 
     # add temporary super-user -> NOTE: NOT SECURE

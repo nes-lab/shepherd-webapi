@@ -12,7 +12,7 @@ from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_user.models import User
 
 
-async def run_web_experiment(web_experiment: WebExperiment):
+async def run_web_experiment(web_experiment: WebExperiment) -> None:
     # mark as started
     web_experiment.started_at = datetime.now(tz=local_tz())
     await web_experiment.save()
@@ -41,7 +41,7 @@ async def run_web_experiment(web_experiment: WebExperiment):
         await web_experiment.save()
 
 
-async def main():
+async def main() -> None:
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     await init_beanie(database=client.shp, document_models=[User, WebExperiment])
 

@@ -28,12 +28,14 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 
 @router.get("", response_model=UserOut)
-async def user_info(user: Annotated[User, Depends(current_active_user)]):
+async def user_info(user: Annotated[User, Depends(current_active_user)]) -> UserOut:
     return user
 
 
 @router.patch("", response_model=UserOut)
-async def update_user(update: UserUpdate, user: Annotated[User, Depends(current_active_user)]):
+async def update_user(
+    update: UserUpdate, user: Annotated[User, Depends(current_active_user)]
+) -> UserOut:
     """Update allowed user fields."""
     fields = update.model_dump(exclude_unset=True)
     new_email = fields.pop("email", None)
@@ -64,7 +66,7 @@ async def delete_user(
 async def user_registration(
     user_auth: UserAuth,
     mail_engine: Annotated[MailEngine, Depends(mail_engine)],
-):
+) -> UserOut:
     """Create a new user."""
     user = await User.by_email(user_auth.email)
     if user is not None:
@@ -101,7 +103,7 @@ async def forgot_password(
 async def reset_password(
     token: Annotated[str, Body(embed=True)],
     password: Annotated[str, Body(embed=True)],
-):
+) -> UserOut:
     """Reset user password from token value."""
     user = await User.by_reset_token(token)
     if user is None:
@@ -136,7 +138,7 @@ async def verify_email(token: str) -> Response:
 async def approve(
     active_user_is_admin: Annotated[None, Depends(active_user_is_admin)],
     email: Annotated[EmailStr, Body(embed=True)],
-):
+) -> Response:
     user = await User.by_email(email)
     if user is None:
         return Response(status_code=404)

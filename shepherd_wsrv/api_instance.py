@@ -77,7 +77,7 @@ app.include_router(experiment_router)
 
 
 @app.get("/")
-async def root() -> dict:
+async def root() -> dict[str, str]:
     # TODO: this should probably also go into a router
     return {"message": "Hello World - from FastApi-Server-Prototype"}
 

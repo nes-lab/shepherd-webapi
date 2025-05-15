@@ -23,7 +23,7 @@ if CFG.ssl_enabled:
 
 
 @app.get("/")
-async def redir():
+async def redir() -> RedirectResponse:
     return RedirectResponse(CFG.redirect_url)
 
 

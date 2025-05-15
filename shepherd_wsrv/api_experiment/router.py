@@ -112,7 +112,7 @@ async def get_experiment_state(
 async def download(
     experiment_id: str,
     user: Annotated[User, Depends(current_active_user)],
-):
+) -> list[str]:
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
@@ -133,7 +133,7 @@ async def download_sheep_file(
     experiment_id: str,
     sheep: str,
     user: Annotated[User, Depends(current_active_user)],
-):
+) -> FileResponse:
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
@@ -149,7 +149,7 @@ async def download_sheep_file(
 
     output_path = str(output_paths[sheep])
 
-    def manipulate_output_path(path: str):
+    def manipulate_output_path(path: str) -> str:
         # TODO: write final path manipulation
         path = PurePosixPath(path)
         return "./shepherd_wsrv/tests/data/" + path.name

@@ -1,8 +1,11 @@
 import copy
 import pickle
+from collections.abc import Iterable
+from collections.abc import Mapping
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 import yaml
 from pydantic import validate_call
@@ -28,11 +31,11 @@ class Fixture:
 
     def __init__(self, model_type: str) -> None:
         self.model_type: str = model_type.lower()
-        self.elements_by_name: dict[str, dict] = {}
-        self.elements_by_id: dict[int, dict] = {}
+        self.elements_by_name: dict[str, dict[str, Any]] = {}
+        self.elements_by_id: dict[int, dict[str, Any]] = {}
         # Iterator reset
         self._iter_index: int = 0
-        self._iter_list: list = list(self.elements_by_name.values())
+        self._iter_list: list[dict[str, Any]] = list(self.elements_by_name.values())
 
     def insert(self, data: Wrapper) -> None:
         # ⤷ TODO: could get easier
@@ -48,9 +51,9 @@ class Fixture:
         self.elements_by_name[name] = data
         self.elements_by_id[_id] = data
         # update iterator
-        self._iter_list: list = list(self.elements_by_name.values())
+        self._iter_list: list[dict[str, Any]] = list(self.elements_by_name.values())
 
-    def __getitem__(self, key: str | int) -> dict:
+    def __getitem__(self, key: str | int) -> dict[str, Any]:
         if isinstance(key, str):
             key = key.lower()
             if key in self.elements_by_name:
@@ -66,20 +69,22 @@ class Fixture:
         self._iter_list = list(self.elements_by_name.values())
         return self
 
-    def __next__(self):
+    def __next__(self) -> dict[str, Any]:
         if self._iter_index < len(self._iter_list):
             member = self._iter_list[self._iter_index]
             self._iter_index += 1
             return member
         raise StopIteration
 
-    def keys(self):
+    def keys(self) -> Iterable[str]:
         return self.elements_by_name.keys()
 
     def refs(self) -> dict:
         return {_i["id"]: _i["name"] for _i in self.elements_by_id.values()}
 
-    def inheritance(self, values: dict, chain: list | None = None) -> (dict, list):
+    def inheritance(
+        self, values: dict[str, Any], chain: list[str] | None = None
+    ) -> tuple[dict[str, Any], list[str]]:
         if chain is None:
             chain = []
         values = copy.copy(values)
@@ -133,20 +138,20 @@ class Fixture:
         return values, chain
 
     @staticmethod
-    def fill_model(model: dict, base: dict) -> dict:
+    def fill_model(model: Mapping, base: dict) -> dict:
         base = copy.copy(base)
         for key, value in model.items():
             # keep previous entries
             base[key] = value
         return base
 
-    def query_id(self, _id: int) -> dict:
+    def query_id(self, _id: int) -> dict[str, Any]:
         if isinstance(_id, int) and _id in self.elements_by_id:
             return self.elements_by_id[_id]
         msg = f"Initialization of {self.model_type} by ID failed - {_id} is unknown!"
         raise ValueError(msg)
 
-    def query_name(self, name: str) -> dict:
+    def query_name(self, name: str) -> dict[str, Any]:
         if isinstance(name, str) and name.lower() in self.elements_by_name:
             return self.elements_by_name[name.lower()]
         msg = f"Initialization of {self.model_type} by name failed - {name} is unknown!"
@@ -214,10 +219,10 @@ class Fixtures:
         msg = f"Component '{key}' not found!"
         raise ValueError(msg)
 
-    def keys(self):
+    def keys(self) -> Iterable[str]:
         return self.components.keys()
 
     @staticmethod
     def to_file(file: Path) -> None:
-        msg = f"Not Implemented, TODO: (val={file})"
-        raise RuntimeError(msg)
+        msg = f"TODO: (val={file})"
+        raise NotImplementedError(msg)

@@ -34,7 +34,7 @@ name2model = {
 
 
 @router.get("/{type_name}/ids")  # items?skip=10&limit=100
-async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40):
+async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40) -> dict:
     if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
     elems = tb_client.query_ids(type_name)
@@ -42,7 +42,7 @@ async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40):
 
 
 @router.get("/{type_name}/names")  # items?skip=10&limit=100
-async def read_item_names_list(type_name: str, skip: int = 0, limit: int = 40):
+async def read_item_names_list(type_name: str, skip: int = 0, limit: int = 40) -> dict:
     if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
     elems = tb_client.query_names(type_name)
@@ -54,7 +54,7 @@ async def read_item_by_id(
     type_name: str,
     item_id: int | None = None,
     item_name: str | None = None,
-):
+) -> dict:
     if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
 
@@ -74,5 +74,5 @@ async def read_item_by_id(
 
 
 @router.post("/{type_name}/add")
-async def write_item(type_name: str, item: Wrapper):
+async def write_item(type_name: str, item: Wrapper) -> None:
     pass

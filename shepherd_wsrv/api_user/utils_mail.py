@@ -63,5 +63,5 @@ class FastMailEngine(MailEngine):
             await mail.send_message(message)
 
 
-def mail_engine():
+def mail_engine() -> MailEngine:
     return FastMailEngine()

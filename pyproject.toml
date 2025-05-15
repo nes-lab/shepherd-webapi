@@ -20,7 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
     "Natural Language :: English"
 ]
 
@@ -69,11 +69,9 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
+platforms = ["unix", "linux"]
+package-dir = {"" = "."}
 zip-safe = true
-
-[tool.setuptools.package-dir]
-shepherd_wsrv = "shepherd_wsrv"
 
 [tool.setuptools.dynamic]
 version = {attr = "shepherd_wsrv.__version__"}
@@ -85,9 +83,14 @@ pythonVersion = "3.10"
 pythonPlatform = "All"
 reportMissingParameterType = true
 
+[tool.aliases]
+test = "pytest"
+
 [tool.pytest.ini_options]
 addopts = ["-vvv"]
 asyncio_mode = "auto"
+testpaths = ["tests", ]
+norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv', '.venv']
 
 [tool.coverage.run]
 source = ["shepherd_wsrv"]

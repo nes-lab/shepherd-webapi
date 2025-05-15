@@ -76,9 +76,9 @@ if __name__ == "__main__":
     sample_size = 1000000
     data = extract_hdf(Path("rec.6.h5"))
     data = data.head(sample_size)
-    print(f"Dataset data: {datetime.fromtimestamp(data.index[0]/1e9)}")
+    print(f"Dataset data: {datetime.fromtimestamp(data.index[0] / 1e9)}")
     print(
-        f"Writing Batch of: {data.shape} entries, {data.shape[0]/1e5} sec\n {data.dtypes}",
+        f"Writing Batch of: {data.shape} entries, {data.shape[0] / 1e5} sec\n {data.dtypes}",
     )
     print(data.iloc[0:5, :])
 

@@ -7,9 +7,8 @@ from fastapi import status
 from jose import JWTError
 from jose import jwt
 
+from shepherd_wsrv.api_auth.models import AccessToken
 from shepherd_wsrv.config import CFG
-
-from .models import AccessToken
 
 
 def create_access_token(username: str, expires_delta: timedelta = timedelta(days=1)) -> AccessToken:
@@ -18,7 +17,7 @@ def create_access_token(username: str, expires_delta: timedelta = timedelta(days
     to_encode.update({"exp": expire})
     return AccessToken(
         access_token=jwt.encode(to_encode, CFG.secret_key, algorithm="HS256"),
-        token_type="bearer",
+        token_type="bearer",  # noqa: S106, not a secret
         access_token_expires=expires_delta,
     )
 

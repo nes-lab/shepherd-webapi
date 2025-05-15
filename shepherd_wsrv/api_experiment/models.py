@@ -1,79 +1,72 @@
-from enum import Enum
-from uuid import uuid4
+from datetime import datetime
+from uuid import uuid4, UUID
 
+import pymongo
 from beanie import Document
-from pydantic import UUID4
-from pydantic import BaseModel
+from beanie import Link
 from pydantic import Field
 from shepherd_core.data_models import Experiment
+from shepherd_core.data_models.task import TestbedTasks
 
-from shepherd_wsrv.api_user import User
-
-
-class StatusXP(int, Enum):
-    inactive = 2
-    scheduled = 8
-    active = 32
-    postprocessing = 128
-    finished = 512
-    error = 2048
-    to_be_deleted = 4096
-    # this leaves some wiggle room for extensions
+from shepherd_wsrv.api_user.models import User
 
 
-class ExperimentShort(BaseModel):
-    # TODO: omit target_configs
-    something: int = 5
-    # can be used with .find().project(ExperimentShort).to_list()
+class WebExperiment(Document):
+    id: UUID = Field(default_factory=uuid4)
+    owner: Link[User] | None = None
+    experiment: Experiment
 
+    # None, if the experiment should not be executed.
+    # Set by the API to current wall-clock time when the user requests the experiment
+    # to be executed.
+    # This is NOT the time when the experiment should be run!
+    requested_execution_at: datetime | None = None
 
-class ExperimentDB(Document, Experiment):
-    id: UUID4 = Field(default_factory=uuid4)
-    # uid: Annotated[int, Field(ge=0, lt=2**128, default_factory=id_default), Indexed(unique=True)]
+    # None, when the experiment is not yet executing on the testbed.
+    # Set to current wall-clock time when the web runner picks to experiment and
+    # starts execution on the testbed.
+    started_at: datetime | None = None
 
-    status: StatusXP = StatusXP.inactive
+    # None, when the experiment is not yet finished (still executing or not yet started).
+    # Set to current wall-clock time by the web runner when the testbed finished execution.
+    finished_at: datetime | None = None
 
-    # TODO: temporary bugfixing
-    # owner_id: Optional[IdInt] = None
+    # TODO convert to paths?
+    testbed_tasks: TestbedTasks | None = None
 
     @classmethod
-    async def activate(cls, xp_id: int, user: User) -> bool:
-        _xp = await cls.find_one(
-            cls.id == xp_id,
-            cls.owner_id == user.id,
-            cls.status == StatusXP.inactive,
-        )
-        if not _xp:
-            return False
-        # TODO: add to scheduler, check if successful
-        _xp.status = StatusXP.active
-        await _xp.save()
-        return True
-
-    @classmethod
-    async def get_by_id(cls, xp_id: int, user: User) -> None | Experiment:
+    async def get_by_id(cls, experiment_id: str) -> "None | WebExperiment":
         return await cls.find_one(
-            cls.id == xp_id,
-            cls.owner_id == user.id,
-            cls.status != StatusXP.to_be_deleted,
+            cls.id == experiment_id,
+            fetch_links=True,
         )
 
     @classmethod
-    async def get_by_user(cls, user: User) -> list[Experiment]:
+    async def get_by_user(cls, user: User) -> list["WebExperiment"]:
         return await cls.find(
-            cls.owner_id == user.id,
-            cls.status != StatusXP.to_be_deleted,
+            cls.owner.email == user.email,
+            fetch_links=True,
         ).to_list()
 
     @classmethod
-    async def set_to_delete(cls, xp_id: int, user: User) -> bool:
-        _xp = await cls.find_one(
-            cls.id == xp_id,
-            cls.owner_id == user.id,
-            cls.status != StatusXP.to_be_deleted,
+    async def get_next_scheduling(cls) -> "None | WebExperiment":
+        """
+        Finds the WebExperiment with the oldest scheduling_at datetime,
+        that has not been executed yet (status less than active).
+        """
+        next_experiments = (
+            await cls.find(
+                cls.requested_execution_at != None, # noqa: E711 beanie cannot handle 'is not None' expressions
+                cls.started_at == None, # noqa: E711 beanie cannot handle 'is not None' expressions
+            )
+            .sort(
+                [
+                    (WebExperiment.requested_execution_at, pymongo.ASCENDING),
+                ],
+            )
+            .limit(1)
+            .to_list()
         )
-        if not _xp:
-            return False
-        _xp.status = StatusXP.to_be_deleted
-        await _xp.save()
-        return True
+        if len(next_experiments) > 0:
+            return next_experiments[0]
+        return None

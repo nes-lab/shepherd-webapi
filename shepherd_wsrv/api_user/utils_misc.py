@@ -1,4 +1,3 @@
-import asyncio
 from hashlib import sha3_512
 
 from fastapi import Depends
@@ -8,9 +7,8 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.hash import pbkdf2_sha512
 
 from shepherd_wsrv.api_auth.utils import decode_access_token
+from shepherd_wsrv.api_user.models import User
 from shepherd_wsrv.config import CFG
-
-from .models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")  # Url = full route
 
@@ -44,7 +42,6 @@ async def query_user(token: str | None = Depends(oauth2_scheme)) -> User | None:
 async def current_user(token: str | None = Depends(oauth2_scheme)) -> User:
     _user = await query_user(token)
     if not _user:
-        await asyncio.sleep(1)  # rate limit
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
@@ -57,3 +54,8 @@ async def current_active_user(user: User = Depends(current_user)) -> User:
     if user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
+
+
+def active_user_is_admin(user: User = Depends(current_user)) -> None:
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")

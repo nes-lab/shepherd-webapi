@@ -32,7 +32,7 @@ dependencies = [
     "fastapi-mail",
     "typer",
     "uvicorn[standard]",
-    "python-multipart==0.0.9",
+    "python-multipart==0.0.18",
     "pydantic[email]",
     "beanie",
     "fastui",

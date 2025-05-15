@@ -35,7 +35,7 @@ dependencies = [
     "pydantic[email]",
     "beanie",
     "fastui",
-    "python-secrets",
+    "python-secrets",  # needed? installs A LOT
     "passlib[bcrypt]",
     "python-jose[cryptography]",
     "shepherd_core",

@@ -1,10 +1,12 @@
 import logging
 import logging.handlers
 
-log = logging.getLogger("shp_wsrv")
-log.setLevel(logging.INFO)
+import chromalog
 
-logging.basicConfig(format="%(message)s")
+chromalog.basicConfig(format="%(message)s")
+log = logging.getLogger("shp_wsrv")
+log.addHandler(logging.NullHandler())
+log.setLevel(logging.INFO)
 
 
 def set_verbosity(debug: bool = False) -> None:

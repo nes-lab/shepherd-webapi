@@ -3,6 +3,7 @@ from datetime import datetime
 
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
+from shepherd_core import local_tz
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
@@ -13,7 +14,7 @@ from shepherd_wsrv.api_user.models import User
 
 async def run_web_experiment(web_experiment: WebExperiment):
     # mark as started
-    web_experiment.started_at = datetime.now()
+    web_experiment.started_at = datetime.now(tz=local_tz())
     await web_experiment.save()
 
     experiment = web_experiment.experiment
@@ -36,7 +37,7 @@ async def run_web_experiment(web_experiment: WebExperiment):
         print("finished task execution")
 
         # mark job as done in database
-        web_experiment.finished_at = datetime.now()
+        web_experiment.finished_at = datetime.now(tz=local_tz())
         await web_experiment.save()
 
 

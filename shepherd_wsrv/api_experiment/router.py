@@ -1,12 +1,14 @@
 from datetime import datetime
 from pathlib import PurePosixPath
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from pydantic import UUID4
+from shepherd_core import local_tz
 from shepherd_core.data_models import Experiment
 from starlette.responses import FileResponse
 
@@ -21,7 +23,7 @@ router = APIRouter(prefix="/experiment", tags=["Experiment"])
 async def create_experiment(
     experiment: Experiment,
     user: Annotated[User, Depends(current_active_user)],
-):
+) -> UUID:
     if experiment.time_start is not None:
         raise HTTPException(
             400,
@@ -40,9 +42,9 @@ async def create_experiment(
 @router.get("/")
 async def list_experiments(
     user: Annotated[User, Depends(current_active_user)],
-):
+) -> dict[UUID, Experiment]:
     web_experiments = await WebExperiment.get_by_user(user)
-    experiments = {}
+    experiments: dict[UUID, Experiment] = {}
     for web_experiment in web_experiments:
         experiments[web_experiment.id] = web_experiment.experiment
 
@@ -53,7 +55,7 @@ async def list_experiments(
 async def get_experiment(
     experiment_id: str,
     user: Annotated[User, Depends(current_active_user)],
-):
+) -> Experiment:
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
@@ -66,7 +68,7 @@ async def get_experiment(
 async def schedule_experiment(
     experiment_id: str,
     user: Annotated[User, Depends(current_active_user)],
-):
+) -> Response:
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
@@ -75,7 +77,7 @@ async def schedule_experiment(
 
     # TODO: it would be possible to schedule the same experiment multiple times...
 
-    web_experiment.requested_execution_at = datetime.now()
+    web_experiment.requested_execution_at = datetime.now(tz=local_tz())
     await web_experiment.save()
 
     return Response(status_code=204)
@@ -85,7 +87,7 @@ async def schedule_experiment(
 async def get_experiment_state(
     experiment_id: str,
     user: Annotated[User, Depends(current_active_user)],
-):
+) -> str:
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
     if web_experiment is None:
         raise HTTPException(404, "Not Found")

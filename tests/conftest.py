@@ -9,6 +9,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from shepherd_core import fw_tools
+from shepherd_core import local_tz
 from shepherd_core.data_models import FirmwareDType
 from shepherd_core.data_models import GpioTracing
 from shepherd_core.data_models import UartTracing
@@ -47,7 +48,7 @@ async def database_for_tests(
         first_name="first name",
         last_name="last name",
         disabled=False,
-        email_confirmed_at=datetime.now(),
+        email_confirmed_at=datetime.now(tz=local_tz()),
     )
 
     working_user = user.model_copy(deep=True)
@@ -72,7 +73,7 @@ async def database_for_tests(
         id=UUID(scheduled_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(),
+        requested_execution_at=datetime.now(tz=local_tz()),
     )
     await WebExperiment.insert_one(scheduled_web_experiment)
 
@@ -80,8 +81,8 @@ async def database_for_tests(
         id=UUID(running_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(),
-        started_at=datetime.now(),
+        requested_execution_at=datetime.now(tz=local_tz()),
+        started_at=datetime.now(tz=local_tz()),
     )
     await WebExperiment.insert_one(running_web_experiment)
 
@@ -91,9 +92,9 @@ async def database_for_tests(
         experiment=sample_experiment,
         testbed_tasks=TestbedTasks.from_xp(sample_experiment, testbed),
         owner=working_user,
-        requested_execution_at=datetime.now(),
-        started_at=datetime.now(),
-        finished_at=datetime.now(),
+        requested_execution_at=datetime.now(tz=local_tz()),
+        started_at=datetime.now(tz=local_tz()),
+        finished_at=datetime.now(tz=local_tz()),
     )
     await WebExperiment.insert_one(finished_web_experiment)
 

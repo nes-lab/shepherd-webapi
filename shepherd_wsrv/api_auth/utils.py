@@ -1,11 +1,11 @@
 from datetime import datetime
 from datetime import timedelta
-from datetime import timezone
 
 from fastapi import HTTPException
 from fastapi import status
 from jose import JWTError
 from jose import jwt
+from shepherd_core import local_tz
 
 from shepherd_wsrv.api_auth.models import AccessToken
 from shepherd_wsrv.config import CFG
@@ -13,7 +13,7 @@ from shepherd_wsrv.config import CFG
 
 def create_access_token(username: str, expires_delta: timedelta = timedelta(days=1)) -> AccessToken:
     to_encode = {"sub": username}
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(tz=local_tz()) + expires_delta
     to_encode.update({"exp": expire})
     return AccessToken(
         access_token=jwt.encode(to_encode, CFG.secret_key, algorithm="HS256"),

@@ -1,0 +1,34 @@
+name: Build, install & [pytest]
+
+on:
+  workflow_call:
+
+jobs:
+  utests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.11", "3.10"]
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }} 🐍
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip-dependencies 🔧
+        run: pip install build
+
+      - name: Test-Build webservice-package 🧱
+        run: python -m build
+        working-directory: "./"
+
+      - name: Install webservice-package 🧱
+        run: pip install .[test,dev]
+        working-directory: "./"
+
+      # TODO: pytest

@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Natural Language :: English"
@@ -29,30 +30,30 @@ dependencies = [
     "pyaml",
     "fastapi",
     "fastapi-mail",
-    "typer[all]",
+    "typer",
     "uvicorn[standard]",
-    "python-multipart",
+    "python-multipart==0.0.9",
     "pydantic[email]",
     "beanie",
     "fastui",
     "python-secrets",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd_core>=2024.9.1",
+    "shepherd_core",
     "python-decouple",
-#   "shepherd_herd", # TODO
+    "shepherd_herd",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pre-commit",
     "pyright",
-    "pandas-stubs",  # for pyright with pandas
-    # as long as pandas has to type hints
+    "pandas-stubs",  # for pyright, as long as pandas has no type hints
     "bcrypt", # for salt-creation
 ]
 test = [
     "pytest",
+    "pytest-asyncio",
     "pytest-click",
     "coverage",
 ]

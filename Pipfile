@@ -4,14 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-shepherd-core = "2024.4.2"
-shepherd-data = "2024.4.2"
-shepherd-herd = "0.7.0"
-shepherd-wsvr = {editable = true, extras = ["dev","test"], path = "."}
-python-multipart = "0.0.9"
+shepherd_wsvr = {editable = true, extras = ["dev","test"], path = "."}
 
 [dev-packages]
-pytest-asyncio = "*"
+
 
 [pipenv]
 allow_prereleases = false

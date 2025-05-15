@@ -1,3 +1,5 @@
+Pipfile.lock
+
 # project-specific
 *.pem
 *.key

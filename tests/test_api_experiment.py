@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from shepherd_core.data_models.experiment import Experiment
 
-from shepherd_wsrv.tests.conftest import UserTestClient
+from tests.conftest import UserTestClient
 
 
 def test_create_experiment_is_authenticated(client: TestClient):

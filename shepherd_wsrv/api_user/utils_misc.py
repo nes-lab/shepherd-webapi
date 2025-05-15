@@ -1,4 +1,5 @@
 from hashlib import sha3_512
+from typing import Annotated
 
 from fastapi import Depends
 from fastapi import HTTPException
@@ -32,14 +33,14 @@ def calculate_hash(text: str) -> str:
     return sha3_512(text.encode("UTF-8") + CFG.auth_salt).hexdigest()
 
 
-async def query_user(token: str | None = Depends(oauth2_scheme)) -> User | None:
+async def query_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User | None:
     if not token:
         return None
     email = decode_access_token(token)
     return await User.by_email(email)
 
 
-async def current_user(token: str | None = Depends(oauth2_scheme)) -> User:
+async def current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User:
     _user = await query_user(token)
     if not _user:
         raise HTTPException(
@@ -50,12 +51,12 @@ async def current_user(token: str | None = Depends(oauth2_scheme)) -> User:
     return _user
 
 
-async def current_active_user(user: User = Depends(current_user)) -> User:
+async def current_active_user(user: Annotated[User, Depends(current_user)]) -> User:
     if user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
 
 
-def active_user_is_admin(user: User = Depends(current_user)) -> None:
+def active_user_is_admin(user: Annotated[User, Depends(current_user)]) -> None:
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Forbidden")

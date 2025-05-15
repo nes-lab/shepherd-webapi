@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
@@ -26,12 +28,12 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 
 @router.get("", response_model=UserOut)
-async def user_info(user: User = Depends(current_active_user)):
+async def user_info(user: Annotated[User, Depends(current_active_user)]):
     return user
 
 
 @router.patch("", response_model=UserOut)
-async def update_user(update: UserUpdate, user: User = Depends(current_active_user)):
+async def update_user(update: UserUpdate, user: Annotated[User, Depends(current_active_user)]):
     """Update allowed user fields."""
     fields = update.model_dump(exclude_unset=True)
     new_email = fields.pop("email", None)
@@ -46,7 +48,7 @@ async def update_user(update: UserUpdate, user: User = Depends(current_active_us
 
 @router.delete("")
 async def delete_user(
-    user: User = Depends(current_active_user),
+    user: Annotated[User, Depends(current_active_user)],
 ) -> Response:
     """Delete current user."""
     await User.find_one(User.email == user.email).delete()
@@ -61,7 +63,7 @@ async def delete_user(
 @router.post("/register", response_model=UserOut)
 async def user_registration(
     user_auth: UserAuth,
-    mail_engine: MailEngine = Depends(mail_engine),
+    mail_engine: Annotated[MailEngine, Depends(mail_engine)],
 ):
     """Create a new user."""
     user = await User.by_email(user_auth.email)
@@ -82,8 +84,8 @@ async def user_registration(
 
 @router.post("/forgot-password")
 async def forgot_password(
-    email: EmailStr = Body(embed=True),
-    mail_engine: MailEngine = Depends(mail_engine),
+    email: Annotated[EmailStr, Body(embed=True)],
+    mail_engine: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Send password reset email."""
     user = await User.by_email(email)
@@ -97,8 +99,8 @@ async def forgot_password(
 
 @router.post("/reset-password", response_model=UserOut)
 async def reset_password(
-    token: str = Body(embed=True),
-    password: str = Body(embed=True),
+    token: Annotated[str, Body(embed=True)],
+    password: Annotated[str, Body(embed=True)],
 ):
     """Reset user password from token value."""
     user = await User.by_reset_token(token)
@@ -132,8 +134,8 @@ async def verify_email(token: str) -> Response:
 
 @router.post("/approve")
 async def approve(
-    active_user_is_admin: None = Depends(active_user_is_admin),
-    email: EmailStr = Body(embed=True),
+    active_user_is_admin: Annotated[None, Depends(active_user_is_admin)],
+    email: Annotated[EmailStr, Body(embed=True)],
 ):
     user = await User.by_email(email)
     if user is None:

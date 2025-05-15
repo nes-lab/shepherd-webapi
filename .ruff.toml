@@ -10,7 +10,6 @@ ignore = [
     "TID252", # relative imports from parent
     "PLR0904", "PLR0911", "PLR0912", "PLR0913", "PLR0915", # complexity
     "C901", # complexity
-    "ANN101", "ANN102", # self & cls not type-annotated
     "ANN401",  # Any as valid type
     "COM812", # trailing comma, same line
     "TD002", "TD003", "TD005", "FIX002",  # TODOs
@@ -21,17 +20,11 @@ ignore = [
     "D410", "D411", "D413", "D415", "D416", "D417",  # conflicts with PEP257-convention (C)
     "EM101", "TRY003", "TRY400",  # xpt & strings
     "D", "T201", "ERA",  # TODO: for releasing now - do add documentation later
-    "B008", # FastAPI intended use of Depends
-    "ANN102",
     ]
 
 [lint.per-file-ignores]
-"*/tests/**" = [
-    # "ARG",
-    "S101",
-    "ANN201",
-    # "D",
-]
+"tests/**" = ["S101"]
+"playground/**" = ["ALL"]
 
 [lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.

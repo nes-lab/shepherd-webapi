@@ -22,13 +22,14 @@ ignore = [
     "EM101", "TRY003", "TRY400",  # xpt & strings
     "D", "T201", "ERA",  # TODO: for releasing now - do add documentation later
     "B008", # FastAPI intended use of Depends
-    "ANN102"
+    "ANN102",
     ]
 
 [lint.per-file-ignores]
 "*/tests/**" = [
     # "ARG",
     "S101",
+    "ANN201",
     # "D",
 ]
 

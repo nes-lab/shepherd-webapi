@@ -8,14 +8,14 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from shepherd_core import fw_tools
-from shepherd_core.data_models import FirmwareDType
+from shepherd_core.data_models import FirmwareDType, UartTracing
 from shepherd_core.data_models import GpioTracing
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.data_models.experiment import TargetConfig
-from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.task import TestbedTasks
+from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
 
 from shepherd_wsrv.api_experiment.models import WebExperiment
@@ -179,10 +179,8 @@ def sample_experiment():
                     mcu=MCU(name="nRF52"),
                 ),
                 power_tracing=None,
-                gpio_tracing=GpioTracing(
-                    uart_decode=True,
-                    uart_baudrate=115_200,
-                ),
+                uart_tracing=UartTracing(baudrate=115_200),
+                gpio_tracing=GpioTracing(),
             ),
         ],
     )

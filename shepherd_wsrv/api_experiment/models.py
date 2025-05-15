@@ -32,7 +32,7 @@ class WebExperiment(Document):
     # Set to current wall-clock time by the web runner when the testbed finished execution.
     finished_at: datetime | None = None
 
-    # TODO convert to paths?
+    # TODO: convert to paths?
     testbed_tasks: TestbedTasks | None = None
 
     @classmethod

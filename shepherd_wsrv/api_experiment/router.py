@@ -73,7 +73,7 @@ async def schedule_experiment(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
-    # TODO it would be possible to schedule the same experiment multiple times...
+    # TODO: it would be possible to schedule the same experiment multiple times...
 
     web_experiment.requested_execution_at = datetime.now()
     await web_experiment.save()
@@ -90,7 +90,7 @@ async def get_experiment_state(
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
 
-    # TODO route privacy should be modeled canonically
+    # TODO: route privacy should be modeled canonically
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
@@ -115,7 +115,7 @@ async def download(
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
 
-    # TODO route privacy should be modeled canonically
+    # TODO: route privacy should be modeled canonically
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
@@ -136,7 +136,7 @@ async def download_sheep_file(
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
 
-    # TODO route privacy should be modeled canonically
+    # TODO: route privacy should be modeled canonically
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
@@ -148,7 +148,7 @@ async def download_sheep_file(
     output_path = str(output_paths[sheep])
 
     def manipulate_output_path(path: str):
-        # TODO write final path manipulation
+        # TODO: write final path manipulation
         path = PurePosixPath(path)
         return "./shepherd_wsrv/tests/data/" + path.name
 

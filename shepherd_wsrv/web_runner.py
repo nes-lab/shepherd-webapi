@@ -25,7 +25,7 @@ async def run_web_experiment(web_experiment: WebExperiment):
     # Yet it is necessary later to compute the download paths.
     web_experiment.testbed_tasks = testbed_tasks
 
-    # TODO move inventory file to environment variable
+    # TODO: move inventory file to environment variable
     herd = Herd(
         inventory="/home/matthias/dev/shepherd/repo/software/shepherd-webservice/herd.yml",
     )
@@ -45,7 +45,7 @@ async def main():
     await init_beanie(database=client.shp, document_models=[User, WebExperiment])
 
     while True:
-        # TODO convert all prints to proper logs
+        # TODO: convert all prints to proper logs
         print("Checking experiment scheduling FIFO")
 
         next_experiment = await WebExperiment.get_next_scheduling()

@@ -107,7 +107,8 @@ class DBClient:
                 # TODO: still depending on _fixture
                 values = self.query_item(model_type, uid=value)
             else:
-                raise ValueError(f"Query {model_type} by name / ID failed - {values} is unknown!")
+                msg = f"Query {model_type} by name / ID failed - {values} is unknown!"
+                raise ValueError(msg)
         return self.try_inheritance(model_type, values)
 
     def fill_in_user_data(self, values: dict) -> dict:

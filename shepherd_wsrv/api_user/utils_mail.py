@@ -22,7 +22,7 @@ mail = FastMail(mail_conf)
 
 
 class MailEngine:
-    # TODO reconsider term "MailEngine"
+    # TODO: reconsider term "MailEngine"
 
     async def send_verification_email(self, email: str, token: str) -> None: ...
 

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -12,7 +14,9 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()) -> AccessToken:
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> AccessToken:
     _user = await User.by_email(form_data.username)
     if not _user:
         raise HTTPException(status_code=401, detail="Incorrect username or password")

@@ -26,7 +26,6 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-    "pandas",  # todo: maybe ditch, just use numpy, if needed at all
     "pyaml",
     "fastapi",
     "fastapi-mail",
@@ -48,7 +47,6 @@ dependencies = [
 dev = [
     "pre-commit",
     "pyright",
-    "pandas-stubs",  # for pyright, as long as pandas has no type hints
     "bcrypt", # for salt-creation
 ]
 test = [
@@ -79,7 +77,6 @@ shepherd_wsrv = "shepherd_wsrv"
 
 [tool.setuptools.dynamic]
 version = {attr = "shepherd_wsrv.__version__"}
-#version = {file = "./shepherd_wsrv/config.py:__version__"}  # TODO: does not work
 
 [tool.pyright]
 root = "./"

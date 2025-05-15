@@ -1,14 +1,14 @@
 from datetime import datetime
-from typing import Annotated
 from pathlib import PurePosixPath
+from typing import Annotated
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
-from starlette.responses import FileResponse
 from pydantic import UUID4
 from shepherd_core.data_models import Experiment
+from starlette.responses import FileResponse
 
 from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_user.models import User

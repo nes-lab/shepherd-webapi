@@ -26,7 +26,7 @@ def test_access_token_unlocks_authenticated_endpoints(client: TestClient):
     assert response.status_code == 200
     response2 = client.get(
         "/user",
-        headers={"Authorization": f"Bearer {response.json()["access_token"]}"},
+        headers={"Authorization": f"Bearer {response.json()['access_token']}"},
     )
     assert response2.status_code == 200
 

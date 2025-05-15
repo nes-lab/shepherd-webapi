@@ -133,6 +133,7 @@ def test_state_of_fresh_experiments(
     assert response.status_code == 200
     assert response.json() == "created"
 
+
 def test_experiment_state_not_found(authenticated_client: UserTestClient):
     response = authenticated_client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029/state")
     assert response.status_code == 404
@@ -160,39 +161,61 @@ def test_experiment_state_is_private_to_owner(
         response = client.get(f"/experiment/{experiment_id}/state")
         assert response.status_code == 403
 
-def test_experiment_state_scheduled(authenticated_client: UserTestClient, scheduled_experiment_id: str):
+
+def test_experiment_state_scheduled(
+    authenticated_client: UserTestClient, scheduled_experiment_id: str
+):
     response = authenticated_client.get(f"/experiment/{scheduled_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "scheduled"
+
 
 def test_experiment_state_running(authenticated_client: UserTestClient, running_experiment_id: str):
     response = authenticated_client.get(f"/experiment/{running_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "running"
 
-def test_experiment_state_finished(authenticated_client: UserTestClient, finished_experiment_id: str):
+
+def test_experiment_state_finished(
+    authenticated_client: UserTestClient, finished_experiment_id: str
+):
     response = authenticated_client.get(f"/experiment/{finished_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "finished"
 
 
-def test_download_rejected_for_unfinished_experiments(authenticated_client: UserTestClient, scheduled_experiment_id: str, running_experiment_id: str):
+def test_download_rejected_for_unfinished_experiments(
+    authenticated_client: UserTestClient, scheduled_experiment_id: str, running_experiment_id: str
+):
     response = authenticated_client.get(f"/experiment/{scheduled_experiment_id}/download")
     assert response.status_code == 400
 
     response = authenticated_client.get(f"/experiment/{running_experiment_id}/download")
     assert response.status_code == 400
 
-def test_download_lists_sheep_files(authenticated_client: UserTestClient, finished_experiment_id: str):
+
+def test_download_lists_sheep_files(
+    authenticated_client: UserTestClient, finished_experiment_id: str
+):
     response = authenticated_client.get(f"/experiment/{finished_experiment_id}/download")
     assert response.status_code == 200
     assert response.json() == ["unit_testing_sheep"]
 
-def test_download_rejects_incorrect_sheeps(authenticated_client: UserTestClient, finished_experiment_id: str):
-    response = authenticated_client.get(f"/experiment/{finished_experiment_id}/download/invalid_sheep")
+
+def test_download_rejects_incorrect_sheeps(
+    authenticated_client: UserTestClient, finished_experiment_id: str
+):
+    response = authenticated_client.get(
+        f"/experiment/{finished_experiment_id}/download/invalid_sheep"
+    )
     assert response.status_code == 404
 
-def test_download_sheep_sends_file(authenticated_client: UserTestClient, finished_experiment_id: str):
-    response = authenticated_client.get(f"/experiment/{finished_experiment_id}/download/unit_testing_sheep")
+
+def test_download_sheep_sends_file(
+    authenticated_client: UserTestClient, finished_experiment_id: str
+):
+    response = authenticated_client.get(
+        f"/experiment/{finished_experiment_id}/download/unit_testing_sheep"
+    )
     assert response.status_code == 200
-    assert int(response.headers['content-length']) == 42
+    assert int(response.headers["content-length"]) == 42

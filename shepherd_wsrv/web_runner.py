@@ -1,24 +1,14 @@
+import asyncio
 from datetime import datetime
-from time import sleep
-
-from contextlib import asynccontextmanager
 
 from beanie import init_beanie
-from fastapi import FastAPI
-from motor.core import AgnosticDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
-from shepherd_core import local_now
+from shepherd_core.data_models.task import TestbedTasks
+from shepherd_core.data_models.testbed import Testbed
+from shepherd_herd.herd import Herd
 
 from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_user.models import User
-from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
-from shepherd_core.data_models.testbed import Testbed
-from shepherd_core.data_models.task import TestbedTasks
-
-import asyncio
-
-from shepherd_herd.herd import Herd
-from pathlib import Path
 
 
 async def run_web_experiment(web_experiment: WebExperiment):

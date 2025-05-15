@@ -1,5 +1,6 @@
 from datetime import datetime
-from uuid import uuid4, UUID
+from uuid import UUID
+from uuid import uuid4
 
 import pymongo
 from beanie import Document
@@ -56,8 +57,8 @@ class WebExperiment(Document):
         """
         next_experiments = (
             await cls.find(
-                cls.requested_execution_at != None, # noqa: E711 beanie cannot handle 'is not None' expressions
-                cls.started_at == None, # noqa: E711 beanie cannot handle 'is not None' expressions
+                cls.requested_execution_at != None,  # noqa: E711 beanie cannot handle 'is not None' expressions
+                cls.started_at == None,  # noqa: E711 beanie cannot handle 'is not None' expressions
             )
             .sort(
                 [

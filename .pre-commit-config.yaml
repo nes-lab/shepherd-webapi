@@ -67,4 +67,4 @@ repos:
     rev: "v2.4.1"
     hooks:
       - id: codespell
-        exclude: \.(sch|brd|lbr)$
+        additional_dependencies: ["tomli"]  # for py<3.11

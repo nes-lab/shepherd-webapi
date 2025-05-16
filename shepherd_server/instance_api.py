@@ -10,6 +10,7 @@ small excurse into what HTTP-Verb to use:
 
 
 """
+
 from pathlib import Path
 
 import uvicorn
@@ -81,13 +82,16 @@ async def root() -> dict[str, str]:
     # TODO: this should probably also go into a router
     return {"message": "Hello World - from FastApi-Server-Prototype"}
 
-@app.get('/favicon.ico', include_in_schema=False)
-async def favicon():
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon1() -> FileResponse:
     return FileResponse((path_favicon / "favicon.ico").as_posix())
 
-@app.get('/favicon.svg', include_in_schema=False)
-async def favicon():
+
+@app.get("/favicon.svg", include_in_schema=False)
+async def favicon2() -> FileResponse:
     return FileResponse((path_favicon / "favicon.svg").as_posix())
+
 
 def run() -> None:
     uvi_args = {

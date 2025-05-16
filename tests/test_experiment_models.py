@@ -2,7 +2,7 @@ import datetime
 
 from shepherd_core.data_models.experiment import Experiment
 
-from shepherd_wsrv.api_experiment.models import WebExperiment
+from shepherd_server.api_experiment.models import WebExperiment
 
 
 async def test_get_next_scheduling(

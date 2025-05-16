@@ -22,13 +22,13 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
 
-from shepherd_wsrv.api_experiment.models import WebExperiment
-from shepherd_wsrv.api_instance import app
-from shepherd_wsrv.api_user.models import User
-from shepherd_wsrv.api_user.utils_mail import MailEngine
-from shepherd_wsrv.api_user.utils_mail import mail_engine
-from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
-from shepherd_wsrv.db_instance import db_client
+from shepherd_server.api_experiment.models import WebExperiment
+from shepherd_server.api_user.models import User
+from shepherd_server.api_user.utils_mail import MailEngine
+from shepherd_server.api_user.utils_mail import mail_engine
+from shepherd_server.api_user.utils_misc import calculate_password_hash
+from shepherd_server.instance_api import app
+from shepherd_server.instance_db import db_client
 
 
 @pytest_asyncio.fixture

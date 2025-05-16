@@ -16,14 +16,14 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from shepherd_wsrv.api_auth.router import router as auth_router
-from shepherd_wsrv.api_experiment.router import router as experiment_router
-from shepherd_wsrv.api_user.router import router as user_router
-from shepherd_wsrv.config import CFG
-from shepherd_wsrv.db_instance import db_context
-from shepherd_wsrv.version import __version__
+from shepherd_server.api_auth.router import router as auth_router
+from shepherd_server.api_experiment.router import router as experiment_router
+from shepherd_server.api_user.router import router as user_router
+from shepherd_server.config import CFG
+from shepherd_server.instance_db import db_context
+from shepherd_server.version import __version__
 
-# run with: uvicorn shepherd_wsrv.webapi:app --reload
+# run with: uvicorn shepherd_server.webapi:app --reload
 # -> open interface http://127.0.0.1:8000
 # -> open docs      http://127.0.0.1:8000/docs
 # -> open docs      http://127.0.0.1:8000/redoc -> long load, but interactive / better
@@ -42,9 +42,9 @@ tag_metadata = [
 
 
 app = FastAPI(
-    title="shepherd-api",
+    title="shepherd-webapi",
     version=str(__version__),
-    description="The web-api for the shepherd-testbed for energy harvesting CPS",
+    description="The WebAPI for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/doc",
     # contact="https://github.com/orgua/shepherd",
     docs_url="/doc0",  # this one allows login

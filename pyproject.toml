@@ -1,5 +1,5 @@
 [project]
-name = "shepherd_wsrv"
+name = "shepherd_server"
 description = "Web-Server & -API for the Shepherd-Testbed"
 keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "solar"]
 
@@ -63,7 +63,7 @@ Issues = "https://github.com/nes-lab/shepherd-webapi/issues"
 Source = "https://github.com/nes-lab/shepherd-webapi"
 
 [project.scripts]
-shepherd-wsrv = "shepherd_wsrv.cli:cli"
+shepherd-wsrv = "shepherd_server.cli:cli"
 
 [build-system]
 requires = ["setuptools"]
@@ -75,11 +75,11 @@ package-dir = {"" = "."}
 zip-safe = true
 
 [tool.setuptools.dynamic]
-version = {attr = "shepherd_wsrv.__version__"}
+version = {attr = "shepherd_server.__version__"}
 
 [tool.pyright]
 root = "./"
-include = ['./sratch_models',]  # TODO
+include = []
 pythonVersion = "3.10"
 pythonPlatform = "All"
 reportMissingParameterType = true
@@ -94,5 +94,5 @@ testpaths = ["tests", ]
 norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv', '.venv']
 
 [tool.coverage.run]
-source = ["shepherd_wsrv"]
+source = ["shepherd_server"]
 # TODO: add something like "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"

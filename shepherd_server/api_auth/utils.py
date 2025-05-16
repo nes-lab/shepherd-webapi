@@ -7,8 +7,8 @@ from jose import JWTError
 from jose import jwt
 from shepherd_core import local_tz
 
-from shepherd_wsrv.api_auth.models import AccessToken
-from shepherd_wsrv.config import CFG
+from shepherd_server.api_auth.models import AccessToken
+from shepherd_server.config import CFG
 
 
 def create_access_token(username: str, expires_delta: timedelta = timedelta(days=1)) -> AccessToken:

@@ -5,10 +5,10 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-from shepherd_wsrv.api_auth.models import AccessToken
-from shepherd_wsrv.api_auth.utils import create_access_token
-from shepherd_wsrv.api_user.models import User
-from shepherd_wsrv.api_user.utils_misc import verify_password_hash
+from shepherd_server.api_auth.models import AccessToken
+from shepherd_server.api_auth.utils import create_access_token
+from shepherd_server.api_user.models import User
+from shepherd_server.api_user.utils_misc import verify_password_hash
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

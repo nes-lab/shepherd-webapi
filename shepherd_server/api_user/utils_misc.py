@@ -7,9 +7,9 @@ from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.hash import pbkdf2_sha512
 
-from shepherd_wsrv.api_auth.utils import decode_access_token
-from shepherd_wsrv.api_user.models import User
-from shepherd_wsrv.config import CFG
+from shepherd_server.api_auth.utils import decode_access_token
+from shepherd_server.api_user.models import User
+from shepherd_server.config import CFG
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")  # Url = full route
 

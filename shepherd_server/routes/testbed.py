@@ -6,7 +6,7 @@ from shepherd_core.data_models import Wrapper
 from shepherd_core.data_models import content as shp_cnt
 from shepherd_core.data_models import testbed as shp_tb
 
-from shepherd_wsrv.api_user.utils_misc import current_active_user
+from shepherd_server.api_user.utils_misc import current_active_user
 
 router = APIRouter(
     prefix="/shepherd",

@@ -7,7 +7,7 @@ from shepherd_core.data_models.base.wrapper import Wrapper
 from typing_extensions import Self
 from typing_extensions import Unpack
 
-from shepherd_wsrv.api_user.models import User
+from shepherd_server.api_user.models import User
 
 
 class DBClient:

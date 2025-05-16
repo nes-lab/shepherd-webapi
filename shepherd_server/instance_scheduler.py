@@ -8,9 +8,9 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
-from shepherd_wsrv.api_experiment.models import WebExperiment
-from shepherd_wsrv.api_user.models import User
-from shepherd_wsrv.logger import log
+from shepherd_server.api_experiment.models import WebExperiment
+from shepherd_server.api_user.models import User
+from shepherd_server.logger import log
 
 
 async def run_web_experiment(web_experiment: WebExperiment, *, dry_run: bool = False) -> None:

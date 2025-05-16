@@ -8,13 +8,13 @@ import click
 import shepherd_core
 import typer
 
-from shepherd_wsrv import __version__
-from shepherd_wsrv.api_instance import run as run_web_api
-from shepherd_wsrv.db_instance import db_insert_test
-from shepherd_wsrv.logger import log
-from shepherd_wsrv.logger import set_verbosity
-from shepherd_wsrv.redirect_instance import run as web_redirect_run
-from shepherd_wsrv.task_scheduler import run as run_task_scheduler
+from shepherd_server import __version__
+from shepherd_server.instance_api import run as run_api_server
+from shepherd_server.instance_db import db_insert_test
+from shepherd_server.instance_redirect import run as run_redirect_server
+from shepherd_server.instance_scheduler import run as run_scheduler_server
+from shepherd_server.logger import log
+from shepherd_server.logger import set_verbosity
 
 cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
 
@@ -58,12 +58,6 @@ def cli_callback(*, verbose: bool = verbose_opt_t, version: bool = version_opt_t
 
 
 @cli.command()
-def redirect() -> None:
-    """Take API offline and only redirect to github-documentation"""
-    web_redirect_run()
-
-
-@cli.command()
 # def init(file: Path | None = None) -> None:
 def init() -> None:
     """Creates structures in database, can also recover data from a backup"""
@@ -83,14 +77,23 @@ def backup() -> None:
 def run_api() -> None:
     """Start web api to access data."""
     with ProcessPoolExecutor() as ppe:
-        ppe.submit(run_web_api)
+        ppe.submit(run_api_server)
 
 
 @cli.command()
 def run_scheduler() -> None:
-    """Start scheduler to coordinate the testbed."""
+    """Start scheduler to coordinate the testbed.
+
+    This is separate to webAPI to allow starting/stopping both individually
+    """
     with ProcessPoolExecutor() as ppe:
-        ppe.submit(run_task_scheduler)
+        ppe.submit(run_scheduler_server)
+
+
+@cli.command()
+def redirect() -> None:
+    """Start http redirect to landing-page."""
+    run_redirect_server()
 
 
 if __name__ == "__main__":

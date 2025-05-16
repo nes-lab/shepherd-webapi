@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from shepherd_wsrv.api_user.utils_mail import MailEngine
+from shepherd_server.api_user.utils_mail import MailEngine
 
 
 def test_user_can_query_account_data(authenticated_client: TestClient) -> None:

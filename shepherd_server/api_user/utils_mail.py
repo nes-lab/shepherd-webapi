@@ -5,8 +5,8 @@ from fastapi_mail import FastMail
 from fastapi_mail import MessageSchema
 from fastapi_mail import MessageType
 
-from shepherd_wsrv.config import CFG
-from shepherd_wsrv.logger import log
+from shepherd_server.config import CFG
+from shepherd_server.logger import log
 
 mail_conf = ConnectionConfig(
     MAIL_USERNAME=CFG.mail_username,

@@ -9,7 +9,7 @@ from pydantic import Field
 from shepherd_core.data_models import Experiment
 from shepherd_core.data_models.task import TestbedTasks
 
-from shepherd_wsrv.api_user.models import User
+from shepherd_server.api_user.models import User
 
 
 class WebExperiment(Document):

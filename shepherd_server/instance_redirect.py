@@ -8,8 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
 
-from shepherd_wsrv.config import CFG
-from shepherd_wsrv.version import __version__
+from shepherd_server.config import CFG
+from shepherd_server.version import __version__
 
 app = FastAPI(
     title="shepherd-web-redirect",

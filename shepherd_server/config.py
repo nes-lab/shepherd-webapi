@@ -24,7 +24,7 @@ class Cfg(BaseModel):
     # will raise if missing default, TODO: remove default
 
     # api redirect
-    redirect_url: str = "https://orgua.github.io/shepherd/external/testbed.html"
+    redirect_url: str = "https://nes-lab.github.io/shepherd-nova/"
 
     # MAIL
     mail_console: bool = config("MAIL_CONSOLE", default=False, cast=bool)

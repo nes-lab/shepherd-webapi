@@ -10,6 +10,7 @@ def test_create_experiment_is_authenticated(client: TestClient) -> None:
     assert response.status_code == 401
 
 
+@pytest.mark.dependency()
 def test_create_experiment_succeeds(
     authenticated_client: TestClient,
     sample_experiment: Experiment,
@@ -26,6 +27,7 @@ def test_list_experiments_is_authenticated(client: TestClient) -> None:
     assert response.status_code == 401
 
 
+@pytest.mark.dependency()
 def test_list_experiments(
     authenticated_client: TestClient,
     created_experiment_id: str,

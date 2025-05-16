@@ -11,9 +11,10 @@ from shepherd_core import local_tz
 from shepherd_core.data_models import Experiment
 from starlette.responses import FileResponse
 
-from shepherd_server.api_experiment.models import WebExperiment
 from shepherd_server.api_user.models import User
 from shepherd_server.api_user.utils_misc import current_active_user
+
+from .models import WebExperiment
 
 router = APIRouter(prefix="/experiment", tags=["Experiment"])
 

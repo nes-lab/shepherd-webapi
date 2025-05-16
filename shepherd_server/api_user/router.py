@@ -8,16 +8,16 @@ from fastapi import Response
 from pydantic import EmailStr
 from shepherd_core import local_now
 
-from shepherd_server.api_user.models import User
-from shepherd_server.api_user.models import UserAuth
-from shepherd_server.api_user.models import UserOut
-from shepherd_server.api_user.models import UserUpdate
-from shepherd_server.api_user.utils_mail import MailEngine
-from shepherd_server.api_user.utils_mail import mail_engine
-from shepherd_server.api_user.utils_misc import active_user_is_admin
-from shepherd_server.api_user.utils_misc import calculate_hash
-from shepherd_server.api_user.utils_misc import calculate_password_hash
-from shepherd_server.api_user.utils_misc import current_active_user
+from .models import User
+from .models import UserAuth
+from .models import UserOut
+from .models import UserUpdate
+from .utils_mail import MailEngine
+from .utils_mail import mail_engine
+from .utils_misc import active_user_is_admin
+from .utils_misc import calculate_hash
+from .utils_misc import calculate_password_hash
+from .utils_misc import current_active_user
 
 router = APIRouter(prefix="/user", tags=["User"])
 

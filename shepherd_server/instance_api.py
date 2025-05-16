@@ -10,24 +10,27 @@ small excurse into what HTTP-Verb to use:
 
 
 """
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.responses import FileResponse
 
-from shepherd_server.api_auth.router import router as auth_router
-from shepherd_server.api_experiment.router import router as experiment_router
-from shepherd_server.api_user.router import router as user_router
-from shepherd_server.config import CFG
-from shepherd_server.instance_db import db_context
-from shepherd_server.version import __version__
+from .api_auth.router import router as auth_router
+from .api_experiment.router import router as experiment_router
+from .api_user.router import router as user_router
+from .config import CFG
+from .instance_db import db_context
+from .version import version
 
 # run with: uvicorn shepherd_server.webapi:app --reload
 # -> open interface http://127.0.0.1:8000
 # -> open docs      http://127.0.0.1:8000/docs
 # -> open docs      http://127.0.0.1:8000/redoc -> long load, but interactive / better
 
+path_favicon = Path(__file__).parent / "favicon/"
 
 tag_metadata = [
     {
@@ -43,7 +46,7 @@ tag_metadata = [
 
 app = FastAPI(
     title="shepherd-webapi",
-    version=str(__version__),
+    version=str(version),
     description="The WebAPI for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/doc",
     # contact="https://github.com/orgua/shepherd",
@@ -78,6 +81,13 @@ async def root() -> dict[str, str]:
     # TODO: this should probably also go into a router
     return {"message": "Hello World - from FastApi-Server-Prototype"}
 
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse((path_favicon / "favicon.ico").as_posix())
+
+@app.get('/favicon.svg', include_in_schema=False)
+async def favicon():
+    return FileResponse((path_favicon / "favicon.svg").as_posix())
 
 def run() -> None:
     uvi_args = {

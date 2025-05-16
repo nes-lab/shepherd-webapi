@@ -8,13 +8,13 @@ import click
 import shepherd_core
 import typer
 
-from shepherd_server import __version__
-from shepherd_server.instance_api import run as run_api_server
-from shepherd_server.instance_db import db_insert_test
-from shepherd_server.instance_redirect import run as run_redirect_server
-from shepherd_server.instance_scheduler import run as run_scheduler_server
-from shepherd_server.logger import log
-from shepherd_server.logger import set_verbosity
+from .instance_api import run as run_api_server
+from .instance_db import db_insert_test
+from .instance_redirect import run as run_redirect_server
+from .instance_scheduler import run as run_scheduler_server
+from .logger import log
+from .logger import set_verbosity
+from .version import version as server_version
 
 cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
 
@@ -50,7 +50,7 @@ def cli_callback(*, verbose: bool = verbose_opt_t, version: bool = version_opt_t
     set_verbosity(debug=verbose)
 
     if version:
-        log.info("Shepherd-Wsrv v%s", __version__)
+        log.info("Shepherd-Server v%s", server_version)
         log.debug("Shepherd-Core v%s", shepherd_core.__version__)
         log.debug("Python v%s", sys.version)
         log.debug("Typer v%s", typer.__version__)
@@ -91,7 +91,7 @@ def run_scheduler() -> None:
 
 
 @cli.command()
-def redirect() -> None:
+def run_redirect() -> None:
     """Start http redirect to landing-page."""
     run_redirect_server()
 

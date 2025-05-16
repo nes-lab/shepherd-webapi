@@ -8,12 +8,12 @@ from fastapi import FastAPI
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
 
-from shepherd_server.config import CFG
-from shepherd_server.version import __version__
+from .config import CFG
+from .version import version
 
 app = FastAPI(
     title="shepherd-web-redirect",
-    version=str(__version__),
+    version=str(version),
     redoc_url=None,
     docs_url=None,
 )

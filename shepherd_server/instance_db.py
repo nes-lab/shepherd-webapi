@@ -7,10 +7,10 @@ from motor.core import AgnosticDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
 from shepherd_core import local_now
 
-from shepherd_server.api_experiment.models import WebExperiment
-from shepherd_server.api_user.models import User
-from shepherd_server.api_user.utils_misc import calculate_password_hash
-from shepherd_server.logger import log
+from .api_experiment.models import WebExperiment
+from .api_user.models import User
+from .api_user.utils_misc import calculate_password_hash
+from .logger import log
 
 
 async def db_client() -> AgnosticDatabase:

@@ -63,7 +63,7 @@ Issues = "https://github.com/nes-lab/shepherd-webapi/issues"
 Source = "https://github.com/nes-lab/shepherd-webapi"
 
 [project.scripts]
-shepherd-wsrv = "shepherd_server.cli:cli"
+shepherd-server = "shepherd_server.cli:cli"
 
 [build-system]
 requires = ["setuptools"]
@@ -73,6 +73,13 @@ build-backend = "setuptools.build_meta"
 platforms = ["unix", "linux"]
 package-dir = {"" = "."}
 zip-safe = true
+include-package-data = true
+
+[tool.setuptools.package-data]
+shepherd_server = [
+    "**/favicon.svg",
+    "**/favicon.ico",
+]
 
 [tool.setuptools.dynamic]
 version = {attr = "shepherd_server.__version__"}

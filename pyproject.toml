@@ -58,9 +58,9 @@ test = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/orgua/shepherd_webservice/blob/main/README.md"
-Issues = "https://github.com/orgua/shepherd_webservice/issues"
-Source = "https://github.com/orgua/shepherd_webservice"
+Documentation = "https://github.com/nes-lab/shepherd-webapi/blob/main/README.md"
+Issues = "https://github.com/nes-lab/shepherd-webapi/issues"
+Source = "https://github.com/nes-lab/shepherd-webapi"
 
 [project.scripts]
 shepherd-wsrv = "shepherd_wsrv.cli:cli"

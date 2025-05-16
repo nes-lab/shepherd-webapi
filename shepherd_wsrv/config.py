@@ -28,11 +28,11 @@ class Cfg(BaseModel):
 
     # MAIL
     mail_console: bool = config("MAIL_CONSOLE", default=False, cast=bool)
-    mail_server: str = config("MAIL_SERVER", default="smtp.shepherd.io")
-    mail_port: int = config("MAIL_PORT", default=587, cast=int)
+    mail_server: str = config("MAIL_SERVER", default="mail.your-server.de")
+    mail_port: int = config("MAIL_PORT", default=993, cast=int)
     mail_username: str = config("MAIL_USERNAME", default="")
     mail_password: str = config("MAIL_PASSWORD", default="")
-    mail_sender: str = config("MAIL_SENDER", default="noreply@shepherd.io")
+    mail_sender: str = config("MAIL_SENDER", default="testbed@nes-lab.org")
 
 
 CFG = Cfg()

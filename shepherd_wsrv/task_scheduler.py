@@ -30,7 +30,7 @@ async def run_web_experiment(web_experiment: WebExperiment, *, dry_run: bool = F
 
     # TODO: move inventory file to environment variable
     herd = Herd(
-        inventory="/home/matthias/dev/shepherd/repo/software/shepherd-webservice/herd.yml",
+        inventory="/home/matthias/dev/shepherd/repo/software/shepherd-webapi/herd.yml",
     )
     with herd:
         log.info("starting testbed tasks through herd tool")

@@ -59,7 +59,7 @@ def cli_callback(*, verbose: bool = verbose_opt_t, version: bool = version_opt_t
 
 @cli.command()
 def redirect() -> None:
-    """Take webserver offline and only redirect to github-documentation"""
+    """Take API offline and only redirect to github-documentation"""
     web_redirect_run()
 
 

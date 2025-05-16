@@ -23,11 +23,11 @@ jobs:
       - name: Install pip-dependencies 🔧
         run: pip install build
 
-      - name: Test-Build webservice-package 🧱
+      - name: Test-Build Package 🧱
         run: python -m build
         working-directory: "./"
 
-      - name: Install webservice-package 🧱
+      - name: Install Package 🧱
         run: pip install .[test,dev]
         working-directory: "./"
 

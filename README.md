@@ -1,22 +1,25 @@
-# Webservice
+# Shepherd-WebAPI
 
-[![QC-Tests](https://github.com/orgua/shepherd_webservice/actions/workflows/qc_tests.yml/badge.svg)](https://github.com/orgua/shepherd_webservice/actions/workflows/qc_tests.yml)
+[![QA-Tests](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml/badge.svg)](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml)
 
 **Testbed-WebAPI**: <https://shepherd.cfaed.tu-dresden.de:8000>
 
 **Main Documentation**: <https://orgua.github.io/shepherd>
 
-**Source Code**: <https://github.com/orgua/shepherd-webservice>
+**Source Code**: <https://github.com/nes-lab/shepherd-webapi>
 
 **Main Project**: <https://github.com/orgua/shepherd>
 
 ---
 
-The Webservice links the user to the testbed. It's written in Python and uses FastAPI to expose an interface to the internet. You can write your own tools or just use the testbed-client integrated in the [Core-Datalib](https://pypi.org/project/shepherd_core).
+The WebAPI links the user to the testbed.
+It's written in Python and uses FastAPI to expose an interface to the internet.
+You can write your own tools or just use the testbed-client integrated in the [Core-Datalib](https://pypi.org/project/shepherd_core).
 
-Internally the webservices utilizes the [herd-lib](https://pypi.org/project/shepherd_herd) to access the shepherd observers. Handling of data is done with Pydantic-Models that store the actual data in a database.
+Internally the scheduler behind the API utilizes the [herd-lib](https://pypi.org/project/shepherd_herd) to access the shepherd observers.
+Handling of data is done with Pydantic-Models that store the actual data in a database.
 
-## FastApi Webservice (current prototype)
+## WebAPI
 
 - DNS approved for the server: shepherd.cfaed.tu-dresden.de
 - Port 8000 requested for firewall passing
@@ -93,7 +96,7 @@ Internally the webservices utilizes the [herd-lib](https://pypi.org/project/shep
 - install package
 - config .env, by either bringing in a backup or starting fresh
   - backup: repopulate database by using ´shepherd_wsrv init file´
-  - fresh start: generate [fresh salt](https://github.com/orgua/shepherd_webservice/blob/main/scripts/salt_generator.py) and initialize database with `shepherd_wsrv init`
+  - fresh start: generate [fresh salt](https://github.com/nes-lab/shepherd-webapi/blob/main/scripts/salt_generator.py) and initialize database with `shepherd_wsrv init`
 
 ## run server
 

@@ -4,7 +4,7 @@ Kept in here for the time being - because 2nd half has thoughts about datastruct
 
 ## Short-term
 
-TODO: large parts are related to django (but not all)
+large parts are related to django (but not all)
 
 django-questions
 - can we delete empty files like admin.py?

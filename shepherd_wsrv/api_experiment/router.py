@@ -1,5 +1,4 @@
 from datetime import datetime
-from pathlib import PurePosixPath
 from typing import Annotated
 from uuid import UUID
 
@@ -61,6 +60,7 @@ async def get_experiment(
         raise HTTPException(404, "Not Found")
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
+        # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
     return web_experiment.experiment
 
 
@@ -147,11 +147,9 @@ async def download_sheep_file(
     if sheep not in output_paths:
         raise HTTPException(404, "Sheep not contained in observers of the experiment.")
 
-    output_path = str(output_paths[sheep])
+    output_path = output_paths[sheep]
 
-    def manipulate_output_path(path: str) -> str:
-        # TODO: write final path manipulation
-        path = PurePosixPath(path)
-        return "./shepherd_wsrv/tests/data/" + path.name
+    if not output_path.exists() or not output_path.is_file():
+        raise HTTPException(404, "File not found on server (but it should exist).")
 
-    return FileResponse(manipulate_output_path(output_path))
+    return FileResponse(output_path.as_posix())

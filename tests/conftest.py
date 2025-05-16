@@ -36,7 +36,7 @@ async def database_for_tests(
     running_experiment_id: str,
     finished_experiment_id: str,
     sample_experiment: Experiment,
-) -> None:
+) -> bool:
     await db_client()
 
     await User.delete_all()
@@ -97,6 +97,7 @@ async def database_for_tests(
         finished_at=datetime.now(tz=local_tz()),
     )
     await WebExperiment.insert_one(finished_web_experiment)
+    return True
 
 
 class UserTestClient(TestClient):
@@ -132,7 +133,8 @@ class UserTestClient(TestClient):
 
 
 @pytest.fixture
-def client() -> Generator[TestClient, None, None]:
+def client(*, database_for_tests: bool) -> Generator[TestClient, None, None]:
+    assert database_for_tests
     with UserTestClient(app) as client:
         yield client
 

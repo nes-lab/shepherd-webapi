@@ -26,7 +26,6 @@ def test_list_experiments_is_authenticated(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-@pytest.mark.usefixtures("sample_experiment")
 def test_list_experiments(
     authenticated_client: TestClient,
     created_experiment_id: str,

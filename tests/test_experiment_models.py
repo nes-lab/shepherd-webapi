@@ -1,15 +1,16 @@
 import datetime
 
-import pytest
 from shepherd_core.data_models.experiment import Experiment
 
 from shepherd_wsrv.api_experiment.models import WebExperiment
 
 
-@pytest.mark.usefixtures("database_for_tests")
 async def test_get_next_scheduling(
     sample_experiment: Experiment,
+    *,
+    database_for_tests: bool,
 ) -> None:
+    assert database_for_tests
     await WebExperiment.delete_all()
     assert await WebExperiment.get_next_scheduling() is None
 

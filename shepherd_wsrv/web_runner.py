@@ -12,13 +12,14 @@ from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_user.models import User
 
 
-async def run_web_experiment(web_experiment: WebExperiment) -> None:
+async def run_web_experiment(web_experiment: WebExperiment, *, dry_run: bool = False) -> None:
     # mark as started
     web_experiment.started_at = datetime.now(tz=local_tz())
     await web_experiment.save()
 
     experiment = web_experiment.experiment
 
+    # TODO:
     testbed = Testbed(name="matthias-office")
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
 
@@ -33,7 +34,8 @@ async def run_web_experiment(web_experiment: WebExperiment) -> None:
     with herd:
         print("starting testbed tasks through herd tool")
 
-        # herd.run_task(testbed_tasks, attach=True)
+        if not dry_run:
+            herd.run_task(testbed_tasks, attach=True)
         print("finished task execution")
 
         # mark job as done in database

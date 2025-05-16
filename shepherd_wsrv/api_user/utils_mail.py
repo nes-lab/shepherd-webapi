@@ -6,6 +6,7 @@ from fastapi_mail import MessageSchema
 from fastapi_mail import MessageType
 
 from shepherd_wsrv.config import CFG
+from shepherd_wsrv.logger import log
 
 mail_conf = ConnectionConfig(
     MAIL_USERNAME=CFG.mail_username,
@@ -35,7 +36,7 @@ class FastMailEngine(MailEngine):
         # Change this later to public endpoint
         _url = CFG.root_url + "/user/verify/" + token
         if CFG.mail_console:
-            print("POST to " + _url)
+            log.debug("POST to %s", _url)
         else:
             message = MessageSchema(
                 recipients=[email],
@@ -51,7 +52,7 @@ class FastMailEngine(MailEngine):
         # Change this later to public endpoint
         _url = CFG.root_url + "/user/reset-password/" + token
         if CFG.mail_console:
-            print("POST to " + _url)
+            log.debug("POST to %s", _url)
         else:
             message = MessageSchema(
                 recipients=[email],

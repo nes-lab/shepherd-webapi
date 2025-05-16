@@ -40,7 +40,6 @@ def redirect() -> None:
 # def init(file: Path | None = None) -> None:
 def init() -> None:
     """Creates structures in database, can also recover data from a backup"""
-    # asyncio.run(db_init())
     asyncio.run(db_insert_test())
     # TODO: implement
 
@@ -54,7 +53,7 @@ def backup() -> None:
 
 
 @cli.command()
-def run() -> None:
+def run_api() -> None:
     """Default functionality with web api, frontend and demons / schedulers
     to coordinate the testbed
     """

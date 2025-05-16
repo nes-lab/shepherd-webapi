@@ -10,6 +10,7 @@ from shepherd_core import local_now
 from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_user.models import User
 from shepherd_wsrv.api_user.utils_misc import calculate_password_hash
+from shepherd_wsrv.logger import log
 
 
 async def db_client() -> AgnosticDatabase:
@@ -24,9 +25,9 @@ async def db_client() -> AgnosticDatabase:
 async def db_context(app: FastAPI) -> AsyncGenerator[None, None]:
     """Initialize application services."""
     app.db = await db_client()
-    print("DB-Startup complete")
+    log.info("DB-Startup complete")
     yield
-    print("DB-Shutdown complete")
+    log.info("DB-Shutdown complete")
 
 
 async def db_insert_test() -> None:

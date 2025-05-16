@@ -10,6 +10,7 @@ from shepherd_herd.herd import Herd
 
 from shepherd_wsrv.api_experiment.models import WebExperiment
 from shepherd_wsrv.api_user.models import User
+from shepherd_wsrv.logger import log
 
 
 async def run_web_experiment(web_experiment: WebExperiment, *, dry_run: bool = False) -> None:
@@ -19,7 +20,7 @@ async def run_web_experiment(web_experiment: WebExperiment, *, dry_run: bool = F
 
     experiment = web_experiment.experiment
 
-    # TODO:
+    # TODO: too much hardcode
     testbed = Testbed(name="matthias-office")
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
 
@@ -32,36 +33,34 @@ async def run_web_experiment(web_experiment: WebExperiment, *, dry_run: bool = F
         inventory="/home/matthias/dev/shepherd/repo/software/shepherd-webservice/herd.yml",
     )
     with herd:
-        print("starting testbed tasks through herd tool")
+        log.info("starting testbed tasks through herd tool")
 
         if not dry_run:
             herd.run_task(testbed_tasks, attach=True)
-        print("finished task execution")
+
+        log.info("finished task execution")
 
         # mark job as done in database
         web_experiment.finished_at = datetime.now(tz=local_tz())
         await web_experiment.save()
 
 
-async def main() -> None:
+async def run_web_scheduler() -> None:
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     await init_beanie(database=client.shp, document_models=[User, WebExperiment])
+    log.info("Checking experiment scheduling FIFO")
 
     while True:
-        # TODO: convert all prints to proper logs
-        print("Checking experiment scheduling FIFO")
-
         next_experiment = await WebExperiment.get_next_scheduling()
         if next_experiment is None:
-            print("No experiment scheduled")
-            print("Waiting 5 sec...")
-            await asyncio.sleep(5)
+            log.debug("No experiment scheduled, waiting 10 s")
+            await asyncio.sleep(10)
             continue
 
-        print("scheduling experiment")
+        log.debug("Scheduling experiment")
         await run_web_experiment(next_experiment)
 
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(main())
+    loop.run_until_complete(run_web_scheduler())

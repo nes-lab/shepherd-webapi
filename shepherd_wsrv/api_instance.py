@@ -18,9 +18,6 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from shepherd_wsrv.api_auth.router import router as auth_router
 from shepherd_wsrv.api_experiment.router import router as experiment_router
-
-# from shepherd_wsrv.routes.mail import router as MailRouter
-# from shepherd_wsrv.routes.register import router as RegisterRouter
 from shepherd_wsrv.api_user.router import router as user_router
 from shepherd_wsrv.config import CFG
 from shepherd_wsrv.db_instance import db_context
@@ -50,7 +47,7 @@ app = FastAPI(
     description="The web-api for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/doc",
     # contact="https://github.com/orgua/shepherd",
-    docs_url="/doc0",  # None,  # this one allows login
+    docs_url="/doc0",  # this one allows login
     openapi_tags=tag_metadata,
     lifespan=db_context,
 )

@@ -4,7 +4,7 @@ import logging.handlers
 import chromalog
 
 chromalog.basicConfig(format="%(message)s")
-log = logging.getLogger("shp_wsrv")
+log = logging.getLogger("[shp_wsrv]")
 log.addHandler(logging.NullHandler())
 log.setLevel(logging.INFO)
 

@@ -31,15 +31,15 @@ dependencies = [
     "fastapi-mail",
     "typer",
     "uvicorn[standard]",
-    "python-multipart==0.0.9",
-    "pydantic[email]",
-    "beanie",
-    "fastui",
-    "python-secrets",  # needed? installs A LOT
+    # "python-multipart==0.0.9", # not used ATM
+    "pydantic[email]>=2.11.0",
+    "beanie>=1.29.0",
+    # "fastui",  # TODO: dead project
+    # "python-secrets", # needed? installs A LOT, not used ATM
     "passlib[bcrypt]",
     "python-jose[cryptography]",
     "shepherd_core",
-    "python-decouple",
+    # "python-decouple", # not used ATM
     "shepherd_herd",
 ]
 
@@ -53,6 +53,7 @@ test = [
     "pytest",
     "pytest-asyncio",
     "pytest-click",
+    "pytest-dependency",
     "coverage",
 ]
 

@@ -45,7 +45,7 @@ async def run_web_experiment(web_experiment: WebExperiment, *, dry_run: bool = F
         await web_experiment.save()
 
 
-async def run_web_scheduler() -> None:
+async def scheduler() -> None:
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     await init_beanie(database=client.shp, document_models=[User, WebExperiment])
     log.info("Checking experiment scheduling FIFO")
@@ -61,6 +61,10 @@ async def run_web_scheduler() -> None:
         await run_web_experiment(next_experiment)
 
 
-if __name__ == "__main__":
+def run() -> None:
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(run_web_scheduler())
+    loop.run_until_complete(scheduler())
+
+
+if __name__ == "__main__":
+    run()

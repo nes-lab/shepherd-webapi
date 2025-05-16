@@ -9,7 +9,7 @@ log.addHandler(logging.NullHandler())
 log.setLevel(logging.INFO)
 
 
-def set_verbosity(*, debug: bool = False) -> None:
+def set_verbosity(*, debug: bool = True) -> None:
     if debug:
         log.setLevel(logging.DEBUG)
         logging.basicConfig(format="%(name)s %(levelname)s: %(message)s")

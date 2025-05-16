@@ -10,7 +10,7 @@ def test_create_experiment_is_authenticated(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-@pytest.mark.dependency()
+@pytest.mark.dependency
 def test_create_experiment_succeeds(
     authenticated_client: TestClient,
     sample_experiment: Experiment,
@@ -27,7 +27,7 @@ def test_list_experiments_is_authenticated(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-@pytest.mark.dependency()
+@pytest.mark.dependency
 def test_list_experiments(
     authenticated_client: TestClient,
     created_experiment_id: str,
@@ -225,4 +225,5 @@ def test_download_sheep_sends_file(
         f"/experiment/{finished_experiment_id}/download/unit_testing_sheep"
     )
     assert response.status_code == 200
-    assert int(response.headers["content-length"]) == 42
+    assert response.headers["content-type"] == "application/x-hdf5"
+    assert int(response.headers["content-length"]) > 100

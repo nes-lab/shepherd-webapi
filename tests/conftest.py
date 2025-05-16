@@ -8,6 +8,7 @@ from uuid import UUID
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from shepherd_core import Writer as CoreWriter
 from shepherd_core import fw_tools
 from shepherd_core import local_tz
 from shepherd_core.data_models import FirmwareDType
@@ -36,6 +37,7 @@ async def database_for_tests(
     running_experiment_id: str,
     finished_experiment_id: str,
     sample_experiment: Experiment,
+    tmp_path: Path,
 ) -> bool:
     await db_client()
 
@@ -86,7 +88,11 @@ async def database_for_tests(
     )
     await WebExperiment.insert_one(running_web_experiment)
 
-    testbed = Testbed(name="unit_testing_testbed")
+    testbed = Testbed(
+        name="unit_testing_testbed",
+        data_on_server=tmp_path,  # path gets discarded after tests
+        data_on_observer=tmp_path,
+    )
     finished_web_experiment = WebExperiment(
         id=UUID(finished_experiment_id),
         experiment=sample_experiment,
@@ -96,6 +102,9 @@ async def database_for_tests(
         started_at=datetime.now(tz=local_tz()),
         finished_at=datetime.now(tz=local_tz()),
     )
+    for _path in finished_web_experiment.testbed_tasks.get_output_paths().values():
+        with CoreWriter(_path) as writer:
+            writer.store_hostname(_path.name)
     await WebExperiment.insert_one(finished_web_experiment)
     return True
 

@@ -1,7 +1,20 @@
+import os
 from pathlib import Path
 
 from decouple import config
 from pydantic import BaseModel
+
+from shepherd_server.logger import log
+
+
+def _get_xdg_path(variable_name: str, default: str) -> Path:
+    _value = os.environ.get(variable_name)
+    if _value is None or _value == "":
+        return Path("~").expanduser() / default
+    return Path(_value)
+
+
+PATH_XDG_CONFIG = _get_xdg_path("XDG_CONFIG_HOME", ".config/")
 
 
 class Cfg(BaseModel):
@@ -15,9 +28,9 @@ class Cfg(BaseModel):
         "email": "ingmar.splitt@tu-dresden.de",
     }
     ssl_enabled: bool = False
-    ssl_keyfile: Path = Path("/etc/shepherd/ssl_private_key.pem")
-    ssl_certfile: Path = Path("/etc/shepherd/ssl_certificate.pem")
-    ssl_ca_certs: Path = Path("/etc/shepherd/ssl_ca_certs.pem")
+    ssl_keyfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_private_key.pem"
+    ssl_certfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
+    ssl_ca_certs: Path = PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
     # user auth
     auth_salt: bytes = config("SALT", default="and_pepper").encode("UTF-8")
     secret_key: str = config("SECRET_KEY", default="replace me")
@@ -36,4 +49,11 @@ class Cfg(BaseModel):
 
 
 CFG = Cfg()
-# TODO: disable ssl if files not found, warn about it
+
+CFG.ssl_enabled = (
+    CFG.ssl_keyfile.exists() and CFG.ssl_certfile.exists() and CFG.ssl_ca_certs.exists()
+)
+if CFG.ssl_enabled:
+    log.info("SSL enabled, because keys & certs were found")
+else:
+    log.warning("SSL disabled. Keys & certs were not found")

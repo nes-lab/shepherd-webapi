@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from decouple import config
@@ -45,6 +46,13 @@ class Cfg(BaseModel):
     mail_username: str = config("MAIL_USERNAME", default="")
     mail_password: str = config("MAIL_PASSWORD", default="")
     mail_sender: str = config("MAIL_SENDER", default="testbed@nes-lab.org")
+
+    # Quotas for users
+    quota_default_duration: timedelta = timedelta(minutes=60)
+    quota_default_storage: int = 200 * (10**9)
+    # 20 nodes @  4 h are ~  290 GB
+    # 30 nodes @ 10 h are ~ 1080 GB
+    # TODO: add temporary quota relief?
 
     def ssl_available(self) -> bool:
         _files = (self.ssl_keyfile, self.ssl_certfile, self.ssl_ca_certs)

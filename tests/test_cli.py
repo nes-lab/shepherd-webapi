@@ -1,9 +1,6 @@
-import asyncio
-from asyncio import Timeout
 from signal import signal
 
 import pytest
-import pytest_timeout
 from typer.testing import CliRunner
 
 from shepherd_server.cli import cli
@@ -99,6 +96,54 @@ def test_cli_run_api_short() -> None:
         res = CliRunner().invoke(
             app=cli,
             args=["-v", "run-api"],
+            catch_exceptions=True,
+        )
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.skipif(not hasattr(signal, "SIGALRM"), reason="Needs SIGALRM")
+def test_cli_run_scheduler_short() -> None:
+    with pytest.raises(TimeoutError):
+        res = CliRunner().invoke(
+            app=cli,
+            args=["-v", "run-scheduler"],
+            catch_exceptions=True,
+        )
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.skipif(not hasattr(signal, "SIGALRM"), reason="Needs SIGALRM")
+def test_cli_run_scheduler_dry() -> None:
+    with pytest.raises(TimeoutError):
+        res = CliRunner().invoke(
+            app=cli,
+            args=["-v", "run-scheduler", "--dry-run"],
+            catch_exceptions=True,
+        )
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.skipif(not hasattr(signal, "SIGALRM"), reason="Needs SIGALRM")
+def test_cli_run_redirect_short() -> None:
+    with pytest.raises(TimeoutError):
+        res = CliRunner().invoke(
+            app=cli,
+            args=["-v", "run-redirect"],
+            catch_exceptions=True,
+        )
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.skipif(not hasattr(signal, "SIGALRM"), reason="Needs SIGALRM")
+def test_cli_run_all_short() -> None:
+    with pytest.raises(TimeoutError):
+        res = CliRunner().invoke(
+            app=cli,
+            args=["-v", "run"],
             catch_exceptions=True,
         )
     assert res.exit_code == 0

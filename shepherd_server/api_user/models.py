@@ -41,7 +41,31 @@ class UserOut(UserUpdate):
     role: str | None = None  # TODO: enum? user, group_admin, sys_admin
 
 
-class User(Document, UserOut):
+class UserQuota(BaseModel):
+    quota_expire_date: datetime | None = None
+    quota_custom_duration: timedelta | None = None
+    quota_custom_storage: int | None = None
+
+    @property
+    def quota_duration(self) -> timedelta:
+        _custom = (
+            (self.quota_expire_date is not None)
+            and (self.quota_custom_duration is not None)
+            and (self.quota_expire_date >= datetime.now(tz=local_tz()))
+        )
+        return self.quota_custom_duration if _custom else CFG.quota_default_duration
+
+    @property
+    def quota_storage(self) -> int:
+        _custom = (
+            (self.quota_expire_date is not None)
+            and (self.quota_custom_storage is not None)
+            and (self.quota_expire_date >= datetime.now(tz=local_tz()))
+        )
+        return self.quota_custom_storage if _custom else CFG.quota_default_storage
+
+
+class User(Document, UserOut, UserQuota):
     """User DB representation."""
 
     # id: UUID4 = Field(default_factory=uuid4)
@@ -51,10 +75,6 @@ class User(Document, UserOut):
     group_confirmed_at: datetime | None = None
     token_verification: str | None = None
     token_pw_reset: str | None = None
-
-    quota_expire_date: datetime | None = None
-    quota_custom_duration: timedelta | None = None
-    quota_custom_storage: int | None = None
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
@@ -76,24 +96,6 @@ class User(Document, UserOut):
     def subject(self) -> dict[str, Any]:
         """JWT subject fields."""
         return {"username": self.email}
-
-    @property
-    def quota_duration(self) -> timedelta:
-        _custom = (
-            (self.quota_expire_date is not None)
-            and (self.quota_custom_duration is not None)
-            and (self.quota_expire_date >= datetime.now(tz=local_tz()))
-        )
-        return self.quota_custom_duration if _custom else CFG.quota_default_duration
-
-    @property
-    def quota_storage(self) -> int:
-        _custom = (
-            (self.quota_expire_date is not None)
-            and (self.quota_custom_storage is not None)
-            and (self.quota_expire_date >= datetime.now(tz=local_tz()))
-        )
-        return self.quota_custom_storage if _custom else CFG.quota_default_storage
 
     @classmethod
     async def by_email(cls, email: str | None) -> Optional["User"]:

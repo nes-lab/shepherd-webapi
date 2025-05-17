@@ -11,6 +11,7 @@ from shepherd_core import local_now
 from .models import User
 from .models import UserAuth
 from .models import UserOut
+from .models import UserQuota
 from .models import UserUpdate
 from .utils_mail import MailEngine
 from .utils_mail import mail_engine
@@ -55,6 +56,35 @@ async def delete_user(
     """Delete current user."""
     await User.find_one(User.email == user.email).delete()
     return Response(status_code=204)
+
+
+# ###############################################################
+# Quota
+# ###############################################################
+
+
+@router.get("/quota")
+async def quota_info(user: Annotated[User, Depends(current_active_user)]) -> UserQuota:
+    return user
+
+
+@router.patch("/quota", dependencies=[Depends(active_user_is_admin)])
+async def update_quota(
+    #    username: Annotated[EmailStr, Body(embed=True)], quota: Annotated[UserQuota, Body(embed=True)]
+    username: EmailStr,
+    quota: UserQuota,
+) -> UserQuota:
+    _user = await User.by_email(username)
+    if _user is None:
+        raise HTTPException(status_code=401, detail="Incorrect username")
+    if quota.quota_expire_date is not None:
+        _user.quota_expire_date = quota.quota_expire_date
+    if quota.quota_custom_duration is not None:
+        _user.quota_custom_duration = quota.quota_custom_duration
+    if quota.quota_custom_storage is not None:
+        _user.quota_custom_storage = quota.quota_custom_storage
+    await _user.save()
+    return _user
 
 
 # ###############################################################

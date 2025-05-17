@@ -24,9 +24,11 @@ Handling of data is done with Pydantic-Models that store the actual data in a da
 - user-management with regular users and elevated admins
 - users can store, schedule, query state of experiments
 - users can download results
+- users have default quotas and may receive custom quotas with expiry date
 - system emails state-changes
-- scheduler as interface to the testbed
+- scheduler, as interface to the testbed
 - redirect http / https to current landing-page
+- SSL is automatically enabled if certs are found
 
 ## Getting Started
 
@@ -48,6 +50,8 @@ Handling of data is done with Pydantic-Models that store the actual data in a da
 - shepherd-herd should have access to all observers
 - extra filesystem should be mounted symmetrically (same path on server & observers)
 - install the package in this repo, see code below
+
+**NOTE:** the current version needs a special version of shepherd-core, with deep validation disabled.
 
 ```Shell
 pip install git+https://github.com/nes-lab/shepherd-webapi.git@main
@@ -84,10 +88,17 @@ MAIL_PASSWORD="pass-the-word"
 ## Command-Line-Interface
 
 ```Shell
+shepherd-server --verbose run
+# or individually (without verbosity)
 shepherd-server run-api
 shepherd-server run-scheduler
 shepherd-server run-redirect
 ```
+
+Note: the scheduler can
+
+- run in dry-mode (`--dry-run`) that mocks result-data
+- receive a custom herd-inventory (`--inventory=path-to-yaml`)
 
 ### Backup & Restore State of DB
 

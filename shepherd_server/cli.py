@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 from types import FrameType
 
-import click
 import shepherd_core
 import typer
 
@@ -14,7 +13,6 @@ from .instance_redirect import run as run_redirect_server
 from .instance_scheduler import run as run_scheduler_server
 from .logger import log
 from .logger import set_verbosity
-from .version import version as server_version
 
 cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
 
@@ -32,16 +30,9 @@ verbose_opt_t = typer.Option(
     help="Sets logging-level to debug",
 )
 
-version_opt_t = typer.Option(
-    False,  # noqa: FBT003
-    "--version",
-    is_flag=True,
-    help="Prints version-infos (combinable with -v)",
-)
-
 
 @cli.callback()
-def cli_callback(*, verbose: bool = verbose_opt_t, version: bool = version_opt_t) -> None:
+def cli_callback(*, verbose: bool = verbose_opt_t) -> None:
     """Enable verbosity and add exit-handlers
     this gets executed prior to the other sub-commands
     """
@@ -49,12 +40,19 @@ def cli_callback(*, verbose: bool = verbose_opt_t, version: bool = version_opt_t
     signal.signal(signal.SIGINT, exit_gracefully)
     set_verbosity(debug=verbose)
 
-    if version:
-        log.info("Shepherd-Server v%s", server_version)
-        log.debug("Shepherd-Core v%s", shepherd_core.__version__)
-        log.debug("Python v%s", sys.version)
-        log.debug("Typer v%s", typer.__version__)
-        log.debug("Click v%s", click.__version__)
+
+@cli.command()
+def version() -> None:
+    """Prints version-infos (combinable with -v)"""
+    import click
+
+    from .version import version as server_version
+
+    log.info("Shepherd-Server v%s", server_version)
+    log.debug("Shepherd-Core v%s", shepherd_core.__version__)
+    log.debug("Python v%s", sys.version)
+    log.debug("Typer v%s", typer.__version__)
+    log.debug("Click v%s", click.__version__)
 
 
 @cli.command()
@@ -92,6 +90,17 @@ def run_scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> No
 def run_redirect() -> None:
     """Start http redirect to landing-page."""
     run_redirect_server()
+
+
+@cli.command()
+def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
+    """Start ALL sub-services in separate subprocess."""
+    from concurrent.futures import ProcessPoolExecutor
+
+    with ProcessPoolExecutor() as ppe:
+        ppe.submit(run_scheduler_server, inventory=inventory, dry_run=dry_run)
+        ppe.submit(run_api_server)
+        ppe.submit(run_redirect_server)
 
 
 if __name__ == "__main__":

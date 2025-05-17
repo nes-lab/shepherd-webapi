@@ -1,7 +1,13 @@
+from datetime import datetime
+from datetime import timedelta
+
 import pytest
 from fastapi.testclient import TestClient
+from shepherd_core import local_tz
+from shepherd_core.data_models import TargetConfig
 from shepherd_core.data_models.experiment import Experiment
 
+from shepherd_server.config import CFG
 from tests.conftest import UserTestClient
 
 
@@ -20,6 +26,109 @@ def test_create_experiment_succeeds(
         data=sample_experiment.model_dump_json(),
     )
     assert response.status_code == 200
+
+
+@pytest.mark.dependency
+def test_create_experiment_as_admin_succeeds(
+    authenticated_admin_client: TestClient,
+    sample_experiment: Experiment,
+) -> None:
+    response = authenticated_admin_client.get("/experiment")
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+    response = authenticated_admin_client.post(
+        "/experiment",
+        data=sample_experiment.model_dump_json(),
+    )
+    assert response.status_code == 200
+
+    response = authenticated_admin_client.get("/experiment")
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+def test_create_experiment_needs_duration(
+    authenticated_client: TestClient,
+    sample_target_config: TargetConfig,
+) -> None:
+    _xp = Experiment(
+        name="test-experiment",
+        target_configs=[sample_target_config],
+    )
+    response = authenticated_client.post(
+        "/experiment",
+        data=_xp.model_dump_json(),
+    )
+    assert response.status_code >= 400
+
+
+def test_create_experiment_duration_has_quota(
+    authenticated_client: TestClient,
+    sample_target_config: TargetConfig,
+) -> None:
+    _xp = Experiment(
+        name="test-experiment",
+        duration=CFG.quota_default_duration + timedelta(seconds=5),
+        target_configs=[sample_target_config],
+    )
+    response = authenticated_client.post(
+        "/experiment",
+        data=_xp.model_dump_json(),
+    )
+    assert response.status_code >= 400
+
+
+@pytest.mark.skip(reason="not finished")
+def test_create_experiment_duration_with_expired_quota(
+    authenticated_client: TestClient,
+    sample_target_config: TargetConfig,
+) -> None:
+    # TODO: change quota
+    _xp = Experiment(
+        name="test-experiment",
+        duration=CFG.quota_default_duration + timedelta(seconds=5),
+        target_configs=[sample_target_config],
+    )
+    response = authenticated_client.post(
+        "/experiment",
+        data=_xp.model_dump_json(),
+    )
+    assert response.status_code >= 400
+
+
+@pytest.mark.skip(reason="not finished")
+def test_create_experiment_duration_with_custom_quota(
+    authenticated_client: TestClient, sample_target_config: TargetConfig
+) -> None:
+    # TODO: change quota
+    _xp = Experiment(
+        name="test-experiment",
+        duration=CFG.quota_default_duration + timedelta(seconds=5),
+        target_configs=[sample_target_config],
+    )
+    response = authenticated_client.post(
+        "/experiment",
+        data=_xp.model_dump_json(),
+    )
+    assert response.status_code == 200
+
+
+def test_create_experiment_only_fifo_scheduler(
+    authenticated_client: TestClient,
+    sample_target_config: TargetConfig,
+) -> None:
+    _xp = Experiment(
+        name="test-experiment",
+        time_start=datetime.now(tz=local_tz()) + timedelta(minutes=1),
+        duration=30,
+        target_configs=[sample_target_config],
+    )
+    response = authenticated_client.post(
+        "/experiment",
+        data=_xp.model_dump_json(),
+    )
+    assert response.status_code >= 400
 
 
 def test_list_experiments_is_authenticated(client: TestClient) -> None:
@@ -105,7 +214,6 @@ def test_get_experiment_is_private_to_user(
     client: UserTestClient,
     sample_experiment: Experiment,
 ) -> None:
-    experiment_id = None
     with client.authenticate_user():
         client.post(
             "/experiment",
@@ -129,6 +237,9 @@ def test_schedule_experiment(
     assert response.status_code == 204
     response = authenticated_client.get(f"/experiment/{created_experiment_id}/state")
     assert response.json() == "scheduled"
+
+
+# TODO: schedule when quota is full - 3 kinds
 
 
 def test_state_of_fresh_experiments(

@@ -177,28 +177,31 @@ def mail_engine_mock() -> MailEngine:
 
 
 @pytest.fixture
-def sample_experiment() -> Experiment:
+def sample_target_config() -> TargetConfig:
     firmware_path = Path(__file__).parent / "data/test-firmware-nrf52.elf"
+    return TargetConfig(
+        target_IDs=[42],
+        custom_IDs=[42],
+        energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
+        firmware1=Firmware(
+            name="FW_TestXYZ",
+            data=fw_tools.file_to_base64(firmware_path),
+            data_type=FirmwareDType.base64_elf,
+            data_local=True,
+            mcu=MCU(name="nRF52"),
+        ),
+        power_tracing=None,
+        uart_tracing=UartTracing(baudrate=115_200),
+        gpio_tracing=GpioTracing(),
+    )
+
+
+@pytest.fixture
+def sample_experiment(sample_target_config: TargetConfig) -> Experiment:
     return Experiment(
         name="test-experiment",
         duration=30,
-        target_configs=[
-            TargetConfig(
-                target_IDs=[42],
-                custom_IDs=[42],
-                energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
-                firmware1=Firmware(
-                    name="FW_TestXYZ",
-                    data=fw_tools.file_to_base64(firmware_path),
-                    data_type=FirmwareDType.base64_elf,
-                    data_local=True,
-                    mcu=MCU(name="nRF52"),
-                ),
-                power_tracing=None,
-                uart_tracing=UartTracing(baudrate=115_200),
-                gpio_tracing=GpioTracing(),
-            ),
-        ],
+        target_configs=[sample_target_config],
     )
 
 

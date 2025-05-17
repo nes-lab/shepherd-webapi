@@ -27,10 +27,13 @@ async def create_experiment(
     if experiment.time_start is not None:
         raise HTTPException(
             400,
-            "time_start must be None,"
-            "the testbed will pick the start time after the experiment is scheduled.",
+            "xp.time_start must be None,"
+            "the FIFO-scheduler will pick the start time after the experiment is scheduled.",
         )
-
+    if (experiment.duration is None) or (experiment.duration > user.quota_duration):
+        raise HTTPException(
+            400, f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)"
+        )
     web_experiment = WebExperiment(
         experiment=experiment,
         owner=user,
@@ -75,8 +78,17 @@ async def schedule_experiment(
         raise HTTPException(404, "Not Found")
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
-
-    # TODO: it would be possible to schedule the same experiment multiple times...
+    if web_experiment.requested_execution_at is not None:
+        raise HTTPException(400, "Experiment already scheduled")
+    _storage = await web_experiment.get_storage(user)
+    if _storage > user.quota_storage:
+        _size_GiB = _storage / (1024**3)
+        _quota_GiB = user.quota_storage / (1024**3)
+        raise HTTPException(
+            400,
+            f"Quota on storage was exceeded ({_size_GiB:.3f} > {_quota_GiB:.3f} GiB). "
+            "Delete old experiments first to continue.",
+        )
 
     web_experiment.requested_execution_at = datetime.now(tz=local_tz())
     await web_experiment.save()

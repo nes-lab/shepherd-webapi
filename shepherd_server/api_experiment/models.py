@@ -52,6 +52,11 @@ class WebExperiment(Document):
         ).to_list()
 
     @classmethod
+    async def get_storage(cls, user: User) -> int:
+        _xps = await cls.get_by_user(user)
+        return sum(_xp.result_size for _xp in _xps)
+
+    @classmethod
     async def get_next_scheduling(cls) -> "None | WebExperiment":
         """
         Finds the WebExperiment with the oldest scheduling_at datetime,

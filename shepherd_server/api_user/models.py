@@ -80,7 +80,7 @@ class User(Document, UserOut):
     @property
     def quota_duration(self) -> timedelta:
         _custom = (
-            (self.quota_expire_data is not None)
+            (self.quota_expire_date is not None)
             and (self.quota_custom_duration is not None)
             and (self.quota_expire_date >= datetime.now(tz=local_tz()))
         )
@@ -89,7 +89,7 @@ class User(Document, UserOut):
     @property
     def quota_storage(self) -> int:
         _custom = (
-            (self.quota_expire_data is not None)
+            (self.quota_expire_date is not None)
             and (self.quota_custom_storage is not None)
             and (self.quota_expire_date >= datetime.now(tz=local_tz()))
         )

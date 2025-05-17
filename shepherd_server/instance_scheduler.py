@@ -4,16 +4,16 @@ from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from beanie import init_beanie
-from motor.motor_asyncio import AsyncIOMotorClient
 from shepherd_core import Writer as CoreWriter
 from shepherd_core import local_tz
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
+from shepherd_server.instance_db import db_available
+from shepherd_server.instance_db import db_client
+
 from .api_experiment.models import WebExperiment
-from .api_user.models import User
 from .logger import log
 
 
@@ -69,8 +69,8 @@ async def run_web_experiment(
 
 
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
-    client = AsyncIOMotorClient("mongodb://localhost:27017")
-    await init_beanie(database=client.shp, document_models=[User, WebExperiment])
+    _client = await db_client()
+
     # allow running dry in temp-folder
     stack = ExitStack()
     _temp_dir = TemporaryDirectory()
@@ -94,6 +94,10 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
 
 
 def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
+    if not db_available(timeout=5):
+        log.error("No connection to database! Will exit scheduler now.")
+        return
+
     loop = asyncio.new_event_loop()
     loop.run_until_complete(scheduler(inventory, dry_run=dry_run))
 

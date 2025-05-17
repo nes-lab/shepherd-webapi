@@ -23,7 +23,9 @@ from .api_auth.router import router as auth_router
 from .api_experiment.router import router as experiment_router
 from .api_user.router import router as user_router
 from .config import CFG
+from .instance_db import db_available
 from .instance_db import db_context
+from .logger import log
 from .version import version
 
 # run with: uvicorn shepherd_server.webapi:app --reload
@@ -94,6 +96,10 @@ async def favicon2() -> FileResponse:
 
 
 def run() -> None:
+    if not db_available(timeout=5):
+        log.error("No connection to database! Will exit scheduler now.")
+        return
+
     uvi_args = {
         "app": f"{run.__module__}:app",
         "reload": False,

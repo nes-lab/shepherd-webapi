@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -21,13 +22,22 @@ async def db_client() -> AgnosticDatabase:
     return client.shp
 
 
+def db_available(timeout: float = 2) -> bool:
+    try:
+        asyncio.run(asyncio.wait_for(db_client(), timeout=timeout))
+    except asyncio.TimeoutError:
+        log.error("Timed out waiting for database connection (%.2f s).", timeout)
+        return False
+    return True
+
+
 @asynccontextmanager
 async def db_context(app: FastAPI) -> AsyncGenerator[None, None]:
     """Initialize application services."""
     app.db = await db_client()
-    log.info("DB-Startup complete")
+    log.info("FastAPI DB-Client connected")
     yield
-    log.info("DB-Shutdown complete")
+    log.info("DB-Client shut down")
 
 
 async def db_insert_test() -> None:

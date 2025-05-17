@@ -1,7 +1,7 @@
 import asyncio
 import signal
 import sys
-from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 from types import FrameType
 
 import click
@@ -76,18 +76,16 @@ def backup() -> None:
 @cli.command()
 def run_api() -> None:
     """Start web api to access data."""
-    with ProcessPoolExecutor() as ppe:
-        ppe.submit(run_api_server)
+    run_api_server()
 
 
 @cli.command()
-def run_scheduler() -> None:
+def run_scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
     """Start scheduler to coordinate the testbed.
 
     This is separate to webAPI to allow starting/stopping both individually
     """
-    with ProcessPoolExecutor() as ppe:
-        ppe.submit(run_scheduler_server)
+    run_scheduler_server(inventory, dry_run=dry_run)
 
 
 @cli.command()

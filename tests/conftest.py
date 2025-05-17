@@ -88,6 +88,7 @@ async def database_for_tests(
     )
     await WebExperiment.insert_one(running_web_experiment)
 
+    # TODO: the part below could also be done by the scheduler
     testbed = Testbed(
         name="unit_testing_testbed",
         data_on_server=tmp_path,  # path gets discarded after tests
@@ -102,9 +103,11 @@ async def database_for_tests(
         started_at=datetime.now(tz=local_tz()),
         finished_at=datetime.now(tz=local_tz()),
     )
-    for _path in finished_web_experiment.testbed_tasks.get_output_paths().values():
+    # mock files
+    finished_web_experiment.result_paths = finished_web_experiment.testbed_tasks.get_output_paths()
+    for name, _path in finished_web_experiment.result_paths.items():
         with CoreWriter(_path) as writer:
-            writer.store_hostname(_path.name)
+            writer.store_hostname(name)
     await WebExperiment.insert_one(finished_web_experiment)
     return True
 

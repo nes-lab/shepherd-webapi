@@ -73,7 +73,7 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
     await init_beanie(database=client.shp, document_models=[User, WebExperiment])
     # allow running dry in temp-folder
     stack = ExitStack()
-    _temp_dir = TemporaryDirectory
+    _temp_dir = TemporaryDirectory()
     stack.enter_context(_temp_dir)
     temp_path: Path | None = None
     if dry_run:
@@ -85,8 +85,7 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
     while True:
         next_experiment = await WebExperiment.get_next_scheduling()
         if next_experiment is None:
-            # TODO: not needed?
-            log.debug("No experiment scheduled, waiting 10 s")
+            log.debug("... waiting 10 s")
             await asyncio.sleep(10)
             continue
 
@@ -94,9 +93,9 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
         await run_web_experiment(next_experiment, inventory=inventory, temp_path=temp_path)
 
 
-def run() -> None:
+def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(scheduler())
+    loop.run_until_complete(scheduler(inventory, dry_run=dry_run))
 
 
 if __name__ == "__main__":

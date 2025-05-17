@@ -26,7 +26,6 @@ verbose_opt_t = typer.Option(
     False,  # noqa: FBT003
     "--verbose",
     "-v",
-    is_flag=True,
     help="Sets logging-level to debug",
 )
 
@@ -38,6 +37,8 @@ def cli_callback(*, verbose: bool = verbose_opt_t) -> None:
     """
     signal.signal(signal.SIGTERM, exit_gracefully)
     signal.signal(signal.SIGINT, exit_gracefully)
+    if hasattr(signal, "SIGALRM"):
+        signal.signal(signal.SIGALRM, exit_gracefully)
     set_verbosity(debug=verbose)
 
 
@@ -48,11 +49,11 @@ def version() -> None:
 
     from .version import version as server_version
 
-    log.info("Shepherd-Server v%s", server_version)
-    log.debug("Shepherd-Core v%s", shepherd_core.__version__)
+    log.info("shepherd-server v%s", server_version)
+    log.debug("shepherd-core v%s", shepherd_core.__version__)
     log.debug("Python v%s", sys.version)
-    log.debug("Typer v%s", typer.__version__)
-    log.debug("Click v%s", click.__version__)
+    log.debug("typer v%s", typer.__version__)
+    log.debug("click v%s", click.__version__)
 
 
 @cli.command()

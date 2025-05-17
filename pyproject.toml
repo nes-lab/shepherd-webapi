@@ -53,6 +53,7 @@ test = [
     "pytest-asyncio",
     "pytest-click",
     "pytest-dependency",
+    "pytest-timeout",
     "coverage",
 ]
 
@@ -98,6 +99,9 @@ addopts = ["-vvv"]
 asyncio_mode = "auto"
 testpaths = ["tests", ]
 norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv', '.venv']
+markers = [
+    "timeout: limit for individual test to finish",
+]
 
 [tool.coverage.run]
 source = ["shepherd_server"]

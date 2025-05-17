@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "main", "dev" ]
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   static-analysis:

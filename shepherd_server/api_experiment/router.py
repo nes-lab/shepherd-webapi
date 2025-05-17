@@ -122,17 +122,16 @@ async def download(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
-    if web_experiment.finished_at is None:
+    if web_experiment.finished_at is None or web_experiment.result_paths is None:
         raise HTTPException(400, "Experiment not yet finished")
 
-    output_paths = web_experiment.testbed_tasks.get_output_paths()
-    return list(output_paths.keys())
+    return list(web_experiment.result_paths.keys())
 
 
-@router.get("/{experiment_id}/download/{sheep}")
+@router.get("/{experiment_id}/download/{observer}")
 async def download_sheep_file(
     experiment_id: str,
-    sheep: str,
+    observer: str,
     user: Annotated[User, Depends(current_active_user)],
 ) -> FileResponse:
     web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
@@ -143,12 +142,10 @@ async def download_sheep_file(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
-    output_paths = web_experiment.testbed_tasks.get_output_paths()
+    if observer not in web_experiment.result_paths:
+        raise HTTPException(404, "Observer not contained in resulting list of the experiment.")
 
-    if sheep not in output_paths:
-        raise HTTPException(404, "Sheep not contained in observers of the experiment.")
-
-    output_path = output_paths[sheep]
+    output_path = web_experiment.result_paths[observer]
 
     if not output_path.exists() or not output_path.is_file():
         raise HTTPException(404, "File not found on server (but it should exist).")

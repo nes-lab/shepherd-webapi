@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 from uuid import uuid4
 
@@ -32,8 +33,9 @@ class WebExperiment(Document):
     # Set to current wall-clock time by the web runner when the testbed finished execution.
     finished_at: datetime | None = None
 
-    # TODO: convert to paths?
-    testbed_tasks: TestbedTasks | None = None
+    testbed_tasks: TestbedTasks | None = None  # TODO: not used ATM
+    result_paths: dict[str, Path] | None = None
+    result_size: int = 0
 
     @classmethod
     async def get_by_id(cls, experiment_id: str) -> "None | WebExperiment":

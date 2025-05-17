@@ -18,9 +18,6 @@ app = FastAPI(
     docs_url=None,
 )
 
-if CFG.ssl_enabled:
-    app.add_middleware(HTTPSRedirectMiddleware)
-
 
 @app.get("/")
 async def redir() -> RedirectResponse:
@@ -28,13 +25,17 @@ async def redir() -> RedirectResponse:
 
 
 def run() -> None:
+    ssl_enabled = CFG.ssl_available()
+    if ssl_enabled:
+        app.add_middleware(HTTPSRedirectMiddleware)
+
     uvi_args = {
         "app": f"{run.__module__}:app",
         "reload": False,
-        "port": 443 if CFG.ssl_enabled else 80,
+        "port": 443 if ssl_enabled else 80,
         "host": CFG.root_url,
     }
-    if CFG.ssl_enabled:
+    if ssl_enabled:
         uvi_args["ssl_keyfile"] = CFG.ssl_keyfile.as_posix()
         uvi_args["ssl_certfile"] = CFG.ssl_certfile.as_posix()
         uvi_args["ssl_ca_certs"] = CFG.ssl_ca_certs.as_posix()

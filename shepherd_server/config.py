@@ -27,7 +27,6 @@ class Cfg(BaseModel):
         "url": "https://github.com/orgua/shepherd",
         "email": "ingmar.splitt@tu-dresden.de",
     }
-    ssl_enabled: bool = False
     ssl_keyfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_private_key.pem"
     ssl_certfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
     ssl_ca_certs: Path = PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
@@ -47,13 +46,17 @@ class Cfg(BaseModel):
     mail_password: str = config("MAIL_PASSWORD", default="")
     mail_sender: str = config("MAIL_SENDER", default="testbed@nes-lab.org")
 
+    def ssl_available(self) -> bool:
+        _files = (self.ssl_keyfile, self.ssl_certfile, self.ssl_ca_certs)
+        _avail = all(_p.exists() for _p in _files)
+        if _avail:
+            log.info("SSL available, as keys & certs were found")
+        else:
+            log.warning("SSL disabled!")
+            for _file in _files:
+                if not _file.exists():
+                    log.warning(" -> NOT FOUND: %s", _file.as_posix())
+        return _avail
+
 
 CFG = Cfg()
-
-CFG.ssl_enabled = (
-    CFG.ssl_keyfile.exists() and CFG.ssl_certfile.exists() and CFG.ssl_ca_certs.exists()
-)
-if CFG.ssl_enabled:
-    log.info("SSL enabled, because keys & certs were found")
-else:
-    log.warning("SSL disabled. Keys & certs were not found")

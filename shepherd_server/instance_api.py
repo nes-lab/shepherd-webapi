@@ -58,11 +58,6 @@ app = FastAPI(
     lifespan=db_context,
 )
 
-
-if CFG.ssl_enabled:
-    app.add_middleware(HTTPSRedirectMiddleware)
-
-
 # TODO: probably not needed
 app.add_middleware(
     CORSMiddleware,
@@ -96,8 +91,12 @@ async def favicon2() -> FileResponse:
 
 
 def run() -> None:
+    ssl_enabled = CFG.ssl_available()
+    if ssl_enabled:
+        app.add_middleware(HTTPSRedirectMiddleware)
+
     if not db_available(timeout=5):
-        log.error("No connection to database! Will exit scheduler now.")
+        log.error("No connection to database! Will exit WebAPI now.")
         return
 
     uvi_args = {
@@ -106,7 +105,7 @@ def run() -> None:
         "port": 8000,
         "host": CFG.root_url,
     }
-    if CFG.ssl_enabled:
+    if ssl_enabled:
         uvi_args["ssl_keyfile"] = CFG.ssl_keyfile.as_posix()
         uvi_args["ssl_certfile"] = CFG.ssl_certfile.as_posix()
         uvi_args["ssl_ca_certs"] = CFG.ssl_ca_certs.as_posix()

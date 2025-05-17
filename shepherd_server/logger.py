@@ -1,25 +1,13 @@
 import logging
-import logging.handlers
 
-import chromalog
-
-chromalog.basicConfig(format="%(message)s")
-log = logging.getLogger("[shp_wsrv]")
-log.addHandler(logging.NullHandler())
-log.setLevel(logging.INFO)
+log = logging.getLogger("[shp_srv]")
 
 
 def set_verbosity(*, debug: bool = True) -> None:
     if debug:
         log.setLevel(logging.DEBUG)
-        logging.basicConfig(format="%(name)s %(levelname)s: %(message)s")
     else:
         log.setLevel(logging.INFO)
-        logging.basicConfig(format="%(message)s", force=True)
-        # only needed in debug mode:
-        logging._srcfile = None  # noqa: SLF001
-        logging.logThreads = False
-        logging.logProcesses = False
 
 
 def get_verbosity() -> bool:

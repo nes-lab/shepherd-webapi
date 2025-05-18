@@ -7,6 +7,7 @@ from shepherd_core import local_tz
 from shepherd_core.data_models import TargetConfig
 from shepherd_core.data_models.experiment import Experiment
 
+from shepherd_server.api_user.models import UserQuota
 from shepherd_server.config import CFG
 from tests.conftest import UserTestClient
 
@@ -79,39 +80,60 @@ def test_create_experiment_duration_has_quota(
     assert response.status_code >= 400
 
 
-@pytest.mark.skip(reason="not finished")
 def test_create_experiment_duration_with_expired_quota(
-    authenticated_client: TestClient,
+    client: UserTestClient,
     sample_target_config: TargetConfig,
 ) -> None:
-    # TODO: change quota
-    _xp = Experiment(
-        name="test-experiment",
-        duration=CFG.quota_default_duration + timedelta(seconds=5),
-        target_configs=[sample_target_config],
-    )
-    response = authenticated_client.post(
-        "/experiment",
-        data=_xp.model_dump_json(),
-    )
-    assert response.status_code >= 400
+    with client.authenticate_admin():
+        json_dict = {
+            "email": "user@test.com",
+            "quota": UserQuota(
+                quota_expire_date=datetime.now(tz=local_tz()) - timedelta(minutes=5),
+                quota_custom_duration=timedelta(hours=60),
+            ).model_dump(exclude_defaults=True, mode="json"),
+        }
+        response = client.patch("/user/quota", json=json_dict)
+        assert response.status_code == 200
+
+    with client.authenticate_user():
+        _xp = Experiment(
+            name="test-experiment",
+            duration=CFG.quota_default_duration + timedelta(seconds=5),
+            target_configs=[sample_target_config],
+        )
+        response = client.post(
+            "/experiment",
+            data=_xp.model_dump_json(exclude_defaults=True),
+        )
+        assert response.status_code >= 400
 
 
-@pytest.mark.skip(reason="not finished")
-def test_create_experiment_duration_with_custom_quota(
-    authenticated_client: TestClient, sample_target_config: TargetConfig
+def test_create_experiment_duration_with_valid_quota(
+    client: UserTestClient,
+    sample_target_config: TargetConfig,
 ) -> None:
-    # TODO: change quota
-    _xp = Experiment(
-        name="test-experiment",
-        duration=CFG.quota_default_duration + timedelta(seconds=5),
-        target_configs=[sample_target_config],
-    )
-    response = authenticated_client.post(
-        "/experiment",
-        data=_xp.model_dump_json(),
-    )
-    assert response.status_code == 200
+    with client.authenticate_admin():
+        json_dict = {
+            "email": "user@test.com",
+            "quota": UserQuota(
+                quota_expire_date=datetime.now(tz=local_tz()) + timedelta(minutes=5),
+                quota_custom_duration=timedelta(hours=60),
+            ).model_dump(exclude_defaults=True, mode="json"),
+        }
+        response = client.patch("/user/quota", json=json_dict)
+        assert response.status_code == 200
+
+    with client.authenticate_user():
+        _xp = Experiment(
+            name="test-experiment",
+            duration=CFG.quota_default_duration + timedelta(seconds=5),
+            target_configs=[sample_target_config],
+        )
+        response = client.post(
+            "/experiment",
+            data=_xp.model_dump_json(exclude_defaults=True),
+        )
+        assert response.status_code == 200
 
 
 def test_create_experiment_only_fifo_scheduler(

@@ -113,6 +113,17 @@ async def database_for_tests(
 
 
 class UserTestClient(TestClient):
+    """Raw-User-Client
+
+    A few notes for avoiding pits:
+
+    - requests like .patch(), ... have a data AND json argument
+    - data is for completely serialized objects like model.model_dump_json()
+    - json digests dicts, self-assembled, composed with .model_dump(mode="json")
+        - mixing json-strings and dicts won't work, i.e. {"quota": quota.model_dump_json()}
+        - .model_dump() may produce dicts that are not json-serializable
+    """
+
     @contextmanager
     def authenticate_admin(self) -> Generator[TestClient, None, None]:
         response = self.post(
@@ -153,12 +164,14 @@ def client(*, database_for_tests: bool) -> Generator[TestClient, None, None]:
 
 @pytest.fixture
 def authenticated_client(client: UserTestClient) -> Generator[TestClient, None, None]:
+    # WARNING: authenticated_client & authenticated_admin_client can't be used in same test.
     with client.authenticate_user():
         yield client
 
 
 @pytest.fixture
 def authenticated_admin_client(client: UserTestClient) -> Generator[TestClient, None, None]:
+    # WARNING: authenticated_client & authenticated_admin_client can't be used in same test.
     with client.authenticate_admin():
         yield client
 

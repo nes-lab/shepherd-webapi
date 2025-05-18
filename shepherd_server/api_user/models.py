@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from typing import Annotated
 from typing import Any
 from typing import Optional
@@ -47,21 +48,27 @@ class UserQuota(BaseModel):
     quota_custom_storage: int | None = None
 
     @property
+    def active(self) -> bool:
+        """
+        note: model is transmitted via fastapi / json and
+              therefore lost timezone (normalized to UTC)
+        """
+        if self.quota_expire_date is None:
+            return False
+        if self.quota_expire_date.tzinfo is None:
+            return self.quota_expire_date.replace(tzinfo=timezone.utc) >= datetime.now(
+                tz=local_tz()
+            )
+        return self.quota_expire_date >= datetime.now(tz=local_tz())
+
+    @property
     def quota_duration(self) -> timedelta:
-        _custom = (
-            (self.quota_expire_date is not None)
-            and (self.quota_custom_duration is not None)
-            and (self.quota_expire_date >= datetime.now(tz=local_tz()))
-        )
+        _custom = self.active and (self.quota_custom_duration is not None)
         return self.quota_custom_duration if _custom else CFG.quota_default_duration
 
     @property
     def quota_storage(self) -> int:
-        _custom = (
-            (self.quota_expire_date is not None)
-            and (self.quota_custom_storage is not None)
-            and (self.quota_expire_date >= datetime.now(tz=local_tz()))
-        )
+        _custom = self.active and (self.quota_custom_storage is not None)
         return self.quota_custom_storage if _custom else CFG.quota_default_storage
 
 

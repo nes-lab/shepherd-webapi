@@ -70,11 +70,10 @@ async def quota_info(user: Annotated[User, Depends(current_active_user)]) -> Use
 
 @router.patch("/quota", dependencies=[Depends(active_user_is_admin)])
 async def update_quota(
-    #    username: Annotated[EmailStr, Body(embed=True)], quota: Annotated[UserQuota, Body(embed=True)]
-    username: EmailStr,
-    quota: UserQuota,
+    email: Annotated[EmailStr, Body(embed=True)],
+    quota: Annotated[UserQuota, Body(embed=True)],
 ) -> UserQuota:
-    _user = await User.by_email(username)
+    _user = await User.by_email(email)
     if _user is None:
         raise HTTPException(status_code=401, detail="Incorrect username")
     if quota.quota_expire_date is not None:

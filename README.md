@@ -109,7 +109,9 @@ shepherd_server init file_name
 
 ## Development & Release
 
-### Testbench
+### Testbench & Static Analysis
+
+**Warning**: ☠☠☠ Don't run unittests (`pytest`) on a production system as it will delete the database! ☠☠☠
 
 ```Shell
 pre-commit run -a

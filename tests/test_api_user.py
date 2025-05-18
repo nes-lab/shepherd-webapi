@@ -1,6 +1,13 @@
-from fastapi.testclient import TestClient
+from datetime import datetime
+from datetime import timedelta
 
+import pytest
+from fastapi.testclient import TestClient
+from shepherd_core import local_tz
+
+from shepherd_server.api_user.models import UserQuota
 from shepherd_server.api_user.utils_mail import MailEngine
+from tests.conftest import UserTestClient
 
 
 def test_user_can_query_account_data(authenticated_client: TestClient) -> None:
@@ -14,6 +21,84 @@ def test_user_can_query_account_data(authenticated_client: TestClient) -> None:
 def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None:
     response = client.get("/user")
     assert response.status_code == 401
+
+
+# TODO: user can update itself
+
+
+@pytest.mark.dependency
+def test_user_can_query_quota_data(authenticated_client: TestClient) -> None:
+    response = authenticated_client.get("/user/quota")
+    assert response.status_code == 200
+    assert response.json()["quota_expire_date"] is None
+    assert response.json()["quota_custom_duration"] is None
+    assert response.json()["quota_custom_storage"] is None
+
+
+@pytest.mark.dependency(depends=["test_user_can_query_quota_data"])
+def test_admin_can_update_quota_date(
+    client: UserTestClient,
+) -> None:
+    json_dict = {
+        "email": "user@test.com",
+        "quota": UserQuota(
+            quota_expire_date=datetime.now(tz=local_tz()),
+        ).model_dump(exclude_defaults=True, mode="json"),
+    }
+    with client.authenticate_admin():
+        response = client.patch("/user/quota", json=json_dict)
+        assert response.status_code == 200
+
+    with client.authenticate_user():
+        response = client.get("/user/quota")
+        assert response.status_code == 200
+        assert response.json()["quota_expire_date"] is not None
+        assert response.json()["quota_custom_duration"] is None
+        assert response.json()["quota_custom_storage"] is None
+
+
+@pytest.mark.dependency(depends=["test_user_can_query_quota_data"])
+def test_admin_can_update_quota_duration(
+    client: UserTestClient,
+) -> None:
+    json_dict = {
+        "email": "user@test.com",
+        "quota": UserQuota(
+            quota_custom_duration=timedelta(hours=60),
+        ).model_dump(exclude_defaults=True, mode="json"),
+    }
+    with client.authenticate_admin():
+        response = client.patch("/user/quota", json=json_dict)
+        assert response.status_code == 200
+
+    with client.authenticate_user():
+        response = client.get("/user/quota")
+        assert response.status_code == 200
+        assert response.json()["quota_expire_date"] is None
+        assert response.json()["quota_custom_duration"] is not None
+        assert response.json()["quota_custom_storage"] is None
+
+
+@pytest.mark.dependency(depends=["test_user_can_query_quota_data"])
+def test_admin_can_update_quota_storage(
+    client: UserTestClient,
+) -> None:
+    json_dict = {
+        "email": "user@test.com",
+        "quota": UserQuota(
+            quota_custom_storage=900e9,
+        ).model_dump(exclude_defaults=True, mode="json"),
+    }
+    with client.authenticate_admin():
+        response = client.patch("/user/quota", json=json_dict)
+        assert response.status_code == 200
+
+    with client.authenticate_user():
+        response = client.get("/user/quota")
+        assert response.status_code == 200
+        assert response.json()["quota_expire_date"] is None
+        assert response.json()["quota_custom_duration"] is None
+        assert response.json()["quota_custom_storage"] is not None
 
 
 def test_register_user_sends_verification_mail(

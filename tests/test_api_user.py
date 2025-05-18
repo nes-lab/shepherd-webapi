@@ -10,8 +10,9 @@ from shepherd_server.api_user.utils_mail import MailEngine
 from tests.conftest import UserTestClient
 
 
-def test_user_can_query_account_data(authenticated_client: TestClient) -> None:
-    response = authenticated_client.get("/user")
+def test_user_can_query_account_data(client: UserTestClient) -> None:
+    with client.authenticate_user():
+        response = client.get("/user")
     assert response.status_code == 200
     assert response.json()["email"] == "user@test.com"
     assert response.json()["first_name"] == "first name"
@@ -27,8 +28,9 @@ def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None
 
 
 @pytest.mark.dependency
-def test_user_can_query_quota_data(authenticated_client: TestClient) -> None:
-    response = authenticated_client.get("/user/quota")
+def test_user_can_query_quota_data(client: UserTestClient) -> None:
+    with client.authenticate_user():
+        response = client.get("/user/quota")
     assert response.status_code == 200
     assert response.json()["quota_expire_date"] is None
     assert response.json()["quota_custom_duration"] is None
@@ -175,109 +177,109 @@ def test_forgot_password_process(
 
 
 def test_verified_but_unapproved_user_cannot_login(
-    client: TestClient,
-    authenticated_admin_client: TestClient,
+    client: UserTestClient,
     mail_engine_mock: MailEngine,
 ) -> None:
-    response = authenticated_admin_client.post(
-        "/user/register",
-        json={
-            "email": "some_new_user@test.com",
-            "password": "new_pw",
-        },
-    )
-    assert response.status_code == 200
-    mail_engine_mock.send_verification_email.assert_called_once()
-    _, token = mail_engine_mock.send_verification_email.call_args.args
+    with client.authenticate_admin():
+        response = client.post(
+            "/user/register",
+            json={
+                "email": "some_new_user@test.com",
+                "password": "new_pw",
+            },
+        )
+        assert response.status_code == 200
+        mail_engine_mock.send_verification_email.assert_called_once()
+        _, token = mail_engine_mock.send_verification_email.call_args.args
 
-    verification_response = client.post(
-        f"/user/verify/{token}",
-    )
-    assert verification_response.status_code == 200
+    with client.regular_joe():
+        verification_response = client.post(
+            f"/user/verify/{token}",
+        )
+        assert verification_response.status_code == 200
 
-    login_response = client.post(
-        "/auth/token",
-        data={
-            "username": "some_new_user@test.com",
-            "password": "new_pw",
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    assert login_response.status_code == 401
+        login_response = client.post(
+            "/auth/token",
+            data={
+                "username": "some_new_user@test.com",
+                "password": "new_pw",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert login_response.status_code == 401
 
 
 def test_approved_but_unverified_user_cannot_login(
-    client: TestClient,
-    authenticated_admin_client: TestClient,
+    client: UserTestClient,
     mail_engine_mock: MailEngine,
 ) -> None:
-    response = authenticated_admin_client.post(
-        "/user/register",
-        json={
-            "email": "some_new_user@test.com",
-            "password": "new_pw",
-        },
-    )
-    assert response.status_code == 200
-    mail_engine_mock.send_verification_email.assert_called_once()
+    with client.authenticate_admin():
+        response = client.post(
+            "/user/register",
+            json={
+                "email": "some_new_user@test.com",
+                "password": "new_pw",
+            },
+        )
+        assert response.status_code == 200
+        mail_engine_mock.send_verification_email.assert_called_once()
 
-    approve_response = authenticated_admin_client.post(
-        "/user/approve",
-        json={
-            "email": "some_new_user@test.com",
-        },
-    )
-    assert approve_response.status_code == 200
+        approve_response = client.post(
+            "/user/approve",
+            json={"email": "some_new_user@test.com"},
+        )
+        assert approve_response.status_code == 200
 
-    login_response = client.post(
-        "/auth/token",
-        data={
-            "username": "some_new_user@test.com",
-            "password": "new_pw",
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    assert login_response.status_code == 401
+    with client.regular_joe():
+        login_response = client.post(
+            "/auth/token",
+            data={
+                "username": "some_new_user@test.com",
+                "password": "new_pw",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert login_response.status_code == 401
 
 
 def test_verified_and_approved_user_can_login(
-    client: TestClient,
-    authenticated_admin_client: TestClient,
+    client: UserTestClient,
     mail_engine_mock: MailEngine,
 ) -> None:
-    response = authenticated_admin_client.post(
-        "/user/register",
-        json={
-            "email": "some_new_user@test.com",
-            "password": "new_pw",
-        },
-    )
-    assert response.status_code == 200
-    mail_engine_mock.send_verification_email.assert_called_once()
-    _, token = mail_engine_mock.send_verification_email.call_args.args
+    with client.authenticate_admin():
+        response = client.post(
+            "/user/register",
+            json={
+                "email": "some_new_user@test.com",
+                "password": "new_pw",
+            },
+        )
+        assert response.status_code == 200
+        mail_engine_mock.send_verification_email.assert_called_once()
+        _, token = mail_engine_mock.send_verification_email.call_args.args
 
-    verification_response = client.post(
-        f"/user/verify/{token}",
-    )
-    assert verification_response.status_code == 200
+    with client.regular_joe():
+        verification_response = client.post(
+            f"/user/verify/{token}",
+        )
+        assert verification_response.status_code == 200
 
-    approve_response = authenticated_admin_client.post(
-        "/user/approve",
-        json={
-            "email": "some_new_user@test.com",
-        },
-    )
-    assert approve_response.status_code == 200
+    with client.authenticate_admin():
+        approve_response = client.post(
+            "/user/approve",
+            json={"email": "some_new_user@test.com"},
+        )
+        assert approve_response.status_code == 200
 
-    login_response = client.post(
-        "/auth/token",
-        data={
-            "username": "some_new_user@test.com",
-            "password": "new_pw",
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    assert login_response.status_code == 200
+        login_response = client.post(
+            "/auth/token",
+            data={
+                "username": "some_new_user@test.com",
+                "password": "new_pw",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert login_response.status_code == 200
 
 
 def test_forgot_password_endpoint_returns_success_for_invalid_email(

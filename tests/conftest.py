@@ -154,25 +154,16 @@ class UserTestClient(TestClient):
         yield self
         self.headers["Authorization"] = ""
 
+    @contextmanager
+    def regular_joe(self) -> Generator[TestClient, None, None]:
+        self.headers["Authorization"] = ""
+        yield self
+
 
 @pytest.fixture
 def client(*, database_for_tests: bool) -> Generator[TestClient, None, None]:
     assert database_for_tests
     with UserTestClient(app) as client:
-        yield client
-
-
-@pytest.fixture
-def authenticated_client(client: UserTestClient) -> Generator[TestClient, None, None]:
-    # WARNING: authenticated_client & authenticated_admin_client can't be used in same test.
-    with client.authenticate_user():
-        yield client
-
-
-@pytest.fixture
-def authenticated_admin_client(client: UserTestClient) -> Generator[TestClient, None, None]:
-    # WARNING: authenticated_client & authenticated_admin_client can't be used in same test.
-    with client.authenticate_admin():
         yield client
 
 

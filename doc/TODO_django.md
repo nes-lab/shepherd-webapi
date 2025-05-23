@@ -48,7 +48,7 @@ Later:
   - transformation: https://convtools.readthedocs.io/en/latest/index.html#ref-index-intro
   - pydantic-models: https://pydantic-docs.helpmanual.io/usage/exporting_models/
   - djantic: https://jordaneremieff.github.io/djantic/
-  - idea: django-model -> djantic -> pydantic -> dict -> yml
+  - idea: django-model -> djantic -> pydantic -> dict -> yaml
 - view Data (list or individual elements)
   - https://pypi.org/project/django-static-models/
   -
@@ -157,7 +157,7 @@ internal:
 - **Observer-IDs**
 - Target-IDs
 - vSource
-  - config-classes (hopefully derivable from datalib)
+  - config-classes (hopefully derivable from core-lib)
   - recorded trace (if needed)
 - **imageID** ID of previously uploaded image **OR** **embeddedImage**
 

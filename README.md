@@ -4,17 +4,17 @@
 
 **Testbed-WebAPI**: <https://shepherd.cfaed.tu-dresden.de:8000>
 
-**Main Documentation**: <https://orgua.github.io/shepherd>
+**Main Documentation**: <https://nes-lab.github.io/shepherd>
 
 **Source Code**: <https://github.com/nes-lab/shepherd-webapi>
 
-**Main Project**: <https://github.com/orgua/shepherd>
+**Main Project**: <https://github.com/nes-lab/shepherd>
 
 ---
 
 The WebAPI links the user to the testbed.
 It's written in Python and uses FastAPI to expose an interface to the internet.
-You can write your own tools or just use the testbed-client integrated in the [Core-Datalib](https://pypi.org/project/shepherd_core).
+You can write your own tools or just use the testbed-client integrated in the [core-lib](https://pypi.org/project/shepherd_core).
 
 Internally the scheduler behind the API utilizes the [herd-lib](https://pypi.org/project/shepherd_herd) to access the shepherd observers.
 Handling of data is done with Pydantic-Models that store the actual data in a database.
@@ -135,7 +135,7 @@ coverage report
 
 - increase version number by executing ``bump2version`` (see cmds below)
 - update changelog in ``CHANGELOG.md``
-- run unittests
+- run unittests locally
   - additionally every push gets automatically tested by GitHub workflows
 - install and run ``pre-commit`` for QA-Checks, see steps above
 - move code from dev-branch to main by PR

@@ -25,7 +25,7 @@ class Cfg(BaseModel):
     # "shepherd.cfaed.tu-dresden.de"
     contact: dict = {
         "name": "Ingmar Splitt",
-        "url": "https://github.com/orgua/shepherd",
+        "url": "https://github.com/nes-lab/shepherd",
         "email": "ingmar.splitt@tu-dresden.de",
     }
     ssl_keyfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_private_key.pem"

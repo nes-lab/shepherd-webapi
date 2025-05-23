@@ -5,7 +5,7 @@
 [Pydantic](https://github.com/pydantic/pydantic)
 
 - data validation for python dataclasses, its fast, elegantly designed and comes with batteries included
-- already trusted base for [shepherd-datalib](https://github.com/orgua/shepherd-datalib)
+- already trusted base for [user-tools](https://github.com/nes-lab/shepherd-tools)
 
 ### WebFrontend
 

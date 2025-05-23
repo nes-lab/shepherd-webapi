@@ -41,7 +41,7 @@ tag_metadata = [
         "description": "...",
         "externalDocs": {
             "description": "**inner** workings to interface the testbed",
-            "url": "https://orgua.github.io/shepherd/user/basics.html#emulator",
+            "url": "https://nes-lab.github.io/shepherd/user/basics.html#emulator",
         },
     },
 ]
@@ -52,7 +52,7 @@ app = FastAPI(
     version=str(version),
     description="The WebAPI for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/doc",
-    # contact="https://github.com/orgua/shepherd",
+    # contact="https://github.com/nes-lab/shepherd",
     docs_url="/doc0",  # this one allows login
     openapi_tags=tag_metadata,
     lifespan=db_context,

@@ -77,7 +77,7 @@ Config `.env`, by either bringing in a backup or starting fresh
 ```ini
 # Secrets
 SECRET_KEY="abc"
-SALT='cde'
+AUTH_SALT='cde'
 
 # FastMail
 MAIL_CONSOLE=true

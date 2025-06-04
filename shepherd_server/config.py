@@ -22,7 +22,7 @@ class Cfg(BaseModel):
     __slots__ = ()
     # web related
     root_url: str = config("ROOT_URL", default="127.0.0.1")
-    # "shepherd.cfaed.tu-dresden.de"
+
     contact: dict = {
         "name": "Ingmar Splitt",
         "url": "https://github.com/nes-lab/shepherd",
@@ -32,7 +32,7 @@ class Cfg(BaseModel):
     ssl_certfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
     ssl_ca_certs: Path = PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
     # user auth
-    auth_salt: bytes = config("SALT", default="and_pepper").encode("UTF-8")
+    auth_salt: bytes = config("AUTH_SALT", ).encode("UTF-8")
     secret_key: str = config("SECRET_KEY", default="replace me")
     # will raise if missing default, TODO: remove default
 
@@ -52,7 +52,6 @@ class Cfg(BaseModel):
     quota_default_storage: int = 200 * (10**9)
     # 20 nodes @  4 h are ~  290 GB
     # 30 nodes @ 10 h are ~ 1080 GB
-    # TODO: add temporary quota relief?
 
     def ssl_available(self) -> bool:
         _files = (self.ssl_keyfile, self.ssl_certfile, self.ssl_ca_certs)

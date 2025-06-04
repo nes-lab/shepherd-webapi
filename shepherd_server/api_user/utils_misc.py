@@ -31,7 +31,7 @@ def verify_password_hash(pw_plain: str, pw_hash: str) -> bool:
 def calculate_hash(text: str) -> str:
     if not CFG.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
-    return sha3_512(text.encode("UTF-8") + CFG.auth_salt).hexdigest()
+    return sha3_512(CFG.auth_salt + text.encode("UTF-8")).hexdigest()
 
 
 async def query_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User | None:

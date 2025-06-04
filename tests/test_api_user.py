@@ -111,7 +111,7 @@ def test_register_user_sends_verification_mail(
         "/user/register",
         json={
             "email": "new@test.com",
-            "password": "new_pw",
+            "password": "new_looong_pw",
         },
     )
     assert response.status_code == 200
@@ -126,11 +126,25 @@ def test_register_user_rejects_duplicate_email(
         "/user/register",
         json={
             "email": "user@test.com",
-            "password": "new_pw",
+            "password": "new_looong_pw",
         },
     )
     assert response.status_code == 409
     mail_engine_mock.send_verification_email.assert_not_called()
+
+
+def test_register_user_rejects_short_pw(
+    client: TestClient,
+    mail_engine_mock: MailEngine,
+) -> None:
+    response = client.post(
+        "/user/register",
+        json={
+            "email": "short@test.com",
+            "password": "short_pw",
+        },
+    )
+    assert response.status_code != 200
 
 
 def test_forgot_password_process(
@@ -185,7 +199,7 @@ def test_verified_but_unapproved_user_cannot_login(
             "/user/register",
             json={
                 "email": "some_new_user@test.com",
-                "password": "new_pw",
+                "password": "new_looong_pw",
             },
         )
         assert response.status_code == 200
@@ -202,7 +216,7 @@ def test_verified_but_unapproved_user_cannot_login(
             "/auth/token",
             data={
                 "username": "some_new_user@test.com",
-                "password": "new_pw",
+                "password": "new_looong_pw",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -218,7 +232,7 @@ def test_approved_but_unverified_user_cannot_login(
             "/user/register",
             json={
                 "email": "some_new_user@test.com",
-                "password": "new_pw",
+                "password": "new_looong_pw",
             },
         )
         assert response.status_code == 200
@@ -235,7 +249,7 @@ def test_approved_but_unverified_user_cannot_login(
             "/auth/token",
             data={
                 "username": "some_new_user@test.com",
-                "password": "new_pw",
+                "password": "new_looong_pw",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -251,7 +265,7 @@ def test_verified_and_approved_user_can_login(
             "/user/register",
             json={
                 "email": "some_new_user@test.com",
-                "password": "new_pw",
+                "password": "new_looong_pw",
             },
         )
         assert response.status_code == 200
@@ -275,7 +289,7 @@ def test_verified_and_approved_user_can_login(
             "/auth/token",
             data={
                 "username": "some_new_user@test.com",
-                "password": "new_pw",
+                "password": "new_looong_pw",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )

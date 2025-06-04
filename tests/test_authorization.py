@@ -6,7 +6,7 @@ def test_login_yields_access_token(client: TestClient) -> None:
         "/auth/token",
         data={
             "username": "user@test.com",
-            "password": "password",
+            "password": "safe-password",
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
@@ -19,7 +19,7 @@ def test_access_token_unlocks_authenticated_endpoints(client: TestClient) -> Non
         "/auth/token",
         data={
             "username": "user@test.com",
-            "password": "password",
+            "password": "safe-password",
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
@@ -60,7 +60,7 @@ def test_login_rejects_if_mail_is_unconfirmed(client: TestClient) -> None:
         "/auth/token",
         data={
             "username": "unconfirmed_mail@test.com",
-            "password": "password",
+            "password": "safe-password",
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
@@ -72,7 +72,7 @@ def test_login_rejects_disabled_user(client: TestClient) -> None:
         "/auth/token",
         data={
             "username": "disabled@test.com",
-            "password": "password",
+            "password": "safe-password",
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

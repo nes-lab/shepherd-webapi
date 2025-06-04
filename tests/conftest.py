@@ -46,7 +46,7 @@ async def database_for_tests(
 
     user = User(
         email="user@test.com",
-        password=calculate_password_hash("password"),
+        password_hash=calculate_password_hash("safe-password"),
         first_name="first name",
         last_name="last name",
         disabled=False,
@@ -130,7 +130,7 @@ class UserTestClient(TestClient):
             "/auth/token",
             data={
                 "username": "admin@test.com",
-                "password": "password",
+                "password": "safe-password",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -145,7 +145,7 @@ class UserTestClient(TestClient):
             "/auth/token",
             data={
                 "username": "user@test.com",
-                "password": "password",
+                "password": "safe-password",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )

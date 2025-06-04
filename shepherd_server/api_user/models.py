@@ -11,16 +11,20 @@ from beanie import Document
 from beanie import Indexed
 from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import StringConstraints
 from shepherd_core import local_tz
 
 from shepherd_server.config import CFG
+
+PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
+# ⤷ Regex = All Printable ASCII-Characters with Space
 
 
 class UserAuth(BaseModel):
     """User register and login auth."""
 
     email: EmailStr
-    password: str
+    password: PasswordStr
 
 
 class UserUpdate(BaseModel):
@@ -37,7 +41,7 @@ class UserOut(UserUpdate):
     """User fields returned to the client."""
 
     disabled: bool = True
-    email: Annotated[str, Indexed(EmailStr, unique=True)]
+    email: Annotated[EmailStr, Indexed(unique=True)]
     group: str = ""  # TODO: will come later
     role: str | None = None  # TODO: enum? user, group_admin, sys_admin
 
@@ -77,7 +81,7 @@ class User(Document, UserOut, UserQuota):
 
     # id: UUID4 = Field(default_factory=uuid4)
 
-    password: str
+    password_hash: str
     email_confirmed_at: datetime | None = None
     group_confirmed_at: datetime | None = None
     token_verification: str | None = None
@@ -87,7 +91,7 @@ class User(Document, UserOut, UserQuota):
         return f"<User {self.email}>"
 
     def __str__(self) -> str:
-        return self.email
+        return str(self.email)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, User):
@@ -119,7 +123,7 @@ class User(Document, UserOut, UserQuota):
     async def by_reset_token(cls, token: str) -> Optional["User"]:
         return await cls.find_one(cls.token_pw_reset == token)
 
-    def update_email(self, new_email: str) -> None:
+    def update_email(self, new_email: EmailStr) -> None:
         """Update email logging and replace."""
         # Add any pre-checks here
         self.email = new_email

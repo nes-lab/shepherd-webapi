@@ -46,7 +46,7 @@ async def db_insert_test() -> None:
     # add temporary super-user -> NOTE: NOT SECURE
     admin = User(
         email="alter_Verwalter@admin.org",
-        password=calculate_password_hash("""So-@khY"pdM_P/GK--='G?3Bsqg;WC,QuSQH=DCKL4"""),
+        password_hash=calculate_password_hash("""So-@khY"pdM_P/GK--='G?3Bsqg;WC,QuSQH=DCKL4"""),
         role="admin",
         disabled=False,
         email_confirmed_at=local_now(),

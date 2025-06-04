@@ -8,6 +8,7 @@ from fastapi import Response
 from pydantic import EmailStr
 from shepherd_core import local_now
 
+from .models import PasswordStr
 from .models import User
 from .models import UserAuth
 from .models import UserOut
@@ -105,7 +106,7 @@ async def user_registration(
     await mail_engine.send_verification_email(user_auth.email, token_verification)
     user = User(
         email=user_auth.email,
-        password=pw_hash,
+        password_hash=pw_hash,
         token_verification=token_verification,
         disabled=True,
     )
@@ -132,13 +133,13 @@ async def forgot_password(
 @router.post("/reset-password")
 async def reset_password(
     token: Annotated[str, Body(embed=True)],
-    password: Annotated[str, Body(embed=True)],
+    password: Annotated[PasswordStr, Body(embed=True)],
 ) -> UserOut:
     """Reset user password from token value."""
     user = await User.by_reset_token(token)
     if user is None:
         raise HTTPException(404, "Invalid password reset token")
-    user.password = calculate_password_hash(password)
+    user.password_hash = calculate_password_hash(password)
     await user.save()
     return user
 

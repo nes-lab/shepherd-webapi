@@ -21,7 +21,7 @@ async def login_for_access_token(
     _user = await User.by_email(form_data.username)
     if not _user:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-    if not verify_password_hash(form_data.password, _user.password):
+    if not verify_password_hash(form_data.password, _user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     if _user.email_confirmed_at is None:
         raise HTTPException(status_code=401, detail="Email is not yet verified")

@@ -84,7 +84,7 @@ def test_cli_init_short() -> None:
 def test_cli_backup_short() -> None:
     res = CliRunner().invoke(
         app=cli,
-        args=["-v", "backup"],
+        args=["-v", "backup", "."],
     )
     assert res.exit_code == 0
 

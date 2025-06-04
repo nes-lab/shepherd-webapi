@@ -80,8 +80,10 @@ def backup(
 ) -> None:
     """Dumps content of database to a file (in addition to MongoDump-tool)"""
     # TODO: fails ATM
+    log.warning("Dumping content of database to YAML-files does not fully work ATM")
     asyncio.run(backup_db(WebExperiment, path))
-    asyncio.run(backup_db(User, path))
+    if False:
+        asyncio.run(backup_db(User, path))
 
 
 @cli.command()

@@ -135,7 +135,6 @@ def test_register_user_rejects_duplicate_email(
 
 def test_register_user_rejects_short_pw(
     client: TestClient,
-    mail_engine_mock: MailEngine,
 ) -> None:
     response = client.post(
         "/user/register",

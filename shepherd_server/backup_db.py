@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+import beanie
 import bson
 import yaml
 from beanie import Document
@@ -35,6 +36,7 @@ def generic2str(dumper: SafeDumper, data: Any) -> Node:
 
 yaml.add_representer(UUID, generic2str, SafeDumper)
 yaml.add_representer(bson.ObjectId, generic2str, SafeDumper)
+yaml.add_representer(beanie.Link, generic2str, SafeDumper)
 yaml.add_representer(pathlib.PosixPath, path2str, SafeDumper)
 yaml.add_representer(pathlib.WindowsPath, path2str, SafeDumper)
 yaml.add_representer(pathlib.Path, path2str, SafeDumper)
@@ -49,7 +51,7 @@ async def backup_db(doc: type(Document), path: Path) -> Path:
     for model in models:
         model_dict = model.model_dump(exclude_unset=True, exclude_defaults=True)
         model_wrap = Wrapper(
-            datatype=type(doc).__name__,
+            datatype=doc.__name__,
             created=local_now(),
             parameters=model_dict,
         )
@@ -60,8 +62,8 @@ async def backup_db(doc: type(Document), path: Path) -> Path:
         default_flow_style=False,
         sort_keys=False,
     )
-    path_file = path / (type(doc).__name__ + ".yaml")
-    log.info("Backup %d %s-Models to: %s", len(models), type(doc).__name__, path_file.name)
+    path_file = path / (doc.__name__ + ".yaml")
+    log.info("Backup %d %s-Models to: %s", len(models), doc.__name__, path_file.name)
     with path_file.open("w") as f:
         f.write(models_yaml)
     return path_file

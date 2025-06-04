@@ -102,9 +102,20 @@ Note: the scheduler can
 
 ### Backup & Restore State of DB
 
+Install MongoDB database tools on the server running the database via <https://www.mongodb.com/docs/database-tools/installation/>
+
+Backup and restore with:
+
 ```Shell
-shepherd_server backup file_name
-shepherd_server init file_name
+mongodump --out=~/mongo-backup/
+mongorestore ~/mongo-backup/
+```
+
+or to get YAML-files (not working ATM)
+
+```
+shepherd_server backup dir_path
+shepherd_server init dir_path
 ```
 
 ## Development & Release

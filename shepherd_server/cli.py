@@ -3,10 +3,15 @@ import signal
 import sys
 from pathlib import Path
 from types import FrameType
+from typing import Annotated
 
 import shepherd_core
 import typer
 
+from shepherd_server.api_experiment.models import WebExperiment
+from shepherd_server.api_user.models import User
+
+from .backup_db import backup_db
 from .instance_api import run as run_api_server
 from .instance_db import db_insert_test
 from .instance_redirect import run as run_redirect_server
@@ -65,11 +70,18 @@ def init() -> None:
 
 
 @cli.command()
-# def backup(file: Path | None = None) -> None:
-def backup() -> None:
-    """Dumps content of database to a file"""
-    # TODO: implement
-    # TODO: also dump default config or keep it in DB?
+def backup(
+    path: Annotated[
+        Path,
+        typer.Argument(
+            exists=True, file_okay=False, dir_okay=True, writable=True, resolve_path=True
+        ),
+    ],
+) -> None:
+    """Dumps content of database to a file (in addition to MongoDump-tool)"""
+    # TODO: fails ATM
+    asyncio.run(backup_db(WebExperiment, path))
+    asyncio.run(backup_db(User, path))
 
 
 @cli.command()

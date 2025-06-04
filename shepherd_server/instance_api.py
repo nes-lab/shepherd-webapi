@@ -102,7 +102,7 @@ def run() -> None:
     uvi_args = {
         "app": f"{run.__module__}:app",
         "reload": False,
-        "port": 8000,
+        "port": CFG.root_port,
         "host": CFG.root_url,
     }
     if ssl_enabled:

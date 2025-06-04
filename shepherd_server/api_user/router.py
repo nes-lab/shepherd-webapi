@@ -128,6 +128,7 @@ async def forgot_password(
     return Response(status_code=200)
 
 
+@router.get("/reset-password")
 @router.post("/reset-password")
 async def reset_password(
     token: Annotated[str, Body(embed=True)],
@@ -147,8 +148,12 @@ async def reset_password(
 # ###############################################################
 
 
+@router.get("/verify/{token}")
 @router.post("/verify/{token}")
-async def verify_email(token: str) -> Response:
+async def verify_email(
+    token: str,
+    mail_engine: Annotated[MailEngine, Depends(mail_engine)],
+) -> Response:
     """Verify the user's email with the supplied token."""
     user = await User.by_verification_token(token)
     if user is None:
@@ -159,10 +164,12 @@ async def verify_email(token: str) -> Response:
         raise HTTPException(412, "Email is already verified")
     user.email_confirmed_at = local_now()
     user.token_verification = None
+    await mail_engine.send_approval_request_email(user.email)
     await user.save()
     return Response(status_code=200)
 
 
+@router.get("/approve", dependencies=[Depends(active_user_is_admin)])
 @router.post("/approve", dependencies=[Depends(active_user_is_admin)])
 async def approve(
     email: Annotated[EmailStr, Body(embed=True)],

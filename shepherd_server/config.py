@@ -22,6 +22,7 @@ class Cfg(BaseModel):
     __slots__ = ()
     # web related
     root_url: str = config("ROOT_URL", default="127.0.0.1")
+    root_port: int = 8000
 
     contact: dict = {
         "name": "Ingmar Splitt",
@@ -32,7 +33,7 @@ class Cfg(BaseModel):
     ssl_certfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
     ssl_ca_certs: Path = PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
     # user auth
-    auth_salt: bytes = config("AUTH_SALT", ).encode("UTF-8")
+    auth_salt: bytes = config("AUTH_SALT").encode("UTF-8")
     secret_key: str = config("SECRET_KEY", default="replace me")
     # will raise if missing default, TODO: remove default
 
@@ -40,12 +41,13 @@ class Cfg(BaseModel):
     redirect_url: str = "https://nes-lab.github.io/shepherd-nova/"
 
     # MAIL
-    mail_console: bool = config("MAIL_CONSOLE", default=False, cast=bool)
+    mail_enabled: bool = config("MAIL_ENABLED", default=False, cast=bool)
     mail_server: str = config("MAIL_SERVER", default="mail.your-server.de")
-    mail_port: int = config("MAIL_PORT", default=993, cast=int)
+    mail_port: int = config("MAIL_PORT", default=465, cast=int)
     mail_username: str = config("MAIL_USERNAME", default="")
     mail_password: str = config("MAIL_PASSWORD", default="")
-    mail_sender: str = config("MAIL_SENDER", default="testbed@nes-lab.org")
+    mail_sender: str = config("MAIL_SENDER", default="")
+    mail_sender_name: str = config("MAIL_SENDER_NAME", default="Shepherd Testbed")
 
     # Quotas for users
     quota_default_duration: timedelta = timedelta(minutes=60)
@@ -64,6 +66,9 @@ class Cfg(BaseModel):
                 if not _file.exists():
                     log.warning(" -> NOT FOUND: %s", _file.as_posix())
         return _avail
+
+    def server_url(self) -> str:
+        return f"http{'s' if self.ssl_available() else ''}://{CFG.root_url}:{CFG.root_port}"
 
 
 CFG = Cfg()

@@ -80,7 +80,7 @@ SECRET_KEY="abc"
 AUTH_SALT='cde'
 
 # FastMail
-MAIL_CONSOLE=true
+MAIL_ENABLED=true
 MAIL_USERNAME="testbed@test.bed"
 MAIL_PASSWORD="pass-the-word"
 ```

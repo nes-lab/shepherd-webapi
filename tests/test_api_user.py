@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from shepherd_core import local_tz
 
+from shepherd_server.api_user.models import UserOut
 from shepherd_server.api_user.models import UserQuota
 from shepherd_server.api_user.utils_mail import MailEngine
 from tests.conftest import UserTestClient
@@ -14,9 +15,10 @@ def test_user_can_query_account_data(client: UserTestClient) -> None:
     with client.authenticate_user():
         response = client.get("/user")
     assert response.status_code == 200
-    assert response.json()["email"] == "user@test.com"
-    assert response.json()["first_name"] == "first name"
-    assert response.json()["last_name"] == "last name"
+    user = UserOut(**response.json())
+    assert user.email == "user@test.com"
+    assert user.first_name == "first name"
+    assert user.last_name == "last name"
 
 
 def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None:
@@ -32,9 +34,10 @@ def test_user_can_query_quota_data(client: UserTestClient) -> None:
     with client.authenticate_user():
         response = client.get("/user/quota")
     assert response.status_code == 200
-    assert response.json()["quota_expire_date"] is None
-    assert response.json()["quota_custom_duration"] is None
-    assert response.json()["quota_custom_storage"] is None
+    quota = UserQuota(**response.json())
+    assert quota.custom_quota_expire_date is None
+    assert quota.custom_quota_duration is None
+    assert quota.custom_quota_storage is None
 
 
 @pytest.mark.dependency(depends=["test_user_can_query_quota_data"])
@@ -54,9 +57,10 @@ def test_admin_can_update_quota_date(
     with client.authenticate_user():
         response = client.get("/user/quota")
         assert response.status_code == 200
-        assert response.json()["quota_expire_date"] is not None
-        assert response.json()["quota_custom_duration"] is None
-        assert response.json()["quota_custom_storage"] is None
+        quota = UserQuota(**response.json())
+        assert quota.custom_quota_expire_date is not None
+        assert quota.custom_quota_duration is None
+        assert quota.custom_quota_storage is None
 
 
 @pytest.mark.dependency(depends=["test_user_can_query_quota_data"])
@@ -76,9 +80,10 @@ def test_admin_can_update_quota_duration(
     with client.authenticate_user():
         response = client.get("/user/quota")
         assert response.status_code == 200
-        assert response.json()["quota_expire_date"] is None
-        assert response.json()["quota_custom_duration"] is not None
-        assert response.json()["quota_custom_storage"] is None
+        quota = UserQuota(**response.json())
+        assert quota.custom_quota_expire_date is None
+        assert quota.custom_quota_duration is not None
+        assert quota.custom_quota_storage is None
 
 
 @pytest.mark.dependency(depends=["test_user_can_query_quota_data"])
@@ -98,9 +103,10 @@ def test_admin_can_update_quota_storage(
     with client.authenticate_user():
         response = client.get("/user/quota")
         assert response.status_code == 200
-        assert response.json()["quota_expire_date"] is None
-        assert response.json()["quota_custom_duration"] is None
-        assert response.json()["quota_custom_storage"] is not None
+        quota = UserQuota(**response.json())
+        assert quota.custom_quota_expire_date is None
+        assert quota.custom_quota_duration is None
+        assert quota.custom_quota_storage is not None
 
 
 def test_register_user_sends_verification_mail(

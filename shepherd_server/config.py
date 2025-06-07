@@ -4,6 +4,7 @@ from pathlib import Path
 
 from decouple import config
 from pydantic import BaseModel
+from pydantic import PositiveInt
 
 from shepherd_server.logger import log
 
@@ -51,7 +52,7 @@ class Cfg(BaseModel):
 
     # Quotas for users
     quota_default_duration: timedelta = timedelta(minutes=60)
-    quota_default_storage: int = 200 * (10**9)
+    quota_default_storage: PositiveInt = 200 * (10**9)
     # 20 nodes @  4 h are ~  290 GB
     # 30 nodes @ 10 h are ~ 1080 GB
 

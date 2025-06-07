@@ -66,6 +66,7 @@ async def delete_user(
 
 @router.get("/quota")
 async def quota_info(user: Annotated[User, Depends(current_active_user)]) -> UserQuota:
+    # TODO: not needed anymore, as quota is included in UserOut / User_info
     return user
 
 
@@ -98,7 +99,7 @@ async def user_registration(
     mail_engine: Annotated[MailEngine, Depends(mail_engine)],
 ) -> UserOut:
     """Create a new user."""
-    # TODO: ip-based rate-limit needed (3/d) or challenge,
+    # TODO: challenge / OTP needed,
     #       otherwise this is going to be misused
     user = await User.by_email(user_auth.email)
     if user is not None:

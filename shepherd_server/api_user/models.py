@@ -11,6 +11,7 @@ from beanie import Document
 from beanie import Indexed
 from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import PositiveInt
 from pydantic import StringConstraints
 from shepherd_core import local_tz
 
@@ -40,7 +41,7 @@ class UserUpdate(BaseModel):
 class UserQuota(BaseModel):
     custom_quota_expire_date: datetime | None = None
     custom_quota_duration: timedelta | None = None
-    custom_quota_storage: int | None = None
+    custom_quota_storage: PositiveInt | None = None
 
     @property
     def custom_quota_active(self) -> bool:

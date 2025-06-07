@@ -18,7 +18,7 @@ def test_cli_help_full() -> None:
 
 
 def test_cli_version_minimal() -> None:
-    res = CliRunner(mix_stderr=False).invoke(
+    res = CliRunner().invoke(
         app=cli,
         args=["version"],
     )

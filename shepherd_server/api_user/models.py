@@ -109,7 +109,7 @@ class User(Document, UserOut, UserQuota):
         return {"username": self.email}
 
     @classmethod
-    async def by_email(cls, email: str | None) -> Optional["User"]:
+    async def by_email(cls, email: EmailStr | None) -> Optional["User"]:
         """Get a user by email."""
         if email is None:
             return None

@@ -6,11 +6,16 @@ from beanie import init_beanie
 from fastapi import FastAPI
 from motor.core import AgnosticDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import EmailStr
 from shepherd_core import local_now
 
 from .api_experiment.models import WebExperiment
+from .api_user.models import PasswordStr
 from .api_user.models import User
+from .api_user.utils_mail import mail_engine
+from .api_user.utils_misc import calculate_hash
 from .api_user.utils_misc import calculate_password_hash
+from .config import CFG
 from .logger import log
 
 
@@ -40,19 +45,25 @@ async def db_context(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("DB-Client shut down")
 
 
-async def db_insert_test() -> None:
+async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
     await db_client()
 
-    # add temporary super-user -> NOTE: NOT SECURE
+    user = await User.by_email(email)
+    if user is not None:
+        log.error("User with that email already exists")
+        return
+    token_verification = calculate_hash(email + str(local_now()))[:10]
+    if CFG.mail_enabled:
+        await mail_engine().send_verification_email(email, token_verification)
+        log.info("Verification E-Mail was sent to User (Account deactivated by default).")
     admin = User(
-        email="alter_Verwalter@admin.org",
-        password_hash=calculate_password_hash("""So-@khY"pdM_P/GK--='G?3Bsqg;WC,QuSQH=DCKL4"""),
+        email=email,
+        password_hash=calculate_password_hash(password),
         role="admin",
-        disabled=False,
-        email_confirmed_at=local_now(),
         group_confirmed_at=local_now(),
+        token_verification=token_verification,
+        disabled=CFG.mail_enabled,
+        email_confirmed_at=None if CFG.mail_enabled else local_now(),
     )
     await User.insert_one(admin)
-
-
-# TODO: dump to file, restore from it - can beanie or motor do it?
+    log.info("Admin user added to DB")

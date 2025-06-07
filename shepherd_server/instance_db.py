@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from motor.core import AgnosticDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import EmailStr
+from pydantic import validate_call
 from shepherd_core import local_now
 
 from .api_experiment.models import WebExperiment
@@ -45,6 +46,7 @@ async def db_context(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("DB-Client shut down")
 
 
+@validate_call
 async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
     await db_client()
 

@@ -98,6 +98,7 @@ async def user_registration(
     mail_engine: Annotated[MailEngine, Depends(mail_engine)],
 ) -> UserOut:
     """Create a new user."""
+    # TODO: ip-based rate-limit needed (3/d), otherwise this is going to be misused
     user = await User.by_email(user_auth.email)
     if user is not None:
         raise HTTPException(409, "User with that email already exists")

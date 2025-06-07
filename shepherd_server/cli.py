@@ -108,7 +108,7 @@ def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
 def create_admin(email: str, password: PasswordStr) -> None:
     """Bootstrap database and add an admin.
 
-    User will have to verify if mail is activated."""
+    User will have to verify if mail-service is activated."""
     asyncio.run(db_create_admin(email, password))
 
 

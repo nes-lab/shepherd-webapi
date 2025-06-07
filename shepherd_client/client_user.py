@@ -38,7 +38,8 @@ class UserClient(WebClient):
         server: optional address to testbed-server-endpoint
         user_email: your account name - used to send status updates
         password: your account safety - can be omitted and token is automatically created
-        save_credentials: your inputs will be saved to your account (XDG-path or user/.config/), so you can avoid entering them here
+        save_credentials: your inputs will be saved to your account (XDG-path or user/.config/),
+                          -> you won't need to enter them again
         """
         if debug:
             increase_verbose_level(3)
@@ -54,9 +55,7 @@ class UserClient(WebClient):
             self._cfg.to_file()
         super().__init__()
 
-        self._connected: bool = False
-        self._token: str | None = None
-
+        self._auth: dict | None = None
         self.authenticate()
 
     def authenticate(self) -> None:
@@ -66,34 +65,53 @@ class UserClient(WebClient):
                 "username": self._cfg.user_email,
                 "password": self._cfg.password,
             },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},  # TODO: needed?
             timeout=3,
         )
-        if not rsp.ok:
+        if rsp.ok:
+            self._auth = {"Authorization": f"Bearer {rsp.json()['access_token']}"}
+        else:
             logger.warning("Authentication failed with: %s", rsp.reason)
-            return
-        self._token = rsp.json()["access_token"]
 
     def register_user(self) -> None:
-        if self._token is not None:
+        if self._auth is not None:
             logger.error("User already registered and authenticated")
         rsp = requests.post(
             url=f"{self._cfg.server}/user/register",
-            data={
+            json={
                 "email": self._cfg.user_email,
                 "password": self._cfg.password,
             },
+            headers=self._auth,
             timeout=3,
         )
-        if not rsp.ok:
+        if rsp.ok:
+            logger.info(f"User {self._cfg.user_email} registered - check mail to verify account.")
+        else:
             logger.warning("Registration failed with: %s", rsp.reason)
-            return
-        logger.info(f"User {self._cfg.user_email} registered - check mail to verify account.")
 
-    def delete_user(self):
+    def delete_user(self) -> None:
         """"""
+        rsp = requests.delete(
+            url=f"{self._cfg.server}/user",
+            headers=self._auth,
+            timeout=3,
+        )
+        if rsp.ok:
+            logger.info(f"User {self._cfg.user_email} deleted")
+        else:
+            logger.warning("User-Deletion failed with: %s", rsp.reason)
 
-    def get_user_info(self):
-        pass
-
-    def get_user_quota(self):
-        pass
+    def get_user_info(self) -> dict:
+        rsp = requests.get(
+            url=f"{self._cfg.server}/user",
+            headers=self._auth,
+            timeout=3,
+        )
+        if rsp.ok:
+            info = rsp.json()
+            logger.debug("User-Info: %s", info)
+        else:
+            logger.warning("Query for User-Info failed with: %s", rsp.reason)
+            info = {}
+        return info

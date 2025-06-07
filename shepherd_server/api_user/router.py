@@ -77,12 +77,12 @@ async def update_quota(
     _user = await User.by_email(email)
     if _user is None:
         raise HTTPException(status_code=401, detail="Incorrect username")
-    if quota.quota_expire_date is not None:
-        _user.quota_expire_date = quota.quota_expire_date
-    if quota.quota_custom_duration is not None:
-        _user.quota_custom_duration = quota.quota_custom_duration
-    if quota.quota_custom_storage is not None:
-        _user.quota_custom_storage = quota.quota_custom_storage
+    if quota.custom_quota_expire_date is not None:
+        _user.custom_quota_expire_date = quota.custom_quota_expire_date
+    if quota.custom_quota_duration is not None:
+        _user.custom_quota_duration = quota.custom_quota_duration
+    if quota.custom_quota_storage is not None:
+        _user.custom_quota_storage = quota.custom_quota_storage
     await _user.save()
     return _user
 
@@ -98,7 +98,8 @@ async def user_registration(
     mail_engine: Annotated[MailEngine, Depends(mail_engine)],
 ) -> UserOut:
     """Create a new user."""
-    # TODO: ip-based rate-limit needed (3/d), otherwise this is going to be misused
+    # TODO: ip-based rate-limit needed (3/d) or challenge,
+    #       otherwise this is going to be misused
     user = await User.by_email(user_auth.email)
     if user is not None:
         raise HTTPException(409, "User with that email already exists")

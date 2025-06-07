@@ -92,8 +92,8 @@ def test_create_experiment_duration_with_expired_quota(
         json_dict = {
             "email": "user@test.com",
             "quota": UserQuota(
-                quota_expire_date=datetime.now(tz=local_tz()) - timedelta(minutes=5),
-                quota_custom_duration=timedelta(hours=60),
+                custom_quota_expire_date=datetime.now(tz=local_tz()) - timedelta(minutes=5),
+                custom_quota_duration=timedelta(hours=60),
             ).model_dump(exclude_defaults=True, mode="json"),
         }
         response = client.patch("/user/quota", json=json_dict)
@@ -120,8 +120,8 @@ def test_create_experiment_duration_with_valid_quota(
         json_dict = {
             "email": "user@test.com",
             "quota": UserQuota(
-                quota_expire_date=datetime.now(tz=local_tz()) + timedelta(minutes=5),
-                quota_custom_duration=timedelta(hours=60),
+                custom_quota_expire_date=datetime.now(tz=local_tz()) + timedelta(minutes=5),
+                custom_quota_duration=timedelta(hours=60),
             ).model_dump(exclude_defaults=True, mode="json"),
         }
         response = client.patch("/user/quota", json=json_dict)

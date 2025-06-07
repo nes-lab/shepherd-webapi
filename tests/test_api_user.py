@@ -44,7 +44,7 @@ def test_admin_can_update_quota_date(
     json_dict = {
         "email": "user@test.com",
         "quota": UserQuota(
-            quota_expire_date=datetime.now(tz=local_tz()),
+            custom_quota_expire_date=datetime.now(tz=local_tz()),
         ).model_dump(exclude_defaults=True, mode="json"),
     }
     with client.authenticate_admin():
@@ -66,7 +66,7 @@ def test_admin_can_update_quota_duration(
     json_dict = {
         "email": "user@test.com",
         "quota": UserQuota(
-            quota_custom_duration=timedelta(hours=60),
+            custom_quota_duration=timedelta(hours=60),
         ).model_dump(exclude_defaults=True, mode="json"),
     }
     with client.authenticate_admin():
@@ -88,7 +88,7 @@ def test_admin_can_update_quota_storage(
     json_dict = {
         "email": "user@test.com",
         "quota": UserQuota(
-            quota_custom_storage=900e9,
+            custom_quota_storage=900e9,
         ).model_dump(exclude_defaults=True, mode="json"),
     }
     with client.authenticate_admin():

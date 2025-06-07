@@ -37,7 +37,37 @@ class UserUpdate(BaseModel):
     last_name: str | None = None
 
 
-class UserOut(UserUpdate):
+class UserQuota(BaseModel):
+    custom_quota_expire_date: datetime | None = None
+    custom_quota_duration: timedelta | None = None
+    custom_quota_storage: int | None = None
+
+    @property
+    def custom_quota_active(self) -> bool:
+        """
+        note: model is transmitted via fastapi / json and
+              therefore lost timezone (normalized to UTC)
+        """
+        if self.custom_quota_expire_date is None:
+            return False
+        if self.custom_quota_expire_date.tzinfo is None:
+            return self.custom_quota_expire_date.replace(tzinfo=timezone.utc) >= datetime.now(
+                tz=local_tz()
+            )
+        return self.custom_quota_expire_date >= datetime.now(tz=local_tz())
+
+    @property
+    def quota_duration(self) -> timedelta:
+        _custom = self.custom_quota_active and (self.custom_quota_duration is not None)
+        return self.custom_quota_duration if _custom else CFG.quota_default_duration
+
+    @property
+    def quota_storage(self) -> int:
+        _custom = self.custom_quota_active and (self.custom_quota_storage is not None)
+        return self.custom_quota_storage if _custom else CFG.quota_default_storage
+
+
+class UserOut(UserUpdate, UserQuota):
     """User fields returned to the client."""
 
     disabled: bool = True
@@ -46,37 +76,7 @@ class UserOut(UserUpdate):
     role: str | None = None  # TODO: enum? user, group_admin, sys_admin
 
 
-class UserQuota(BaseModel):
-    quota_expire_date: datetime | None = None
-    quota_custom_duration: timedelta | None = None
-    quota_custom_storage: int | None = None
-
-    @property
-    def active(self) -> bool:
-        """
-        note: model is transmitted via fastapi / json and
-              therefore lost timezone (normalized to UTC)
-        """
-        if self.quota_expire_date is None:
-            return False
-        if self.quota_expire_date.tzinfo is None:
-            return self.quota_expire_date.replace(tzinfo=timezone.utc) >= datetime.now(
-                tz=local_tz()
-            )
-        return self.quota_expire_date >= datetime.now(tz=local_tz())
-
-    @property
-    def quota_duration(self) -> timedelta:
-        _custom = self.active and (self.quota_custom_duration is not None)
-        return self.quota_custom_duration if _custom else CFG.quota_default_duration
-
-    @property
-    def quota_storage(self) -> int:
-        _custom = self.active and (self.quota_custom_storage is not None)
-        return self.quota_custom_storage if _custom else CFG.quota_default_storage
-
-
-class User(Document, UserOut, UserQuota):
+class User(Document, UserOut):
     """User DB representation."""
 
     # id: UUID4 = Field(default_factory=uuid4)

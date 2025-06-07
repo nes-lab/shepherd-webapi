@@ -13,7 +13,7 @@ from shepherd_core import fw_tools
 from shepherd_core import local_tz
 from shepherd_core.data_models import FirmwareDType
 from shepherd_core.data_models import GpioTracing
-from shepherd_core.data_models import UartTracing
+from shepherd_core.data_models import UartLogging
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment
@@ -185,7 +185,6 @@ def sample_target_config() -> TargetConfig:
     firmware_path = Path(__file__).parent / "data/test-firmware-nrf52.elf"
     return TargetConfig(
         target_IDs=[42],
-        custom_IDs=[42],
         energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
         firmware1=Firmware(
             name="FW_TestXYZ",
@@ -195,7 +194,7 @@ def sample_target_config() -> TargetConfig:
             mcu=MCU(name="nRF52"),
         ),
         power_tracing=None,
-        uart_tracing=UartTracing(baudrate=115_200),
+        uart_logging=UartLogging(baudrate=115_200),
         gpio_tracing=GpioTracing(),
     )
 

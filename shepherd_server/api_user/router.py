@@ -10,9 +10,9 @@ from shepherd_core import local_now
 
 from .models import PasswordStr
 from .models import User
-from .models import UserAuth
 from .models import UserOut
 from .models import UserQuota
+from .models import UserRegistration
 from .models import UserUpdate
 from .utils_mail import MailEngine
 from .utils_mail import mail_engine
@@ -93,41 +93,17 @@ async def update_quota(
 # ###############################################################
 
 
-@router.post("/register")
-async def user_registration(
-    user_auth: UserAuth,
-    mail_engine: Annotated[MailEngine, Depends(mail_engine)],
-) -> UserOut:
-    """Create a new user."""
-    # TODO: challenge / OTP needed,
-    #       otherwise this is going to be misused
-    user = await User.by_email(user_auth.email)
-    if user is not None:
-        raise HTTPException(409, "User with that email already exists")
-    pw_hash = calculate_password_hash(user_auth.password)
-    token_verification = calculate_hash(user_auth.email + str(local_now()))[:10]
-    await mail_engine.send_verification_email(user_auth.email, token_verification)
-    user = User(
-        email=user_auth.email,
-        password_hash=pw_hash,
-        token_verification=token_verification,
-        disabled=True,
-    )
-    await user.create()
-    return user
-
-
 @router.post("/forgot-password")
 async def forgot_password(
     email: Annotated[EmailStr, Body(embed=True)],
-    mail_engine: Annotated[MailEngine, Depends(mail_engine)],
+    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Send password reset email."""
     user = await User.by_email(email)
     if user is None:
         return Response(status_code=200)
-    user.token_pw_reset = calculate_hash(user.email + str(local_now()))[:10]
-    await mail_engine.send_password_reset_email(email, user.token_pw_reset)
+    user.token_pw_reset = calculate_hash(user.email + str(local_now()))[-12:]
+    await mail_sys.send_password_reset_email(email, user.token_pw_reset)
     await user.save()
     return Response(status_code=200)
 
@@ -148,17 +124,65 @@ async def reset_password(
 
 
 # ###############################################################
-# Verification
+# Account Creation
 # ###############################################################
+
+
+@router.post("/approve", dependencies=[Depends(active_user_is_admin)])
+async def approve(
+    email: Annotated[EmailStr, Body(embed=True)],
+    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
+) -> Response:
+    """Pre-Approve Email-Address for registration - also functions as validation.
+
+    If Mail-System does not work, the admin can hand token to user manually (returned here).
+    """
+    user = await User.by_email(email)
+    if user is not None:
+        raise HTTPException(412, "Account already exists")
+    token_verification = calculate_hash(email)[-12:]
+    await mail_sys.send_approval_email(email, token_verification)
+    return Response(status_code=200, content=token_verification)
+
+
+@router.post("/register")
+async def user_registration(
+    user_reg: UserRegistration,
+    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
+) -> UserOut:
+    """Create a new user.
+
+    To avoid spam / misuse, a valid token (generated from email) is needed.
+    """
+    token_sys = calculate_hash(user_reg.email)[-12:]
+    if token_sys != user_reg.token:
+        raise HTTPException(404, "Invalid user registration token")
+    user = await User.by_email(user_reg.email)
+    if user is not None:
+        raise HTTPException(409, "User with that email already exists")
+    pw_hash = calculate_password_hash(user_reg.password)
+    user = User(
+        email=user_reg.email,
+        password_hash=pw_hash,
+        disabled=False,
+        email_confirmed_at=local_now(),
+        token_verification=None,
+    )
+    await user.create()
+    await mail_sys.send_registration_complete_email(user_reg.email)
+    return user
 
 
 @router.get("/verify/{token}")
 @router.post("/verify/{token}")
 async def verify_email(
     token: str,
-    mail_engine: Annotated[MailEngine, Depends(mail_engine)],
+    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
-    """Verify the user's email with the supplied token."""
+    """Verify the user's email with the supplied token.
+
+    NOTE: currently only used for admins.
+    """
     user = await User.by_verification_token(token)
     if user is None:
         raise HTTPException(404, "Token not found")
@@ -168,19 +192,7 @@ async def verify_email(
         raise HTTPException(412, "Email is already verified")
     user.email_confirmed_at = local_now()
     user.token_verification = None
-    await mail_engine.send_approval_request_email(user.email)
-    await user.save()
-    return Response(status_code=200)
-
-
-@router.get("/approve", dependencies=[Depends(active_user_is_admin)])
-@router.post("/approve", dependencies=[Depends(active_user_is_admin)])
-async def approve(
-    email: Annotated[EmailStr, Body(embed=True)],
-) -> Response:
-    user = await User.by_email(email)
-    if user is None:
-        return Response(status_code=404)
     user.disabled = False
+    await mail_sys.send_registration_complete_email(user.email)
     await user.save()
     return Response(status_code=200)

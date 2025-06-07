@@ -1,8 +1,10 @@
 from signal import signal
 
 import pytest
+from fastapi.testclient import TestClient
 from typer.testing import CliRunner
 
+from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.cli import cli
 
 
@@ -71,6 +73,27 @@ def test_cli_version_help_full() -> None:
     )
     assert res.exit_code == 0
     assert len(res.output) > 30
+
+
+@pytest.mark.skip  # TODO: fix mock.problem - create_admin() sends real mail
+def test_cli_create_admin_new(client: TestClient, mail_engine_mock: MailEngine) -> None:
+    res = CliRunner().invoke(
+        app=cli,
+        args=[
+            "--verbose",
+            "create-admin",
+            "padmin1@cadmin.de",
+            "1234567890",
+        ],
+    )
+    assert res.exit_code == 0
+    mail_engine_mock.send_verification_email.assert_called_once()
+    _, token = mail_engine_mock.send_verification_email.call_args.args
+    with client.regular_joe():
+        verification_response = client.post(
+            f"/user/verify/{token}",
+        )
+        assert verification_response.status_code == 200
 
 
 def test_cli_init_short() -> None:

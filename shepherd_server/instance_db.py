@@ -54,10 +54,8 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
     if user is not None:
         log.error("User with that email already exists")
         return
-    token_verification = calculate_hash(email + str(local_now()))[:10]
-    if CFG.mail_enabled:
-        await mail_engine().send_verification_email(email, token_verification)
-        log.info("Verification E-Mail was sent to User (Account deactivated by default).")
+    token_verification = calculate_hash(email + str(local_now()))[-12:]
+    await mail_engine().send_verification_email(email, token_verification)
     admin = User(
         email=email,
         password_hash=calculate_password_hash(password),

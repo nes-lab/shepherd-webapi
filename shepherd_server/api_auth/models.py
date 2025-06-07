@@ -16,6 +16,8 @@ class AccessToken(BaseModel):
 class RefreshToken(AccessToken):
     """Access and refresh token details."""
 
+    # TODO: not used ATM
+
     refresh_token: str
     token_type: str
     refresh_token_expires: timedelta = timedelta(days=30)

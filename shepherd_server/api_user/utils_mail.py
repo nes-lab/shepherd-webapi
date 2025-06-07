@@ -29,30 +29,64 @@ mail = FastMail(mail_conf)
 class MailEngine:
     # TODO: reconsider term "MailEngine"
 
-    async def send_verification_email(self, email: EmailStr, token: str) -> None: ...
+    @staticmethod
+    async def send_approval_email(email: EmailStr, token: str) -> None: ...
 
-    async def send_password_reset_email(self, email: EmailStr, token: str) -> None: ...
+    @staticmethod
+    async def send_verification_email(email: EmailStr, token: str) -> None: ...
 
-    async def send_approval_request_email(self, email: EmailStr) -> None: ...
+    @staticmethod
+    async def send_registration_complete_email(email: EmailStr) -> None: ...
+
+    @staticmethod
+    async def send_password_reset_email(email: EmailStr, token: str) -> None: ...
 
 
 class FastMailEngine(MailEngine):
-    async def send_verification_email(self, email: EmailStr, token: str) -> None:
-        """Send user verification email."""
+    @staticmethod
+    async def send_approval_email(email: EmailStr, token: str) -> None:
+        """Send approval request to admin / contact email."""
         # Change this later to public endpoint
+        log.debug("EMAIL APPROVAL")
+        if CFG.mail_enabled:
+            message = MessageSchema(
+                recipients=[email],
+                subject="Shepherd Testbed Approval",
+                body="Welcome to the Shepherd Testbed! "
+                f"Use the following token for registering this Email-Address: {token}",
+                subtype=MessageType.plain,
+            )
+            await mail.send_message(message)
+
+    @staticmethod
+    async def send_verification_email(email: EmailStr, token: str) -> None:
+        """Send user verification email."""
         _url = f"{CFG.server_url()}/user/verify/{token}"
-        log.debug("EMAIL POST to %s", _url)
+        log.info("Verification E-Mail was sent to User (Account deactivated by default).")
         if CFG.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="Shepherd Testbed Email Verification",
                 body="Welcome to the Shepherd Testbed! "
-                f"We just need to verify your email to begin: {_url}",
+                f"You just need to verify your email to complete registration: {_url}",
                 subtype=MessageType.plain,  # TODO: replace with HTTP + Link
             )
             await mail.send_message(message)
 
-    async def send_password_reset_email(self, email: EmailStr, token: str) -> None:
+    @staticmethod
+    async def send_registration_complete_email(email: EmailStr) -> None:
+        log.debug("EMAIL REGISTRATION")
+        if CFG.mail_enabled:
+            message = MessageSchema(
+                recipients=[email],
+                subject="Shepherd Testbed Registration Complete",
+                body="You are now fully registered and can use the Testbed",
+                subtype=MessageType.plain,
+            )
+            await mail.send_message(message)
+
+    @staticmethod
+    async def send_password_reset_email(email: EmailStr, token: str) -> None:
         """Send password reset email."""
         # Change this later to public endpoint
         _url = f"{CFG.server_url()}/user/reset-password/{token}"
@@ -63,20 +97,6 @@ class FastMailEngine(MailEngine):
                 subject="Shepherd Testbed Password Reset",
                 body="Click the link to reset your Shepherd Testbed account password: "
                 f"{_url}\nIf you did not request this, please ignore this email",
-                subtype=MessageType.plain,
-            )
-            await mail.send_message(message)
-
-    async def send_approval_request_email(self, email: EmailStr) -> None:
-        """Send approval request to admin / contact email."""
-        # Change this later to public endpoint
-        _url = f"{CFG.server_url()}/user/approve/{email}"
-        log.debug("EMAIL POST to %s", _url)
-        if CFG.mail_enabled:
-            message = MessageSchema(
-                recipients=[CFG.contact.get("email")],
-                subject="Shepherd Testbed Approval Request",
-                body=f"Click the link to approve the user '{email}': {_url}",
                 subtype=MessageType.plain,
             )
             await mail.send_message(message)

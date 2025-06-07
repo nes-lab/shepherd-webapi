@@ -171,13 +171,15 @@ class MockMailEngine(MailEngine):
     def __init__(self) -> None:
         self.send_verification_email = AsyncMock()
         self.send_password_reset_email = AsyncMock()
+        self.send_approval_email = AsyncMock()
+        self.send_registration_complete_email = AsyncMock()
 
 
 @pytest.fixture
 def mail_engine_mock() -> MailEngine:
-    mock = MockMailEngine()
-    app.dependency_overrides[mail_engine] = lambda: mock
-    return mock
+    mock_engine = MockMailEngine()
+    app.dependency_overrides[mail_engine] = lambda: mock_engine
+    return mock_engine
 
 
 @pytest.fixture

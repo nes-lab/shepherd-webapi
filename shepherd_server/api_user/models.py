@@ -21,11 +21,12 @@ PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pat
 # ⤷ Regex = All Printable ASCII-Characters with Space
 
 
-class UserAuth(BaseModel):
-    """User register and login auth."""
+class UserRegistration(BaseModel):
+    """User data needed for registration."""
 
     email: EmailStr
     password: PasswordStr
+    token: str
 
 
 class UserUpdate(BaseModel):

@@ -36,7 +36,10 @@ class AdminClient(UserClient):
         raise NotImplementedError
 
     def approve_user(self, user: EmailStr) -> None:
-        """Enable Account after a user registers & validates their email."""
+        """Approve Account for registration.
+
+        This will also send out an email for account verification.
+        """
         rsp = requests.post(
             url=f"{self._cfg.server}/user/approve",
             json={"email": user},
@@ -46,7 +49,7 @@ class AdminClient(UserClient):
         if not rsp.ok:
             logger.warning("Approval of '%s' failed with: %s", user, rsp.reason)
         else:
-            logger.info("Approval of '%s' succeeded", user)
+            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.content)
 
     def extend_quota(
         self,
@@ -55,7 +58,10 @@ class AdminClient(UserClient):
         storage: int | None = None,
         expire_date: datetime | None = None,
     ) -> None:
-        """Extend account limitations of a user."""
+        """Extend account limitations of a user.
+
+        Only non-None fields get set by the API.
+        """
         quota = {
             "custom_quota_expire_date": expire_date,
             "custom_quota_duration": duration,

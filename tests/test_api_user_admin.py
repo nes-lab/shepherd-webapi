@@ -6,12 +6,16 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from shepherd_server.api_user.utils_mail import MailEngine
-from shepherd_server.api_user.utils_mail import mail_engine
 from shepherd_server.instance_db import db_create_admin
 from tests.conftest import MockMailEngine
 from tests.conftest import UserTestClient
 
-# from shepherd_server.api_user.utils_mail import MailEngine
+mocki = MockMailEngine()
+
+
+@mock.patch("shepherd_server.api_user.utils_mail.mail_engine")
+def mock_engine() -> MailEngine:
+    return mocki
 
 
 def test_create_admin_invalid_mail() -> None:
@@ -28,13 +32,10 @@ def test_create_admin_invalid_password() -> None:
 def test_unverified_admin_cannot_login(
     client: UserTestClient,
 ) -> None:
-    with mock.patch("shepherd_server.api_user.utils_mail.FastMailEngine", new=MockMailEngine):
-        # from shepherd_server.instance_db import db_create_admin
-        # from shepherd_server.api_user.utils_mail import mail_engine
-
-        asyncio.run(db_create_admin("padmin2@cadmin.de", "1234567890"))
-        mail_engine().send_verification_email("hasn@kanns", "ods")
-        mail_engine().send_verification_email.assert_called_once()
+    # with mock.patch("shepherd_server.api_user.utils_mail.FastMailEngine", new=MockMailEngine):
+    asyncio.run(db_create_admin("padmin2@cadmin.de", "1234567890"))
+    # mocki.send_verification_email("hasn@kanns", "ods")
+    mocki.send_verification_email.assert_called_once()
 
     with client.regular_joe():
         login_response = client.post(

@@ -31,7 +31,7 @@ class AdminClient(UserClient):
         if self.get_user_info().get("role") != "admin":
             raise TypeError("You are not an admin")
 
-    def register_user(self) -> None:
+    def register_user(self, token: str) -> None:
         """Registration not possible."""
         raise NotImplementedError
 
@@ -49,7 +49,7 @@ class AdminClient(UserClient):
         if not rsp.ok:
             logger.warning("Approval of '%s' failed with: %s", user, rsp.reason)
         else:
-            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.content)
+            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
 
     def extend_quota(
         self,

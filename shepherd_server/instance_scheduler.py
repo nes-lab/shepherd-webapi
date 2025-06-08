@@ -51,6 +51,8 @@ async def run_web_experiment(
             herd.run_task(testbed_tasks, attach=True)
             await asyncio.sleep(20)  # finish IO, precaution
             # TODO: paths must probably be bend from sheep to server structure
+            #       from sheep-path: /var/shepherd/experiments/xp_name
+            #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
             paths_herd = testbed_tasks.get_output_paths()
 
         log.info("finished task execution")
@@ -65,6 +67,7 @@ async def run_web_experiment(
         web_experiment.result_paths = paths_herd
         web_experiment.result_size = _size
         web_experiment.finished_at = datetime.now(tz=local_tz())
+        # TODO: update time_start in real experiment, once it finishes
         await web_experiment.save()
 
 

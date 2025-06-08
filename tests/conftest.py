@@ -167,6 +167,7 @@ def client(*, database_for_tests: bool) -> Generator[TestClient, None, None]:
         yield client
 
 
+# @mock.patch("shepherd_server.api_user.utils_mail.FastMailEngine")
 class MockMailEngine(MailEngine):
     def __init__(self) -> None:
         self.send_verification_email = AsyncMock()

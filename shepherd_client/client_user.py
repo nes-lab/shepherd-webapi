@@ -164,6 +164,16 @@ class UserClient(WebClient):
 
         return Experiment(**rsp.json())
 
+    def delete_experiment(self, xp_id: UUID) -> bool:
+        rsp = requests.delete(
+            url=f"{self._cfg.server}/experiment/{xp_id}",
+            headers=self._auth,
+            timeout=3,
+        )
+        if not rsp.ok:
+            logger.warning("Deleting experiment failed with: %s", rsp.reason)
+        return rsp.ok
+
     def get_experiment_state(self, xp_id: UUID) -> str | None:
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment/{xp_id}/state",
@@ -239,6 +249,3 @@ class UserClient(WebClient):
         if delete_on_server:
             self.delete_experiment(xp_id)
         return downloads_ok
-
-    def delete_experiment(self, xp_id: UUID) -> bool:
-        return False

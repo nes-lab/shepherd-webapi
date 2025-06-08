@@ -68,6 +68,28 @@ async def get_experiment(
     return web_experiment.experiment
 
 
+@router.delete("/{experiment_id}")
+async def delete_experiment(
+    experiment_id: str,
+    user: Annotated[User, Depends(current_active_user)],
+) -> Response:
+    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    if web_experiment is None:
+        raise HTTPException(404, "Not Found")
+    if web_experiment.owner.email != user.email:
+        raise HTTPException(403, "Forbidden")
+    if web_experiment.started_at is not None and web_experiment.finished_at is None:
+        # TODO: possible race-condition
+        raise HTTPException(403, "Experiment is running - cannot delete")
+    if isinstance(web_experiment.result_paths, dict):
+        # TODO: removing files for now - should switch to paths (leftover firmware and meta-data)
+        for path in web_experiment.result_paths.values():
+            if path.exists() and path.is_file():
+                path.unlink()
+    await web_experiment.delete()
+    return Response(status_code=204)
+
+
 @router.post("/{experiment_id}/schedule")
 async def schedule_experiment(
     experiment_id: str,

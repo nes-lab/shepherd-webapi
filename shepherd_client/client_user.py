@@ -8,7 +8,6 @@ import requests
 from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import validate_call
-from shepherd_core import local_now
 from shepherd_core import logger
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import increase_verbose_level
@@ -238,10 +237,7 @@ class UserClient(WebClient):
         node_ids = self._get_experiment_downloads(xp_id)
         if node_ids is None:
             return False
-        timestamp = local_now() if xp.time_start is None else xp.time_start
-        timestrng = timestamp.strftime("%Y-%m-%d_%H-%M-%S")
-        # ⤷ closest to ISO 8601, avoids ":"
-        path_xp = path / f"{timestrng}_{xp.name.replace(' ', '_')}"
+        path_xp = path / xp.folder_name()
         path_xp.mkdir(parents=True, exist_ok=False)
         downloads_ok: bool = True
         for node_id in node_ids:

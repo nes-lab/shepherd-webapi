@@ -67,7 +67,7 @@ async def run_web_experiment(
         web_experiment.result_paths = paths_herd
         web_experiment.result_size = _size
         web_experiment.finished_at = datetime.now(tz=local_tz())
-        # TODO: update time_start in real experiment, once it finishes
+        await web_experiment.update_time_start()
         await web_experiment.save()
 
 

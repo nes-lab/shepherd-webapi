@@ -81,11 +81,7 @@ async def delete_experiment(
     if web_experiment.started_at is not None and web_experiment.finished_at is None:
         # TODO: possible race-condition
         raise HTTPException(403, "Experiment is running - cannot delete")
-    if isinstance(web_experiment.result_paths, dict):
-        # TODO: removing files for now - should switch to paths (leftover firmware and meta-data)
-        for path in web_experiment.result_paths.values():
-            if path.exists() and path.is_file():
-                path.unlink()
+    await web_experiment.delete_content()
     await web_experiment.delete()
     return Response(status_code=204)
 

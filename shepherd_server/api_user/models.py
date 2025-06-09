@@ -11,8 +11,10 @@ from beanie import Document
 from beanie import Indexed
 from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import Field
 from pydantic import PositiveInt
 from pydantic import StringConstraints
+from shepherd_core import local_now
 from shepherd_core import local_tz
 
 from shepherd_server.config import CFG
@@ -84,6 +86,10 @@ class User(Document, UserOut):
     # id: UUID4 = Field(default_factory=uuid4)
 
     password_hash: str
+
+    created_at: datetime = Field(default_factory=local_now)
+    last_active_at: datetime = Field(default_factory=local_now)  # TODO: update during auth
+
     email_confirmed_at: datetime | None = None
     group_confirmed_at: datetime | None = None
     token_verification: str | None = None

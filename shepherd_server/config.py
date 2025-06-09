@@ -56,6 +56,11 @@ class Cfg(BaseModel):
     # 20 nodes @  4 h are ~  290 GB
     # 30 nodes @ 10 h are ~ 1080 GB
 
+    # Lifetime of Objects
+    age_max_user: timedelta = timedelta(days=18 * 31)
+    age_max_experiment: timedelta = timedelta(days=6 * 31)
+    age_min_experiment: timedelta = timedelta(days=15)
+
     def ssl_available(self) -> bool:
         _files = (self.ssl_keyfile, self.ssl_certfile, self.ssl_ca_certs)
         _avail = all(_p.exists() for _p in _files)

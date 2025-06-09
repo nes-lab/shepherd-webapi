@@ -44,7 +44,7 @@ async def update_user(
     new_email = fields.pop("email", None)
     if isinstance(new_email, str) and new_email != user.email:
         if await User.by_email(new_email) is not None:
-            raise HTTPException(400, "Email already exists")
+            raise HTTPException(406, "Email already exists")
         user.update_email(new_email)
     user = user.model_copy(update=fields)
     await user.save()
@@ -145,7 +145,7 @@ async def approve(
     """
     user = await User.by_email(email)
     if user is not None:
-        raise HTTPException(412, "Account already exists")
+        raise HTTPException(409, "Account already exists")
     token_verification = calculate_hash(email)[-12:]
     await mail_sys.send_approval_email(email, token_verification)
     return Response(status_code=200, content=token_verification)
@@ -195,7 +195,7 @@ async def verify_email(
     if user.email_confirmed_at is not None:
         # This should never happen,
         # because no verification token can be generated for verified accounts
-        raise HTTPException(412, "Email is already verified")
+        raise HTTPException(409, "Email is already verified")
     user.email_confirmed_at = local_now()
     user.token_verification = None
     user.disabled = False

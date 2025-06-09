@@ -134,6 +134,18 @@ class WebExperiment(Document):
             log.info("Pruning old experiments freed: %d MiB", size_total / (2**20))
         return size_total
 
+    @property
+    def state(self) -> str:
+        if self.finished_at is not None:
+            if self.result_paths is not None:
+                return "finished"
+            return "error"
+        if self.started_at is not None:
+            return "running"
+        if self.requested_execution_at is not None:
+            return "scheduled"
+        return "created"
+
     async def delete_content(self) -> None:
         # TODO: just overwrite default delete-method?
         if isinstance(self.result_paths, dict):

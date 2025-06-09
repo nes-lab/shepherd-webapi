@@ -81,6 +81,7 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
     if dry_run:
         log.warning("Dry run mode - not executing tasks!")
         temp_path = Path(_temp_dir.name)
+        log.debug("Temp path: %s", temp_path.resolve())
 
     log.info("Checking experiment scheduling FIFO")
 
@@ -100,8 +101,9 @@ def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
         log.error("No connection to database! Will exit scheduler now.")
         return
 
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(scheduler(inventory, dry_run=dry_run))
+    # loop = asyncio.new_event_loop()
+    # loop.run_until_complete(scheduler(inventory, dry_run=dry_run))
+    asyncio.run(scheduler(inventory, dry_run=dry_run))
 
 
 if __name__ == "__main__":

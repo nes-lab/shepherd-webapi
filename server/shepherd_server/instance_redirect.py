@@ -9,6 +9,7 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
 
 from .config import CFG
+from .logger import log
 from .version import version
 
 app = FastAPI(
@@ -28,6 +29,8 @@ def run() -> None:
     ssl_enabled = CFG.ssl_available()
     if ssl_enabled:
         app.add_middleware(HTTPSRedirectMiddleware)
+
+    log.info("Starting http-redirect ...")
 
     uvi_args = {
         "app": f"{run.__module__}:app",

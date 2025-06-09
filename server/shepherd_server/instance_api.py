@@ -77,7 +77,7 @@ app.include_router(experiment_router)
 @app.get("/")
 async def root() -> dict[str, str]:
     # TODO: this should probably also go into a router
-    return {"message": "Hello World - from FastApi-Server-Prototype"}
+    return {"message": "Hello World - from Shepherd Nova WebApi"}
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -98,6 +98,8 @@ def run() -> None:
     if not db_available(timeout=5):
         log.error("No connection to database! Will exit WebAPI now.")
         return
+
+    log.info("Starting Web-Api server...")
 
     uvi_args = {
         "app": f"{run.__module__}:app",

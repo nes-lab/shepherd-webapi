@@ -71,7 +71,7 @@ class UserQuota(BaseModel):
         return self.custom_quota_storage if _custom else CFG.quota_default_storage
 
 
-class UserOut(UserUpdate, UserQuota):
+class UserOut(UserQuota, UserUpdate):
     """User fields returned to the client."""
 
     disabled: bool = True

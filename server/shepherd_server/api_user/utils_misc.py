@@ -54,7 +54,7 @@ async def current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> 
 
 async def current_active_user(user: Annotated[User, Depends(current_user)]) -> User:
     if user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(status_code=403, detail="Deactivated user")
     return user
 
 

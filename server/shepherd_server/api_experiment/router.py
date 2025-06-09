@@ -26,13 +26,13 @@ async def create_experiment(
 ) -> UUID:
     if experiment.time_start is not None:
         raise HTTPException(
-            400,
+            403,
             "xp.time_start must be None,"
             "the FIFO-scheduler will pick the start time after the experiment is scheduled.",
         )
     if (experiment.duration is None) or (experiment.duration > user.quota_duration):
         raise HTTPException(
-            400, f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)"
+            403, f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)"
         )
     web_experiment = WebExperiment(
         experiment=experiment,
@@ -45,13 +45,10 @@ async def create_experiment(
 @router.get("/")
 async def list_experiments(
     user: Annotated[User, Depends(current_active_user)],
-) -> dict[UUID, Experiment]:
+) -> dict[UUID, str]:
     web_experiments = await WebExperiment.get_by_user(user)
-    experiments: dict[UUID, Experiment] = {}
-    for web_experiment in web_experiments:
-        experiments[web_experiment.id] = web_experiment.experiment
-
-    return experiments
+    xp_states: dict[UUID, str] = {wex.id: wex.state for wex in web_experiments}
+    return xp_states
 
 
 @router.get("/{experiment_id}")
@@ -80,7 +77,7 @@ async def delete_experiment(
         raise HTTPException(403, "Forbidden")
     if web_experiment.started_at is not None and web_experiment.finished_at is None:
         # TODO: possible race-condition
-        raise HTTPException(403, "Experiment is running - cannot delete")
+        raise HTTPException(409, "Experiment is running - cannot delete")
     await web_experiment.delete_content()
     await web_experiment.delete()
     return Response(status_code=204)
@@ -97,13 +94,13 @@ async def schedule_experiment(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
     if web_experiment.requested_execution_at is not None:
-        raise HTTPException(400, "Experiment already scheduled")
+        raise HTTPException(409, "Experiment already scheduled")
     _storage = await web_experiment.get_storage(user)
     if _storage > user.quota_storage:
         _size_GiB = _storage / (1024**3)
         _quota_GiB = user.quota_storage / (1024**3)
         raise HTTPException(
-            400,
+            409,
             f"Quota on storage was exceeded ({_size_GiB:.3f} > {_quota_GiB:.3f} GiB). "
             "Delete old experiments first to continue.",
         )
@@ -127,16 +124,7 @@ async def get_experiment_state(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
-    if web_experiment.finished_at is not None:
-        return "finished"
-
-    if web_experiment.started_at is not None:
-        return "running"
-
-    if web_experiment.requested_execution_at is not None:
-        return "scheduled"
-
-    return "created"
+    return web_experiment.state
 
 
 @router.get("/{experiment_id}/download")
@@ -152,8 +140,8 @@ async def download(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
-    if web_experiment.finished_at is None or web_experiment.result_paths is None:
-        raise HTTPException(400, "Experiment not yet finished")
+    if web_experiment.state != "finished":
+        raise HTTPException(409, "Experiment not yet finished")
 
     return list(web_experiment.result_paths.keys())
 

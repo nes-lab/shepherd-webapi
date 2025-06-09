@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.api_user.utils_misc import calculate_hash
-from tests.conftest import UserTestClient
+from .conftest import UserTestClient
 
 
 def test_user_approves_registration_rejected(client: UserTestClient) -> None:

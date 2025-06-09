@@ -8,7 +8,7 @@ from shepherd_core import local_tz
 from shepherd_server.api_user.models import UserOut
 from shepherd_server.api_user.models import UserQuota
 from shepherd_server.api_user.utils_mail import MailEngine
-from tests.conftest import UserTestClient
+from .conftest import UserTestClient
 
 
 def test_user_can_query_account_data(client: UserTestClient) -> None:

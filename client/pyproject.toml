@@ -1,0 +1,91 @@
+[project]
+name = "shepherd_client"
+description = "Web-Client for the Shepherd-Testbed"
+keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "solar"]
+
+authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
+maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
+
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+dynamic = ["version"]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Natural Language :: English"
+]
+
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic[email]>=2.11.0",
+    "shepherd_core",
+    "exrex",  # for automatic password creation
+    "pyaml",
+    "typer",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pyright",
+]
+test = [
+    "pytest",
+    "pytest-click",
+    "pytest-dependency",
+    "pytest-timeout",
+    "coverage",
+]
+
+[project.urls]
+Documentation = "https://github.com/nes-lab/shepherd-webapi/blob/main/README.md"
+Issues = "https://github.com/nes-lab/shepherd-webapi/issues"
+Source = "https://github.com/nes-lab/shepherd-webapi"
+
+[project.scripts]
+shepherd-client = "shepherd_client.cli:cli"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
+package-dir = {"shepherd_client" = "./shepherd_client/"}
+zip-safe = true
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "shepherd_client.__version__"}
+
+[tool.pyright]
+root = "./"
+include = []
+pythonVersion = "3.10"
+pythonPlatform = "All"
+reportMissingParameterType = true
+
+[tool.aliases]
+test = "pytest"
+
+[tool.pytest.ini_options]
+addopts = ["-vvv"]
+asyncio_mode = "auto"
+testpaths = ["tests", ]
+norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv', '.venv']
+markers = [
+    "timeout: limit for individual test to finish",
+]
+
+[tool.coverage.run]
+source = ["shepherd_client"]
+# TODO: add something like "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"

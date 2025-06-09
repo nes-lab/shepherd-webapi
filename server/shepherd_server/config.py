@@ -6,7 +6,7 @@ from decouple import config
 from pydantic import BaseModel
 from pydantic import PositiveInt
 
-from shepherd_server.logger import log
+from .logger import log
 
 
 def _get_xdg_path(variable_name: str, default: str) -> Path:

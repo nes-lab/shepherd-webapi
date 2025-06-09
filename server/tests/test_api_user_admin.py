@@ -7,8 +7,8 @@ from pydantic import ValidationError
 
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.instance_db import db_create_admin
-from tests.conftest import MockMailEngine
-from tests.conftest import UserTestClient
+from .conftest import MockMailEngine
+from .conftest import UserTestClient
 
 mocki = MockMailEngine()
 

@@ -9,7 +9,7 @@ from shepherd_core.data_models.experiment import Experiment
 
 from shepherd_server.api_user.models import UserQuota
 from shepherd_server.config import CFG
-from tests.conftest import UserTestClient
+from .conftest import UserTestClient
 
 
 def test_create_experiment_is_authenticated(client: TestClient) -> None:

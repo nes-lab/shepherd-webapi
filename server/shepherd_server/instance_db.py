@@ -10,7 +10,7 @@ from pydantic import EmailStr
 from pydantic import validate_call
 from shepherd_core import local_now
 
-from shepherd_server.api_user.utils_mail import mail_engine
+from .api_user.utils_mail import mail_engine
 
 from .api_experiment.models import WebExperiment
 from .api_user.models import PasswordStr

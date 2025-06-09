@@ -8,10 +8,10 @@ from typing import Annotated
 import shepherd_core
 import typer
 
-from shepherd_server.api_experiment.models import WebExperiment
-from shepherd_server.api_user.models import PasswordStr
-from shepherd_server.api_user.models import User
-from shepherd_server.database_prune import prune_db
+from .api_experiment.models import WebExperiment
+from .api_user.models import PasswordStr
+from .api_user.models import User
+from .database_prune import prune_db
 
 from .database_backup import backup_db
 from .instance_api import run as run_api_server

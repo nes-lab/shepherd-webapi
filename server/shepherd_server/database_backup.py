@@ -13,8 +13,8 @@ from shepherd_core.data_models import Wrapper
 from yaml import Node
 from yaml import SafeDumper
 
-from shepherd_server.instance_db import db_client
-from shepherd_server.logger import log
+from .instance_db import db_client
+from .logger import log
 
 
 def path2str(

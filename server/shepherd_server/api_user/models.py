@@ -88,7 +88,7 @@ class User(Document, UserOut):
     password_hash: str
 
     created_at: datetime = Field(default_factory=local_now)
-    last_active_at: datetime = Field(default_factory=local_now)  # TODO: update during auth
+    last_active_at: datetime = Field(default_factory=local_now)
 
     email_confirmed_at: datetime | None = None
     group_confirmed_at: datetime | None = None

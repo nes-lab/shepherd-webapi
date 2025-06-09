@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from shepherd_core import local_now
 
 from shepherd_server.api_user.models import User
 from shepherd_server.api_user.utils_misc import verify_password_hash
@@ -27,4 +28,6 @@ async def login_for_access_token(
         raise HTTPException(status_code=401, detail="Email is not yet verified")
     if _user.disabled:
         raise HTTPException(status_code=401, detail="Account is disabled")
+    _user.last_active_at = local_now()
+    await _user.save()
     return create_access_token(_user.email)

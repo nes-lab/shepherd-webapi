@@ -18,7 +18,6 @@ from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.data_models.experiment import TargetConfig
-from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_server.api_experiment.models import WebExperiment
@@ -93,21 +92,20 @@ async def database_for_tests(
         data_on_server=tmp_path,  # path gets discarded after tests
         data_on_observer=tmp_path,
     )
-    finished_web_experiment = WebExperiment(
+    finished_web_xp = WebExperiment(
         id=UUID(finished_experiment_id),
         experiment=sample_experiment,
-        testbed_tasks=TestbedTasks.from_xp(sample_experiment, testbed),
         owner=working_user,
         requested_execution_at=datetime.now(tz=local_tz()),
         started_at=datetime.now(tz=local_tz()),
         finished_at=datetime.now(tz=local_tz()),
     )
     # mock files
-    finished_web_experiment.result_paths = finished_web_experiment.testbed_tasks.get_output_paths()
-    for name, _path in finished_web_experiment.result_paths.items():
+    finished_web_xp.result_paths = finished_web_xp.testbed_tasks.get_output_paths()
+    for name, _path in finished_web_xp.result_paths.items():
         with CoreWriter(_path) as writer:
             writer.store_hostname(name)
-    await WebExperiment.insert_one(finished_web_experiment)
+    await WebExperiment.insert_one(finished_web_xp)
     return True
 
 

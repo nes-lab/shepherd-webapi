@@ -26,16 +26,10 @@ async def run_web_experiment(
     experiment = web_experiment.experiment
 
     # TODO: too much hardcode
-    testbed = Testbed(name="matthias-office")
+    testbed = Testbed(name="unit_testing_testbed")
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
 
-    # Sadly, we must materialize the tasks here, although this is redundant information.
-    # Yet it is necessary later to compute the download paths.
-    web_experiment.testbed_tasks = testbed_tasks
-    # TODO: tasks don't have to be saved, just store paths and their size
-
-    herd = Herd(inventory=inventory)
-    with herd:
+    with Herd(inventory=inventory) as herd:
         log.info("starting testbed tasks through herd-tool")
         paths_herd: dict[str, Path] = {}
 
@@ -83,7 +77,9 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
         temp_path = Path(_temp_dir.name)
         log.debug("Temp path: %s", temp_path.resolve())
 
+    # TODO: how to make sure there is only one scheduler? Singleton
     log.info("Checking experiment scheduling FIFO")
+    await WebExperiment.reset_stuck_items()
 
     while True:
         next_experiment = await WebExperiment.get_next_scheduling()

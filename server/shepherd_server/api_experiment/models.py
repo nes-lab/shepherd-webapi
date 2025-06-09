@@ -10,7 +10,6 @@ from pydantic import Field
 from shepherd_core import Reader as CoreReader
 from shepherd_core import local_now
 from shepherd_core.data_models import Experiment
-from shepherd_core.data_models.task import TestbedTasks
 
 from shepherd_server.api_user.models import User
 from shepherd_server.config import CFG
@@ -45,7 +44,6 @@ class WebExperiment(Document):
     Set to current wall-clock time by the web runner when the testbed finished execution.
     """
 
-    testbed_tasks: TestbedTasks | None = None  # TODO: not used ATM
     result_paths: dict[str, Path] | None = None
     result_size: int = 0
 
@@ -80,8 +78,8 @@ class WebExperiment(Document):
         """
         next_experiments = (
             await cls.find(
-                cls.requested_execution_at != None,  # noqa: E711 beanie cannot handle 'is not None' expressions
-                cls.started_at == None,  # noqa: E711 beanie cannot handle 'is not None' expressions
+                cls.requested_execution_at != None,  # noqa: E711 beanie cannot handle 'is not None'
+                cls.started_at == None,  # noqa: E711
             )
             .sort((WebExperiment.requested_execution_at, pymongo.ASCENDING))
             .limit(1)
@@ -90,6 +88,18 @@ class WebExperiment(Document):
         if len(next_experiments) > 0:
             return next_experiments[0]
         return None
+
+    @classmethod
+    async def reset_stuck_items(cls) -> None:
+        """Find and reset scheduled, but unfinished experiments."""
+        stuck_xps = await cls.find(
+            cls.finished_at == None,  # noqa: E711 beanie cannot handle 'is not None'
+            cls.started_at != None,  # noqa: E711
+        ).to_list()
+        for _xp in stuck_xps:
+            log.info("Resetting experiment: %s", _xp.id)
+            _xp.started_at = None
+            await _xp.save()
 
     @classmethod
     async def prune(cls, users: list[User] | None = None, *, dry_run: bool = True) -> int:

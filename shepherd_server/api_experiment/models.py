@@ -63,11 +63,7 @@ class WebExperiment(Document):
                 cls.owner.email == user.email,
                 fetch_links=True,
             )
-            .sort(  # TODO: this should be fine without list-encaps
-                [
-                    (WebExperiment.created_at, pymongo.ASCENDING),
-                ],
-            )
+            .sort((WebExperiment.created_at, pymongo.ASCENDING))
             .to_list()
         )
 
@@ -87,11 +83,7 @@ class WebExperiment(Document):
                 cls.requested_execution_at != None,  # noqa: E711 beanie cannot handle 'is not None' expressions
                 cls.started_at == None,  # noqa: E711 beanie cannot handle 'is not None' expressions
             )
-            .sort(
-                [  # TODO: this should be fine without list-encaps
-                    (WebExperiment.requested_execution_at, pymongo.ASCENDING),
-                ],
-            )
+            .sort((WebExperiment.requested_execution_at, pymongo.ASCENDING))
             .limit(1)
             .to_list()
         )
@@ -100,18 +92,43 @@ class WebExperiment(Document):
         return None
 
     @classmethod
-    async def prune(cls, *, dry_run: bool = True) -> int:
-        # TODO: remove items with missing link to user (zombies)
-        size_total = 0
-        experiments_old = await cls.find(
+    async def prune(cls, users: list[User] | None = None, *, dry_run: bool = True) -> int:
+        # TODO: find xp with missing link to user (zombies)
+        xps_2_prune = []
+
+        # fetch experiments by user
+        if users is not None:
+            for user in users:
+                xps_2_prune += await cls.get_by_user(user)
+
+        # get oldest XP of users over quota
+        users_all = await User.find_all().to_list()
+        xp_date_limit = local_now() - CFG.age_min_experiment
+        for user in users_all:
+            xps_user = await cls.get_by_user(user)  # already sorted by age
+            storage_user = cls.get_storage(user)
+            for xp in xps_user:
+                if xp.created_at >= xp_date_limit:
+                    break
+                if storage_user >= user.quota_storage:
+                    xps_2_prune.append(xp)
+                    storage_user -= xp.result_size
+
+        # get xp exceeding max age
+        xps_2_prune += await cls.find(
             cls.created_at <= local_now() - CFG.age_max_experiment,
             fetch_links=True,
         ).to_list()
-        size_total = sum(xp.result_size for xp in experiments_old)
+
+        # calculate size of experiments
+        xps_2_prune = set(xps_2_prune)
+        size_total = sum(xp.result_size for xp in xps_2_prune)
+
         if dry_run:
             log.info("Pruning old experiments could free: %d MiB", size_total / (2**20))
         else:
-            for xp in experiments_old:
+            for xp in xps_2_prune:
+                log.debug(" -> deleting experiment %s", xp.name)
                 await xp.delete_content()
                 await xp.delete()
             log.info("Pruning old experiments freed: %d MiB", size_total / (2**20))

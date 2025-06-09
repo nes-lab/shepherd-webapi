@@ -11,8 +11,9 @@ import typer
 from shepherd_server.api_experiment.models import WebExperiment
 from shepherd_server.api_user.models import PasswordStr
 from shepherd_server.api_user.models import User
+from shepherd_server.database_prune import prune_db
 
-from .backup_db import backup_db
+from .database_backup import backup_db
 from .instance_api import run as run_api_server
 from .instance_db import db_create_admin
 from .instance_redirect import run as run_redirect_server
@@ -110,6 +111,12 @@ def create_admin(email: str, password: PasswordStr) -> None:
 
     User will have to verify if mail-service is activated."""
     asyncio.run(db_create_admin(email, password))
+
+
+@cli.command()
+def prune(*, delete: bool = False) -> None:
+    """Clean up Database."""
+    asyncio.run(prune_db(dry_run=not delete))
 
 
 @cli.command()

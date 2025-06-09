@@ -24,11 +24,12 @@ ignore = [
 
 [lint.per-file-ignores]
 "*/tests/**" = ["S101"]  # usage of assert
+"*/examples/**" = ["S106", "T201"]  # hardcoded passwords, print
 "playground/**" = ["ALL"]  # no production code
 
 [lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
-max-complexity = 12
+max-complexity = 10
 
 [lint.isort]
 force-single-line = true

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Annotated
+from typing import Any
 from typing import Self
 
 import yaml
@@ -12,6 +13,8 @@ from pydantic import StringConstraints
 from shepherd_core import local_now
 from shepherd_core import logger
 from shepherd_core.data_models import Wrapper
+from yaml import Node
+from yaml import SafeDumper
 
 PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
 # ⤷ Regex = All Printable ASCII-Characters with Space
@@ -21,6 +24,14 @@ def generate_password() -> PasswordStr:
     import exrex
 
     return exrex.getone("[ -~]{64}")
+
+
+def generic2str(dumper: SafeDumper, data: Any) -> Node:
+    """Add a yaml-representation for a specific datatype."""
+    return dumper.represent_scalar("tag:yaml.org,2002:str", str(data))
+
+
+yaml.add_representer(HttpUrl, generic2str, SafeDumper)
 
 
 def get_xdg_config() -> Path:

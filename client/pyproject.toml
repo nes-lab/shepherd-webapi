@@ -63,10 +63,10 @@ build-backend = "setuptools.build_meta"
 platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
 package-dir = {"shepherd_client" = "./shepherd_client/"}
 zip-safe = true
-# include-package-data = true
+include-package-data = true
 
 [tool.setuptools.dynamic]
-version = {attr = "shepherd_client.__version__"}
+version = {attr = "shepherd_client.version.version"}
 
 [tool.pyright]
 root = "./"

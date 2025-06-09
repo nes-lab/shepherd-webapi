@@ -31,9 +31,9 @@ class UserClient(WebClient):
     @validate_call
     def __init__(
         self,
-        server: HttpUrl | None = None,
         user_email: EmailStr | None = None,
         password: PasswordStr | None = None,
+        server: HttpUrl | None = None,
         *,
         save_credentials: bool = False,
         debug: bool = False,

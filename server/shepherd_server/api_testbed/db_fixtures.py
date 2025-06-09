@@ -183,7 +183,10 @@ class Fixtures:
             if self.file_path.is_file():
                 files = [self.file_path]
             elif self.file_path.is_dir():
-                files = get_files(self.file_path, self.suffix)
+                files = list(
+                    self.file_path.glob("**/*" + self.suffix)
+                )  # for py>=3.12: case_sensitive=False
+                logger.debug(" -> got %s %s-files", len(files), self.suffix)
             else:
                 raise ValueError("Path must either be file or directory (or empty)")
 

@@ -8,6 +8,7 @@ from pydantic import validate_call
 from shepherd_core import logger
 
 from .client_user import UserClient
+from .client_user import msg
 from .config import PasswordStr
 
 
@@ -47,9 +48,9 @@ class AdminClient(UserClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Approval of '%s' failed with: %s", user, rsp.reason)
+            logger.warning("Approval of '%s' failed with: %s", user, msg(rsp))
         else:
-            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
+            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.json())
 
     def extend_quota(
         self,
@@ -77,6 +78,6 @@ class AdminClient(UserClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Extension of Quota failed with: %s", rsp.reason)
+            logger.warning("Extension of Quota failed with: %s", msg(rsp))
         else:
             logger.info("Extension of Quota succeeded with: %s", rsp.json())

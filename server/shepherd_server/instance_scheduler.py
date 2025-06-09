@@ -62,6 +62,7 @@ async def run_web_experiment(
         web_experiment.finished_at = datetime.now(tz=local_tz())
         await web_experiment.update_time_start()
         await web_experiment.save()
+        # TODO: send out Email here (if wanted)
 
 
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:

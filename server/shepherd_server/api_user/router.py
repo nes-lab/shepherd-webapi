@@ -62,6 +62,7 @@ async def delete_user(
         await xp.delete_content()
         await xp.delete()
     await user.delete()
+    # TODO: inform user about it
     return Response(status_code=204)
 
 
@@ -91,11 +92,12 @@ async def update_quota(
     if quota.custom_quota_storage is not None:
         _user.custom_quota_storage = quota.custom_quota_storage
     await _user.save()
+    # TODO: inform user about it?
     return _user
 
 
 # ###############################################################
-# Registration
+# Password Management
 # ###############################################################
 
 

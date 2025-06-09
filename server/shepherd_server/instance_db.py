@@ -10,11 +10,10 @@ from pydantic import EmailStr
 from pydantic import validate_call
 from shepherd_core import local_now
 
-from .api_user.utils_mail import mail_engine
-
 from .api_experiment.models import WebExperiment
 from .api_user.models import PasswordStr
 from .api_user.models import User
+from .api_user.utils_mail import mail_engine
 from .api_user.utils_misc import calculate_hash
 from .api_user.utils_misc import calculate_password_hash
 from .config import CFG

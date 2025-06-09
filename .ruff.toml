@@ -23,7 +23,7 @@ ignore = [
     ]
 
 [lint.per-file-ignores]
-"tests/**" = ["S101"]  # usage of assert
+"*/tests/**" = ["S101"]  # usage of assert
 "playground/**" = ["ALL"]  # no production code
 
 [lint.mccabe]

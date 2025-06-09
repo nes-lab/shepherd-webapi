@@ -1,4 +1,5 @@
 Pipfile.lock
+*.yaml
 
 # project-specific
 *.pem

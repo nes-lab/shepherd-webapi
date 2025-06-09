@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 from shepherd_core import local_tz
 from shepherd_core.data_models import TargetConfig
 from shepherd_core.data_models.experiment import Experiment
-
 from shepherd_server.api_user.models import UserQuota
 from shepherd_server.config import CFG
+
 from .conftest import UserTestClient
 
 

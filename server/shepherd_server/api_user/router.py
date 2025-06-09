@@ -201,4 +201,4 @@ async def verify_email(
     user.disabled = False
     await mail_sys.send_registration_complete_email(user.email)
     await user.save()
-    return Response(status_code=200)
+    return Response(status_code=200, content="Verification successful")

@@ -4,9 +4,9 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.instance_db import db_create_admin
+
 from .conftest import MockMailEngine
 from .conftest import UserTestClient
 

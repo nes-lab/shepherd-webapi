@@ -26,6 +26,7 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
+    "requests",
     "pydantic[email]>=2.11.0",
     "shepherd_core",
     "exrex",  # for automatic password creation
@@ -62,7 +63,7 @@ build-backend = "setuptools.build_meta"
 platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
 package-dir = {"shepherd_client" = "./shepherd_client/"}
 zip-safe = true
-include-package-data = true
+# include-package-data = true
 
 [tool.setuptools.dynamic]
 version = {attr = "shepherd_client.__version__"}

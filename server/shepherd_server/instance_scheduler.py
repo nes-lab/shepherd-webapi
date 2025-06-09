@@ -10,10 +10,9 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
+from .api_experiment.models import WebExperiment
 from .instance_db import db_available
 from .instance_db import db_client
-
-from .api_experiment.models import WebExperiment
 from .logger import log
 
 

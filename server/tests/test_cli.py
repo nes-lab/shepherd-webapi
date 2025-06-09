@@ -2,10 +2,9 @@ from signal import signal
 
 import pytest
 from fastapi.testclient import TestClient
-from typer.testing import CliRunner
-
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.cli import cli
+from typer.testing import CliRunner
 
 
 def test_cli_help_full() -> None:

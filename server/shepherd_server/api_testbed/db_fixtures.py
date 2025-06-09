@@ -9,15 +9,12 @@ from typing import Any
 
 import yaml
 from pydantic import validate_call
-
+from shepherd_core import local_now
+from shepherd_core import local_tz
+from shepherd_core.data_models import Wrapper
+from shepherd_core.logger import logger
+from shepherd_core.testbed_client.cache_path import cache_user_path
 from typing_extensions import Self
-
-# TODO: wrong imports
-from shepherd_server import cache_user_path
-from shepherd_server import local_now
-from shepherd_server import local_tz
-from shepherd_server import Wrapper
-from shepherd_server.logger import logger
 
 # Proposed field-name:
 # - inheritance

@@ -138,7 +138,7 @@ class UserClient(WebClient):
     # ####################################################################
 
     def list_experiments(self, *, only_finished: bool = False) -> dict[UUID, str]:
-        """Query users experiments and their state."""
+        """Query users experiments and their state (chronological order)."""
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment",
             headers=self._auth,
@@ -209,7 +209,10 @@ class UserClient(WebClient):
         return state
 
     def schedule_experiment(self, xp_id: UUID) -> bool:
-        """Enter the experiment into the queue."""
+        """Enter the experiment into the queue.
+
+        Only possible if they never run before (state is "created").
+        """
         rsp = requests.post(
             url=f"{self._cfg.server}/experiment/{xp_id}/schedule",
             headers=self._auth,

@@ -22,6 +22,7 @@ from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_server.api_experiment.models import WebExperiment
 from shepherd_server.api_user.models import User
+from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.api_user.utils_mail import mail_engine
 from shepherd_server.api_user.utils_misc import calculate_password_hash
@@ -56,7 +57,7 @@ async def database_for_tests(
 
     admin_user = user.model_copy(deep=True)
     admin_user.email = "admin@test.com"
-    admin_user.role = "admin"
+    admin_user.role = UserRole.admin
     await User.insert_one(admin_user)
 
     unconfirmed_user = user.model_copy(deep=True)

@@ -9,6 +9,8 @@ from pydantic import EmailStr
 from shepherd_core import local_now
 from shepherd_core.data_models import Experiment
 
+from shepherd_server.api_experiment.models import WebExperiment
+
 from .models import PasswordStr
 from .models import User
 from .models import UserOut
@@ -32,6 +34,8 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 @router.get("")
 async def user_info(user: Annotated[User, Depends(current_active_user)]) -> UserOut:
+    user.quota_storage_free = user.quota_storage - await WebExperiment.get_storage(user)
+    await user.save()
     return user
 
 
@@ -69,12 +73,6 @@ async def delete_user(
 # ###############################################################
 # Quota
 # ###############################################################
-
-
-@router.get("/quota")
-async def quota_info(user: Annotated[User, Depends(current_active_user)]) -> UserQuota:
-    # TODO: not needed anymore, as quota is included in UserOut / User_info
-    return user
 
 
 @router.patch("/quota", dependencies=[Depends(active_user_is_admin)])

@@ -3,6 +3,7 @@
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+from enum import Enum
 from typing import Annotated
 from typing import Any
 from typing import Optional
@@ -14,6 +15,7 @@ from pydantic import EmailStr
 from pydantic import Field
 from pydantic import PositiveInt
 from pydantic import StringConstraints
+from pydantic import computed_field
 from shepherd_core import local_now
 from shepherd_core import local_tz
 
@@ -21,6 +23,14 @@ from shepherd_server.config import CFG
 
 PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
 # ⤷ Regex = All Printable ASCII-Characters with Space
+
+
+class UserRole(str, Enum):
+    """Options for roles."""
+
+    user = "user"
+    admin = "admin"
+    # TODO: add group-admin, elevated user (VIP privileges like faster path for scheduler)
 
 
 class UserRegistration(BaseModel):
@@ -45,6 +55,9 @@ class UserQuota(BaseModel):
     custom_quota_expire_date: datetime | None = None
     custom_quota_duration: timedelta | None = None
     custom_quota_storage: PositiveInt | None = None
+    quota_storage_free: PositiveInt | None = None
+    """updated when user asks for its info.
+    fill level should be computed_field/property, but created circular import"""
 
     @property
     def custom_quota_active(self) -> bool:
@@ -60,13 +73,15 @@ class UserQuota(BaseModel):
             )
         return self.custom_quota_expire_date >= datetime.now(tz=local_tz())
 
+    @computed_field
     @property
     def quota_duration(self) -> timedelta:
         _custom = self.custom_quota_active and (self.custom_quota_duration is not None)
         return self.custom_quota_duration if _custom else CFG.quota_default_duration
 
+    @computed_field
     @property
-    def quota_storage(self) -> int:
+    def quota_storage(self) -> PositiveInt:
         _custom = self.custom_quota_active and (self.custom_quota_storage is not None)
         return self.custom_quota_storage if _custom else CFG.quota_default_storage
 
@@ -77,7 +92,7 @@ class UserOut(UserQuota, UserUpdate):
     disabled: bool = True
     email: Annotated[EmailStr, Indexed(unique=True)]
     group: str = ""  # TODO: will come later
-    role: str | None = None  # TODO: enum? user, group_admin, sys_admin
+    role: UserRole = UserRole.user
 
 
 class User(Document, UserOut):
@@ -109,6 +124,7 @@ class User(Document, UserOut):
     @property
     def created(self) -> datetime | None:
         """Datetime user was created from ID."""
+        # TODO: deprecated - use .created_at field - not used ATM?
         return self.id.generation_time if self.id else None
 
     @property

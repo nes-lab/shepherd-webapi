@@ -11,6 +11,7 @@ from shepherd_server.api_auth.utils import decode_access_token
 from shepherd_server.config import CFG
 
 from .models import User
+from .models import UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")  # Url = full route
 
@@ -59,5 +60,5 @@ async def current_active_user(user: Annotated[User, Depends(current_user)]) -> U
 
 
 def active_user_is_admin(user: Annotated[User, Depends(current_user)]) -> None:
-    if user.role != "admin":
+    if user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Forbidden")

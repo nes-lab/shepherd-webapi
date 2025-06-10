@@ -33,11 +33,9 @@ dependencies = [
     "uvicorn[standard]",
     "pydantic[email]>=2.11.0",
     "beanie>=1.29.0",
-    # "fastui",  # TODO: dead project
-    # "python-secrets", # installs A LOT, not used ATM
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd_core",
+    "shepherd_core>=2025.6.1",
     "python-decouple",
     "shepherd_herd",
 ]
@@ -45,6 +43,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pre-commit",
+    "bump2version",
     "pyright",
     "bcrypt", # for salt-creation
 ]

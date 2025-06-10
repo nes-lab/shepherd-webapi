@@ -28,7 +28,7 @@ requires-python = ">=3.10"
 dependencies = [
     "requests",
     "pydantic[email]>=2.11.0",
-    "shepherd_core",
+    "shepherd_core>=2025.6.1",
     "exrex",  # for automatic password creation
     "pyaml",
     "typer",
@@ -37,6 +37,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pre-commit",
+    "bump2version",
     "pyright",
 ]
 test = [

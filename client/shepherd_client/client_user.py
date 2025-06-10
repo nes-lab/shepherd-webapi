@@ -137,7 +137,7 @@ class UserClient(WebClient):
     # Experiments
     # ####################################################################
 
-    def list_experiments(self) -> dict[UUID, str]:
+    def list_experiments(self, *, only_finished: bool = False) -> dict[UUID, str]:
         """Query users experiments and their state."""
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment",
@@ -146,6 +146,8 @@ class UserClient(WebClient):
         )
         if not rsp.ok:
             return {}
+        if only_finished:
+            return {key: value for key, value in rsp.json().items() if value == "finished"}
         return rsp.json()
 
     def create_experiment(self, xp: Experiment) -> UUID | None:
@@ -246,6 +248,7 @@ class UserClient(WebClient):
             return False
         with path_file.open("wb") as fp:
             shutil.copyfileobj(rsp.raw, fp)
+        logger.info("Download of file completed: %s", path_file)
         return True
 
     def download_experiment(

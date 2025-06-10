@@ -232,6 +232,9 @@ class UserClient(WebClient):
 
     def _download_file(self, xp_id: UUID, node_id: str, path: Path) -> bool:
         """Download a specific node/observer-file for a finished experiment."""
+        path_file = path / f"{node_id}.h5"
+        if path_file.exists():
+            logger.warning("File already exists - will skip download: %s", path_file)
         rsp = requests.get(
             f"{self._cfg.server}/experiment/{xp_id}/download/{node_id}",
             headers=self._auth,
@@ -241,8 +244,7 @@ class UserClient(WebClient):
         if not rsp.ok:
             logger.warning("Downloading %s - %s failed with: %s", xp_id, node_id, msg(rsp))
             return False
-
-        with (path / f"{node_id}.h5").open("wb") as fp:
+        with path_file.open("wb") as fp:
             shutil.copyfileobj(rsp.raw, fp)
         return True
 
@@ -256,8 +258,8 @@ class UserClient(WebClient):
         """Download all files from a finished experiment.
 
         The files are stored in subdirectory of the path that was provided.
+        Existing files are not overwritten, so only missing files are (re)downloaded.
         """
-
         xp = self.get_experiment(xp_id)
         if xp is None:
             return False
@@ -265,7 +267,7 @@ class UserClient(WebClient):
         if node_ids is None:
             return False
         path_xp = path / xp.folder_name()
-        path_xp.mkdir(parents=True, exist_ok=False)
+        path_xp.mkdir(parents=True, exist_ok=True)
         downloads_ok: bool = True
         for node_id in node_ids:
             downloads_ok &= self._download_file(xp_id, node_id, path_xp)

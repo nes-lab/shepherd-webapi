@@ -4,29 +4,37 @@ from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import numpy as np
+from pydantic import UUID4
 from shepherd_core import Writer as CoreWriter
+from shepherd_core import local_now
 from shepherd_core import local_tz
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
 from .api_experiment.models import WebExperiment
+from .config import CFG
 from .instance_db import db_available
 from .instance_db import db_client
 from .logger import log
 
 
 async def run_web_experiment(
-    web_experiment: WebExperiment, inventory: Path | None = None, temp_path: Path | None = None
+    xp_id: UUID4, inventory: Path | None = None, temp_path: Path | None = None
 ) -> None:
     # mark as started
-    web_experiment.started_at = datetime.now(tz=local_tz())
-    await web_experiment.save()
+    web_exp = await WebExperiment.get_by_id(xp_id)
+    if web_exp is None:
+        log.warning("Dataset of Experiment not found before running it (deleted?)")
+        return
+    web_exp.started_at = datetime.now(tz=local_tz())
+    await web_exp.save()
 
-    experiment = web_experiment.experiment
+    experiment = web_exp.experiment
 
-    # TODO: too much hardcode
-    testbed = Testbed(name="unit_testing_testbed")
+    # TODO: temp path should be derived here - or use subdir
+    testbed = Testbed(name=CFG.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
 
     with Herd(inventory=inventory) as herd:
@@ -34,12 +42,18 @@ async def run_web_experiment(
         paths_herd: dict[str, Path] = {}
 
         if temp_path is not None:
+            await asyncio.sleep(10)  # mocked length
             # create mocked files
             paths_task = testbed_tasks.get_output_paths()
             for name, path_task in paths_task.items():
-                paths_herd[name] = temp_path / path_task.name
+                paths_herd[name] = temp_path / experiment.folder_name() / path_task.name
                 with CoreWriter(paths_herd[name]) as writer:
                     writer.store_hostname(name)
+                    writer.append_iv_data_si(
+                        timestamp=local_now().timestamp(),
+                        voltage=np.zeros(10_000),
+                        current=np.zeros(10_000),
+                    )
         else:
             herd.run_task(testbed_tasks, attach=True)
             await asyncio.sleep(20)  # finish IO, precaution
@@ -57,11 +71,16 @@ async def run_web_experiment(
                 _size += path.stat().st_size
             else:
                 log.warning(f"file '{path}' does not exist after the experiment")
-        web_experiment.result_paths = paths_herd
-        web_experiment.result_size = _size
-        web_experiment.finished_at = datetime.now(tz=local_tz())
-        await web_experiment.update_time_start()
-        await web_experiment.save()
+        # Reload XP to avoid race-condition / working on old data
+        web_exp = await WebExperiment.get_by_id(xp_id)
+        if web_exp is None:
+            log.warning("Dataset of Experiment not found after running it (deleted?)")
+            return
+        web_exp.result_paths = paths_herd
+        web_exp.result_size = _size
+        web_exp.finished_at = datetime.now(tz=local_tz())
+        await web_exp.update_time_start()
+        await web_exp.save()
         # TODO: send out Email here (if wanted)
 
 
@@ -90,7 +109,7 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
             continue
 
         log.debug("Scheduling experiment '%s'", next_experiment.experiment.name)
-        await run_web_experiment(next_experiment, inventory=inventory, temp_path=temp_path)
+        await run_web_experiment(next_experiment.id, inventory=inventory, temp_path=temp_path)
 
 
 def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:

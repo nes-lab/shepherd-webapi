@@ -170,8 +170,8 @@ class WebExperiment(Document):
         if not isinstance(self.result_paths, dict):
             log.error("Could not update Experiment.time_start")
             return
-        with CoreReader(next(self.result_paths.values())) as shp_rd:
+        with CoreReader(next(iter(self.result_paths.values()))) as shp_rd:
             time_start = shp_rd.get_time_start()
         xp = self.experiment.model_dump()
         xp["time_start"] = time_start
-        self.xp = Experiment(**xp)
+        self.experiment = Experiment(**xp)

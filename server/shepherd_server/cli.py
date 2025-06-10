@@ -93,6 +93,7 @@ def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
     """Start ALL sub-services in separate subprocess."""
     from concurrent.futures import ProcessPoolExecutor
 
+    # TODO: either log-messages are muted or scheduler is not running correctly
     with ProcessPoolExecutor() as ppe:
         ppe.submit(run_scheduler_server, inventory=inventory, dry_run=dry_run)
         ppe.submit(run_api_server)

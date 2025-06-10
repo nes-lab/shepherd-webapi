@@ -24,6 +24,7 @@ class Cfg(BaseModel):
     # web related
     root_url: str = config("ROOT_URL", default="127.0.0.1")
     root_port: int = 8000
+    testbed_name: str = config("TESTBED_NAME", default="unit_testing_testbed")
 
     contact: dict = {
         "name": "Ingmar Splitt",

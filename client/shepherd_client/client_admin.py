@@ -50,7 +50,7 @@ class AdminClient(UserClient):
         if not rsp.ok:
             logger.warning("Approval of '%s' failed with: %s", user, msg(rsp))
         else:
-            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.json())
+            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
 
     def extend_quota(
         self,

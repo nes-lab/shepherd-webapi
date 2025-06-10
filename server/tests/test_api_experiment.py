@@ -173,7 +173,7 @@ def test_list_experiments(
     assert response.status_code == 200
     assert len(response.json()) == 4
     assert response.json()[created_experiment_id] is not None
-    assert response.json()[created_experiment_id]["name"] == "test-experiment"
+    assert response.json()[created_experiment_id] == "created"
 
 
 def test_experiments_are_private_to_user(
@@ -336,10 +336,10 @@ def test_download_rejected_for_unfinished_experiments(
 ) -> None:
     with client.authenticate_user():
         response = client.get(f"/experiment/{scheduled_experiment_id}/download")
-        assert response.status_code == 400
+        assert response.status_code == 409
 
         response = client.get(f"/experiment/{running_experiment_id}/download")
-        assert response.status_code == 400
+        assert response.status_code == 409
 
 
 def test_download_lists_sheep_files(client: UserTestClient, finished_experiment_id: str) -> None:

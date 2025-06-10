@@ -18,6 +18,7 @@ from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.data_models.experiment import TargetConfig
+from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_server.api_experiment.models import WebExperiment
@@ -26,6 +27,7 @@ from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.api_user.utils_mail import mail_engine
 from shepherd_server.api_user.utils_misc import calculate_password_hash
+from shepherd_server.config import CFG
 from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
 
@@ -102,7 +104,9 @@ async def database_for_tests(
         finished_at=datetime.now(tz=local_tz()),
     )
     # mock files
-    finished_web_xp.result_paths = finished_web_xp.testbed_tasks.get_output_paths()
+    testbed = Testbed(name=CFG.testbed_name)
+    testbed_tasks = TestbedTasks.from_xp(finished_web_xp.experiment, testbed)
+    finished_web_xp.result_paths = testbed_tasks.get_output_paths()
     for name, _path in finished_web_xp.result_paths.items():
         with CoreWriter(_path) as writer:
             writer.store_hostname(name)

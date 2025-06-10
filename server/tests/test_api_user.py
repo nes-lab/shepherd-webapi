@@ -32,7 +32,7 @@ def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None
 @pytest.mark.dependency
 def test_user_can_query_quota_data(client: UserTestClient) -> None:
     with client.authenticate_user():
-        response = client.get("/user/quota")
+        response = client.get("/user")
     assert response.status_code == 200
     quota = UserQuota(**response.json())
     assert quota.custom_quota_expire_date is None
@@ -55,7 +55,7 @@ def test_admin_can_update_quota_date(
         assert response.status_code == 200
 
     with client.authenticate_user():
-        response = client.get("/user/quota")
+        response = client.get("/user")
         assert response.status_code == 200
         quota = UserQuota(**response.json())
         assert quota.custom_quota_expire_date is not None
@@ -78,7 +78,7 @@ def test_admin_can_update_quota_duration(
         assert response.status_code == 200
 
     with client.authenticate_user():
-        response = client.get("/user/quota")
+        response = client.get("/user")
         assert response.status_code == 200
         quota = UserQuota(**response.json())
         assert quota.custom_quota_expire_date is None
@@ -101,7 +101,7 @@ def test_admin_can_update_quota_storage(
         assert response.status_code == 200
 
     with client.authenticate_user():
-        response = client.get("/user/quota")
+        response = client.get("/user")
         assert response.status_code == 200
         quota = UserQuota(**response.json())
         assert quota.custom_quota_expire_date is None

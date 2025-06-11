@@ -1,4 +1,4 @@
-name: Publish Core-Package to PyPi
+name: Publish Client-Package to PyPi
 
 on:
   workflow_dispatch:

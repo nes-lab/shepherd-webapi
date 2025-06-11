@@ -1,5 +1,7 @@
 # Schepherd-Client
 
+[![PyPIVersion](https://img.shields.io/pypi/v/shepherd_client.svg)](https://pypi.org/project/shepherd_client)
+[![PyVers](https://img.shields.io/pypi/pyversions/shepherd_client.svg)](https://pypi.python.org/pypi/shepherd-client)
 [![QA-Tests](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml/badge.svg)](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml)
 
 **Shepherd Nova Testbed**: https://testbed.nes-lab.org/
@@ -36,9 +38,15 @@ In the near future, the functionality will be extended to:
 
 ### Install
 
-While the client is not yet available on PyPI
+You can install the client by using the package-manager of your choice. In the following example we show pip:
 
 ```Shell
+pip3 install shepherd-client -U
+```
+
+Newest features can be obtained by directly installing from GitHub:
+
+```
 pip install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=client
 
 # or modern venv
@@ -51,6 +59,6 @@ pipenv install
 pipenv shell
 ```
 
-###
+### Usage
 
 The current interface is introduced in 5 short examples in the example-directory.

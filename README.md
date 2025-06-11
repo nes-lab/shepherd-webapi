@@ -30,7 +30,7 @@ Handling of data is done with Pydantic-Models that store the actual data in a da
 - redirect http / https to current landing-page
 - SSL is automatically enabled if certs are found
 
-## Getting Started
+## Getting started
 
 ### Prepare Server
 

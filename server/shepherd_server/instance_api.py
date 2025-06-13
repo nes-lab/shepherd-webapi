@@ -22,7 +22,7 @@ from starlette.responses import FileResponse
 from .api_auth.router import router as auth_router
 from .api_experiment.router import router as experiment_router
 from .api_user.router import router as user_router
-from .config import CFG
+from .config import config
 from .instance_db import db_available
 from .instance_db import db_context
 from .logger import log
@@ -91,7 +91,7 @@ async def favicon2() -> FileResponse:
 
 
 def run() -> None:
-    ssl_enabled = CFG.ssl_available()
+    ssl_enabled = config.ssl_available()
     if ssl_enabled:
         app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -104,12 +104,12 @@ def run() -> None:
     uvi_args = {
         "app": f"{run.__module__}:app",
         "reload": False,
-        "port": CFG.root_port,
-        "host": CFG.root_url,
+        "port": config.root_port,
+        "host": config.root_url,
     }
     if ssl_enabled:
-        uvi_args["ssl_keyfile"] = CFG.ssl_keyfile.as_posix()
-        uvi_args["ssl_certfile"] = CFG.ssl_certfile.as_posix()
-        uvi_args["ssl_ca_certs"] = CFG.ssl_ca_certs.as_posix()
+        uvi_args["ssl_keyfile"] = config.ssl_keyfile.as_posix()
+        uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
+        uvi_args["ssl_ca_certs"] = config.ssl_ca_certs.as_posix()
 
     uvicorn.run(**uvi_args)

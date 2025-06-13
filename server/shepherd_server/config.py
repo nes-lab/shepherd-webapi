@@ -2,7 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from decouple import config
+from decouple import config as dcoup_cfg
 from pydantic import BaseModel
 from pydantic import PositiveInt
 
@@ -19,12 +19,12 @@ def _get_xdg_path(variable_name: str, default: str) -> Path:
 PATH_XDG_CONFIG = _get_xdg_path("XDG_CONFIG_HOME", ".config/")
 
 
-class Cfg(BaseModel):
+class ConfigDefault(BaseModel):
     __slots__ = ()
     # web related
-    root_url: str = config("ROOT_URL", default="127.0.0.1")
+    root_url: str = dcoup_cfg("ROOT_URL", default="127.0.0.1")
     root_port: int = 8000
-    testbed_name: str = config("TESTBED_NAME", default="unit_testing_testbed")
+    testbed_name: str = dcoup_cfg("TESTBED_NAME", default="unit_testing_testbed")
 
     contact: dict = {
         "name": "Ingmar Splitt",
@@ -35,21 +35,21 @@ class Cfg(BaseModel):
     ssl_certfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
     ssl_ca_certs: Path = PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
     # user auth
-    auth_salt: bytes = config("AUTH_SALT").encode("UTF-8")
-    secret_key: str = config("SECRET_KEY", default="replace me")
+    auth_salt: bytes = dcoup_cfg("AUTH_SALT").encode("UTF-8")
+    secret_key: str = dcoup_cfg("SECRET_KEY", default="replace me")
     # will raise if missing default, TODO: remove default
 
     # api redirect
     redirect_url: str = "https://nes-lab.github.io/shepherd-nova/"
 
     # MAIL
-    mail_enabled: bool = config("MAIL_ENABLED", default=False, cast=bool)
-    mail_server: str = config("MAIL_SERVER", default="mail.your-server.de")
-    mail_port: int = config("MAIL_PORT", default=465, cast=int)
-    mail_username: str = config("MAIL_USERNAME", default="")
-    mail_password: str = config("MAIL_PASSWORD", default="")
-    mail_sender: str = config("MAIL_SENDER", default="")
-    mail_sender_name: str = config("MAIL_SENDER_NAME", default="Shepherd Testbed")
+    mail_enabled: bool = dcoup_cfg("MAIL_ENABLED", default=False, cast=bool)
+    mail_server: str = dcoup_cfg("MAIL_SERVER", default="mail.your-server.de")
+    mail_port: int = dcoup_cfg("MAIL_PORT", default=465, cast=int)
+    mail_username: str = dcoup_cfg("MAIL_USERNAME", default="")
+    mail_password: str = dcoup_cfg("MAIL_PASSWORD", default="")
+    mail_sender: str = dcoup_cfg("MAIL_SENDER", default="")
+    mail_sender_name: str = dcoup_cfg("MAIL_SENDER_NAME", default="Shepherd Testbed")
 
     # Quotas for users
     quota_default_duration: timedelta = timedelta(minutes=60)
@@ -75,7 +75,7 @@ class Cfg(BaseModel):
         return _avail
 
     def server_url(self) -> str:
-        return f"http{'s' if self.ssl_available() else ''}://{CFG.root_url}:{CFG.root_port}"
+        return f"http{'s' if self.ssl_available() else ''}://{self.root_url}:{self.root_port}"
 
 
-CFG = Cfg()
+config = ConfigDefault()

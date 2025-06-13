@@ -2,7 +2,7 @@ from shepherd_core import local_now
 
 from .api_experiment.models import WebExperiment
 from .api_user.models import User
-from .config import CFG
+from .config import config
 from .instance_db import db_client
 from .logger import log
 
@@ -16,7 +16,7 @@ async def prune_db(*, dry_run: bool = True) -> int:
     """
     _client = await db_client()
     users_old = await User.find(
-        User.last_active_at <= local_now() - CFG.age_max_user,
+        User.last_active_at <= local_now() - config.age_max_user,
         fetch_links=True,
     ).to_list()
     size_xp = await WebExperiment.prune(users_old, dry_run=dry_run)

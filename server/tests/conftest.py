@@ -27,7 +27,7 @@ from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.api_user.utils_mail import mail_engine
 from shepherd_server.api_user.utils_misc import calculate_password_hash
-from shepherd_server.config import CFG
+from shepherd_server.config import config
 from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
 
@@ -104,7 +104,7 @@ async def database_for_tests(
         finished_at=datetime.now(tz=local_tz()),
     )
     # mock files
-    testbed = Testbed(name=CFG.testbed_name)
+    testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(finished_web_xp.experiment, testbed)
     finished_web_xp.result_paths = testbed_tasks.get_output_paths()
     for name, _path in finished_web_xp.result_paths.items():

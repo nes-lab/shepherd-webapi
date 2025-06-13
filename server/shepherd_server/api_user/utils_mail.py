@@ -6,16 +6,16 @@ from fastapi_mail import MessageSchema
 from fastapi_mail import MessageType
 from pydantic import EmailStr
 
-from shepherd_server.config import CFG
+from shepherd_server.config import config
 from shepherd_server.logger import log
 
 mail_conf = ConnectionConfig(
-    MAIL_USERNAME=CFG.mail_username,
-    MAIL_PASSWORD=CFG.mail_password,
-    MAIL_FROM=CFG.mail_sender,
-    MAIL_FROM_NAME=CFG.mail_sender_name,
-    MAIL_PORT=CFG.mail_port,
-    MAIL_SERVER=CFG.mail_server,
+    MAIL_USERNAME=config.mail_username,
+    MAIL_PASSWORD=config.mail_password,
+    MAIL_FROM=config.mail_sender,
+    MAIL_FROM_NAME=config.mail_sender_name,
+    MAIL_PORT=config.mail_port,
+    MAIL_SERVER=config.mail_server,
     MAIL_STARTTLS=False,
     MAIL_SSL_TLS=True,
     USE_CREDENTIALS=True,
@@ -48,7 +48,7 @@ class FastMailEngine(MailEngine):
         """Send approval request to admin / contact email."""
         # Change this later to public endpoint
         log.debug("EMAIL APPROVAL")
-        if CFG.mail_enabled:
+        if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="Shepherd Testbed Approval",
@@ -61,9 +61,9 @@ class FastMailEngine(MailEngine):
     @staticmethod
     async def send_verification_email(email: EmailStr, token: str) -> None:
         """Send user verification email."""
-        _url = f"{CFG.server_url()}/user/verify/{token}"
+        _url = f"{config.server_url()}/user/verify/{token}"
         log.info("Verification E-Mail was sent to User (Account deactivated by default).")
-        if CFG.mail_enabled:
+        if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="Shepherd Testbed Email Verification",
@@ -76,7 +76,7 @@ class FastMailEngine(MailEngine):
     @staticmethod
     async def send_registration_complete_email(email: EmailStr) -> None:
         log.debug("EMAIL REGISTRATION")
-        if CFG.mail_enabled:
+        if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="Shepherd Testbed Registration Complete",
@@ -89,9 +89,9 @@ class FastMailEngine(MailEngine):
     async def send_password_reset_email(email: EmailStr, token: str) -> None:
         """Send password reset email."""
         # Change this later to public endpoint
-        _url = f"{CFG.server_url()}/user/reset-password/{token}"
+        _url = f"{config.server_url()}/user/reset-password/{token}"
         log.debug("EMAIL POST to %s", _url)
-        if CFG.mail_enabled:
+        if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="Shepherd Testbed Password Reset",

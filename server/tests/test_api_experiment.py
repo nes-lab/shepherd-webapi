@@ -7,7 +7,7 @@ from shepherd_core import local_tz
 from shepherd_core.data_models import TargetConfig
 from shepherd_core.data_models.experiment import Experiment
 from shepherd_server.api_user.models import UserQuota
-from shepherd_server.config import CFG
+from shepherd_server.config import config
 
 from .conftest import UserTestClient
 
@@ -73,7 +73,7 @@ def test_create_experiment_duration_has_quota(
 ) -> None:
     _xp = Experiment(
         name="test-experiment",
-        duration=CFG.quota_default_duration + timedelta(seconds=5),
+        duration=config.quota_default_duration + timedelta(seconds=5),
         target_configs=[sample_target_config],
     )
     with client.authenticate_user():
@@ -102,7 +102,7 @@ def test_create_experiment_duration_with_expired_quota(
     with client.authenticate_user():
         _xp = Experiment(
             name="test-experiment",
-            duration=CFG.quota_default_duration + timedelta(seconds=5),
+            duration=config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
         )
         response = client.post(
@@ -130,7 +130,7 @@ def test_create_experiment_duration_with_valid_quota(
     with client.authenticate_user():
         xp = Experiment(
             name="test-experiment",
-            duration=CFG.quota_default_duration + timedelta(seconds=5),
+            duration=config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
         )
         response = client.post(

@@ -19,7 +19,7 @@ from pydantic import computed_field
 from shepherd_core import local_now
 from shepherd_core import local_tz
 
-from shepherd_server.config import CFG
+from shepherd_server.config import config
 
 PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
 # ⤷ Regex = All Printable ASCII-Characters with Space
@@ -77,13 +77,13 @@ class UserQuota(BaseModel):
     @property
     def quota_duration(self) -> timedelta:
         _custom = self.custom_quota_active and (self.custom_quota_duration is not None)
-        return self.custom_quota_duration if _custom else CFG.quota_default_duration
+        return self.custom_quota_duration if _custom else config.quota_default_duration
 
     @computed_field
     @property
     def quota_storage(self) -> PositiveInt:
         _custom = self.custom_quota_active and (self.custom_quota_storage is not None)
-        return self.custom_quota_storage if _custom else CFG.quota_default_storage
+        return self.custom_quota_storage if _custom else config.quota_default_storage
 
 
 class UserOut(UserQuota, UserUpdate):

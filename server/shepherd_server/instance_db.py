@@ -16,7 +16,7 @@ from .api_user.models import User
 from .api_user.utils_mail import mail_engine
 from .api_user.utils_misc import calculate_hash
 from .api_user.utils_misc import calculate_password_hash
-from .config import CFG
+from .config import config
 from .logger import log
 
 
@@ -62,8 +62,8 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
         role="admin",
         group_confirmed_at=local_now(),
         token_verification=token_verification,
-        disabled=CFG.mail_enabled,
-        email_confirmed_at=None if CFG.mail_enabled else local_now(),
+        disabled=config.mail_enabled,
+        email_confirmed_at=None if config.mail_enabled else local_now(),
     )
     await User.insert_one(admin)
     log.info("Admin user added to DB")

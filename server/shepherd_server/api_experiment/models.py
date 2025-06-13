@@ -12,7 +12,7 @@ from shepherd_core import local_now
 from shepherd_core.data_models import Experiment
 
 from shepherd_server.api_user.models import User
-from shepherd_server.config import CFG
+from shepherd_server.config import config
 from shepherd_server.logger import log
 
 
@@ -113,7 +113,7 @@ class WebExperiment(Document):
 
         # get oldest XP of users over quota
         users_all = await User.find_all().to_list()
-        xp_date_limit = local_now() - CFG.age_min_experiment
+        xp_date_limit = local_now() - config.age_min_experiment
         for user in users_all:
             xps_user = await cls.get_by_user(user)  # already sorted by age
             storage_user = cls.get_storage(user)
@@ -126,7 +126,7 @@ class WebExperiment(Document):
 
         # get xp exceeding max age
         xps_2_prune += await cls.find(
-            cls.created_at <= local_now() - CFG.age_max_experiment,
+            cls.created_at <= local_now() - config.age_max_experiment,
             fetch_links=True,
         ).to_list()
 

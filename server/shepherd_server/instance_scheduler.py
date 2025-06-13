@@ -14,7 +14,7 @@ from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
 from .api_experiment.models import WebExperiment
-from .config import CFG
+from .config import config
 from .instance_db import db_available
 from .instance_db import db_client
 from .logger import log
@@ -34,7 +34,7 @@ async def run_web_experiment(
     experiment = web_exp.experiment
 
     # TODO: temp path should be derived here - or use subdir
-    testbed = Testbed(name=CFG.testbed_name)
+    testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
 
     with Herd(inventory=inventory) as herd:

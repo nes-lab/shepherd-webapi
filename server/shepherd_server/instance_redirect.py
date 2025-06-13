@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
 
-from .config import CFG
+from .config import config
 from .logger import log
 from .version import version
 
@@ -22,11 +22,11 @@ app = FastAPI(
 
 @app.get("/")
 async def redir() -> RedirectResponse:
-    return RedirectResponse(CFG.redirect_url)
+    return RedirectResponse(config.redirect_url)
 
 
 def run() -> None:
-    ssl_enabled = CFG.ssl_available()
+    ssl_enabled = config.ssl_available()
     if ssl_enabled:
         app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -36,11 +36,11 @@ def run() -> None:
         "app": f"{run.__module__}:app",
         "reload": False,
         "port": 443 if ssl_enabled else 80,
-        "host": CFG.root_url,
+        "host": config.root_url,
     }
     if ssl_enabled:
-        uvi_args["ssl_keyfile"] = CFG.ssl_keyfile.as_posix()
-        uvi_args["ssl_certfile"] = CFG.ssl_certfile.as_posix()
-        uvi_args["ssl_ca_certs"] = CFG.ssl_ca_certs.as_posix()
+        uvi_args["ssl_keyfile"] = config.ssl_keyfile.as_posix()
+        uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
+        uvi_args["ssl_ca_certs"] = config.ssl_ca_certs.as_posix()
 
     uvicorn.run(**uvi_args)

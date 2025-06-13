@@ -33,7 +33,6 @@ async def run_web_experiment(
 
     experiment = web_exp.experiment
 
-    # TODO: temp path should be derived here - or use subdir
     testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
 
@@ -57,10 +56,25 @@ async def run_web_experiment(
         else:
             herd.run_task(testbed_tasks, attach=True)
             await asyncio.sleep(20)  # finish IO, precaution
-            # TODO: paths must probably be bend from sheep to server structure
+            paths_herd = testbed_tasks.get_output_paths()
+            # TODO: hardcoded bending of observer to server path-structure
             #       from sheep-path: /var/shepherd/experiments/xp_name
             #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
-            paths_herd = testbed_tasks.get_output_paths()
+            for observer in paths_herd:
+                path_obs = paths_herd[observer].absolute()
+                if not path_obs.is_relative_to("/var/shepherd/experiments"):
+                    log.error("Path outside of experiment-location? %s", path_obs.as_posix())
+                    paths_herd.pop(observer)
+                    continue
+                if path_obs.exists():
+                    log.warning("Observer-Path should not exist on server! %s", path_obs.as_posix())
+                path_rel = path_obs.relative_to("/var/shepherd/experiments")
+                path_srv = Path("/var/shepherd/experiments") / observer / path_rel
+                if not path_srv.exists():
+                    log.error("Server-Path must exist on server! %s", path_srv.as_posix())
+                    paths_herd.pop(observer)
+                    continue
+                paths_herd[observer] = path_srv
 
         log.info("finished task execution")
 

@@ -54,15 +54,15 @@ Handling of data is done with Pydantic-Models that store the actual data in a da
 **NOTE:** the current version needs a special version of shepherd-core, with deep validation disabled.
 
 ```Shell
-pip install git+https://github.com/nes-lab/shepherd-webapi.git@main
+pip install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server -U
 
 # or modern venv
-uv pip install git+https://github.com/nes-lab/shepherd-webapi.git@main
+uv pip install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server -U
 
 # or old pipenv
 git clone https://github.com/nes-lab/shepherd-webapi.git
 cd shepherd-webapi
-pipenv install
+pipenv install server
 pipenv shell
 ```
 

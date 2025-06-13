@@ -31,7 +31,7 @@
 sudo pip install fastapi uvicorn shepherd-core python-multipart -U
 
 cd /opt
-sudo git clone https://github.com/orgua/shepherd_webservice
+sudo git clone https://github.com/nes-lab/shepherd-webapi
 
 sudo cp /opt/shepherd_webservice/playground/prototype_fastapi/shepherd-web.service /etc/systemd/system/
 sudo systemctl start shepherd-web

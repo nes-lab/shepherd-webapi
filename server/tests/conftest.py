@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from shepherd_core import Writer as CoreWriter
 from shepherd_core import fw_tools
 from shepherd_core import local_tz
+from shepherd_core.config import config as core_cfg
 from shepherd_core.data_models import FirmwareDType
 from shepherd_core.data_models import GpioTracing
 from shepherd_core.data_models import UartLogging
@@ -27,9 +28,13 @@ from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.api_user.utils_mail import mail_engine
 from shepherd_server.api_user.utils_misc import calculate_password_hash
-from shepherd_server.config import config
+from shepherd_server.config import config as server_cfg
 from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
+
+# switch core-lib to another fixture
+core_cfg.TESTBED = "unit_testing_testbed"
+server_cfg.mail_enabled = False
 
 
 @pytest_asyncio.fixture
@@ -90,11 +95,6 @@ async def database_for_tests(
     await WebExperiment.insert_one(running_web_experiment)
 
     # TODO: the part below could also be done by the scheduler
-    testbed = Testbed(
-        name="unit_testing_testbed",
-        data_on_server=tmp_path,  # path gets discarded after tests
-        data_on_observer=tmp_path,
-    )
     finished_web_xp = WebExperiment(
         id=UUID(finished_experiment_id),
         experiment=sample_experiment,
@@ -104,7 +104,11 @@ async def database_for_tests(
         finished_at=datetime.now(tz=local_tz()),
     )
     # mock files
-    testbed = Testbed(name=config.testbed_name)
+    testbed = Testbed(
+        name="unit_testing_testbed",
+        data_on_server=tmp_path,  # path gets discarded after tests
+        data_on_observer=tmp_path,
+    )
     testbed_tasks = TestbedTasks.from_xp(finished_web_xp.experiment, testbed)
     finished_web_xp.result_paths = testbed_tasks.get_output_paths()
     for name, _path in finished_web_xp.result_paths.items():

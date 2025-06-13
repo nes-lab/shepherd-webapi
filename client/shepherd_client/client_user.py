@@ -14,7 +14,7 @@ from shepherd_core.data_models import Experiment
 from shepherd_core.logger import increase_verbose_level
 
 from .client_web import WebClient
-from .config import Cfg
+from .config import Config
 from .config import PasswordStr
 
 
@@ -54,7 +54,7 @@ class UserClient(WebClient):
         if debug:
             increase_verbose_level(3)
         # TODO: no password and wanting to save should be disallowed, as the password would be lost
-        self._cfg = Cfg.from_file()
+        self._cfg = Config.from_file()
         if server is not None:
             self._cfg.server = server
         if user_email is not None:

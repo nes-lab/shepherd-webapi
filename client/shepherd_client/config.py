@@ -44,7 +44,7 @@ def get_xdg_config() -> Path:
 path_shp_config = get_xdg_config() / "shepherd/client.yaml"
 
 
-class Cfg(BaseModel):
+class Config(BaseModel):
     __slots__ = ()
 
     server: HttpUrl = "https://shepherd.cfaed.tu-dresden.de:8000/"

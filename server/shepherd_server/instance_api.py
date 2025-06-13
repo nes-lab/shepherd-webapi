@@ -110,6 +110,7 @@ def run() -> None:
     if ssl_enabled:
         uvi_args["ssl_keyfile"] = config.ssl_keyfile.as_posix()
         uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
-        uvi_args["ssl_ca_certs"] = config.ssl_ca_certs.as_posix()
+        if config.ssl_ca_certs.exists():
+            uvi_args["ssl_ca_certs"] = config.ssl_ca_certs.as_posix()
 
     uvicorn.run(**uvi_args)

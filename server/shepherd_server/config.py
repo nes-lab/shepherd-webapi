@@ -33,6 +33,7 @@ class ConfigDefault(BaseModel):
     }
     ssl_keyfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_private_key.pem"
     ssl_certfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
+    # ca_certs seems to be optional
     ssl_ca_certs: Path = PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
     # user auth
     auth_salt: bytes = dcoup_cfg("AUTH_SALT").encode("UTF-8")
@@ -63,7 +64,7 @@ class ConfigDefault(BaseModel):
     age_min_experiment: timedelta = timedelta(days=15)
 
     def ssl_available(self) -> bool:
-        _files = (self.ssl_keyfile, self.ssl_certfile, self.ssl_ca_certs)
+        _files = (self.ssl_keyfile, self.ssl_certfile)  # out: self.ssl_ca_certs
         _avail = all(_p.exists() for _p in _files)
         if _avail:
             log.info("SSL available, as keys & certs were found")

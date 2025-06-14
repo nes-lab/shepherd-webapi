@@ -167,7 +167,7 @@ class WebExperiment(Document):
             self.result_paths = None
 
     async def update_time_start(self) -> None:
-        if not isinstance(self.result_paths, dict):
+        if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:
             log.error("Could not update Experiment.time_start")
             return
         with CoreReader(next(iter(self.result_paths.values()))) as shp_rd:

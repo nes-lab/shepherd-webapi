@@ -54,7 +54,9 @@ async def run_web_experiment(
                         current=np.zeros(10_000),
                     )
         else:
-            herd.run_task(testbed_tasks, attach=True)
+            exit_code = herd.run_task(testbed_tasks, attach=True, quiet=True)
+            if exit_code > 0:
+                log.warning("Run had errors - could have been failed.")
             await asyncio.sleep(20)  # finish IO, precaution
             paths_herd = testbed_tasks.get_output_paths()
             # TODO: hardcoded bending of observer to server path-structure
@@ -66,17 +68,27 @@ async def run_web_experiment(
                     log.error("Path outside of experiment-location? %s", path_obs.as_posix())
                     paths_herd.pop(observer)
                     continue
-                if path_obs.exists():
+                try:
+                    path_obs_exists = path_obs.exists()
+                except PermissionError:
+                    path_obs_exists = False
+                if path_obs_exists:
                     log.warning("Observer-Path should not exist on server! %s", path_obs.as_posix())
                 path_rel = path_obs.relative_to("/var/shepherd/experiments")
                 path_srv = Path("/var/shepherd/experiments") / observer / path_rel
-                if not path_srv.exists():
+                try:
+                    path_srv_exists = path_srv.exists()
+                except PermissionError:
+                    log.error("Permission-Error on Server-Path -> will skip!")
+                    path_srv_exists = False
+                if not path_srv_exists:
                     log.error("Server-Path must exist on server! %s", path_srv.as_posix())
                     paths_herd.pop(observer)
                     continue
                 paths_herd[observer] = path_srv
 
         log.info("finished task execution")
+        # TODO: email on error - extract logs & mail?
 
         # mark job as done in database
         _size = 0

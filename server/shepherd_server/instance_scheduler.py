@@ -1,4 +1,5 @@
 import asyncio
+import copy
 from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
@@ -62,7 +63,7 @@ async def run_web_experiment(
             # TODO: hardcoded bending of observer to server path-structure
             #       from sheep-path: /var/shepherd/experiments/xp_name
             #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
-            for observer in paths_herd:
+            for observer in copy.deepcopy(paths_herd):
                 path_obs = paths_herd[observer].absolute()
                 if not path_obs.is_relative_to("/var/shepherd/experiments"):
                     log.error("Path outside of experiment-location? %s", path_obs.as_posix())

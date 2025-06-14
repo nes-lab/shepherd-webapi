@@ -12,7 +12,7 @@ uv tool install shepherd-herd
 uv tool install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server
 # OR - source newest commits from git
 uv tool install git+https://github.com/nes-lab/shepherd@main#subdirectory=software/shepherd-herd
-uv tool install --with git+https://github.com/nes-lab/shepherd@main#subdirectory=software/shepherd-herd git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server --force
+uv tool install --with git+https://github.com/nes-lab/shepherd@dev#subdirectory=software/shepherd-herd git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server --force
 ```
 
 Create an admin account with:

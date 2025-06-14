@@ -6,7 +6,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
-from pydantic import UUID4
 from shepherd_core import local_tz
 from shepherd_core.data_models import Experiment
 from starlette.responses import FileResponse
@@ -55,10 +54,10 @@ async def list_experiments(
 
 @router.get("/{experiment_id}")
 async def get_experiment(
-    experiment_id: str,
+    experiment_id: UUID,
     user: Annotated[User, Depends(current_active_user)],
 ) -> Experiment:
-    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
     if web_experiment.owner.email != user.email:
@@ -69,10 +68,10 @@ async def get_experiment(
 
 @router.delete("/{experiment_id}")
 async def delete_experiment(
-    experiment_id: str,
+    experiment_id: UUID,
     user: Annotated[User, Depends(current_active_user)],
 ) -> Response:
-    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
     if web_experiment.owner.email != user.email:
@@ -87,10 +86,10 @@ async def delete_experiment(
 
 @router.post("/{experiment_id}/schedule")
 async def schedule_experiment(
-    experiment_id: str,
+    experiment_id: UUID,
     user: Annotated[User, Depends(current_active_user)],
 ) -> Response:
-    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
     if web_experiment.owner.email != user.email:
@@ -115,10 +114,10 @@ async def schedule_experiment(
 
 @router.get("/{experiment_id}/state")
 async def get_experiment_state(
-    experiment_id: str,
+    experiment_id: UUID,
     user: Annotated[User, Depends(current_active_user)],
 ) -> str:
-    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
 
@@ -131,10 +130,10 @@ async def get_experiment_state(
 
 @router.get("/{experiment_id}/download")
 async def download(
-    experiment_id: str,
+    experiment_id: UUID,
     user: Annotated[User, Depends(current_active_user)],
 ) -> list[str]:
-    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
 
@@ -150,11 +149,11 @@ async def download(
 
 @router.get("/{experiment_id}/download/{observer}")
 async def download_sheep_file(
-    experiment_id: str,
+    experiment_id: UUID,
     observer: str,
     user: Annotated[User, Depends(current_active_user)],
 ) -> FileResponse:
-    web_experiment = await WebExperiment.get_by_id(UUID4(experiment_id))
+    web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
 

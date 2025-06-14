@@ -48,7 +48,7 @@ class WebExperiment(Document):
     result_size: int = 0
 
     @classmethod
-    async def get_by_id(cls, experiment_id: str) -> "None | WebExperiment":
+    async def get_by_id(cls, experiment_id: UUID) -> "None | WebExperiment":
         return await cls.find_one(
             cls.id == experiment_id,
             fetch_links=True,

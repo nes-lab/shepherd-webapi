@@ -1,0 +1,16 @@
+[Unit]
+Description=API for controlling the Testbed
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=3
+EnvironmentFile=/home/service/.env
+ExecStart=/home/service/.local/bin/shepherd-server -v run-api
+
+[Install]
+WantedBy=multi-user.target
+
+# systemctl status shepherd-api
+# systemctl restart shepherd-api
+# journalctl --follow -u shepherd-api.service

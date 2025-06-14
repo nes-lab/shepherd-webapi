@@ -5,7 +5,9 @@ from pathlib import Path
 from types import FrameType
 from typing import Annotated
 
+import pydantic
 import shepherd_core
+import shepherd_herd
 import typer
 
 from .api_experiment.models import WebExperiment
@@ -57,9 +59,11 @@ def version() -> None:
 
     log.info("shepherd-server v%s", server_version)
     log.debug("shepherd-core v%s", shepherd_core.__version__)
+    log.debug("shepherd-herd v%s", shepherd_herd.__version__)
     log.debug("Python v%s", sys.version)
     log.debug("typer v%s", typer.__version__)
     log.debug("click v%s", click.__version__)
+    log.debug("pydantic v%s", pydantic.__version__)
 
 
 # #######################################################################

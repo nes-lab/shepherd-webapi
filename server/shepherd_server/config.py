@@ -31,10 +31,16 @@ class ConfigDefault(BaseModel):
         "url": "https://github.com/nes-lab/shepherd",
         "email": "ingmar.splitt@tu-dresden.de",
     }
-    ssl_keyfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_private_key.pem"
-    ssl_certfile: Path = PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
+    ssl_keyfile: Path = dcoup_cfg(
+        "SSL_KEYFILE", default=PATH_XDG_CONFIG / "shepherd/ssl_private_key.pem"
+    )
+    ssl_certfile: Path = dcoup_cfg(
+        "SSL_CERTFILE", default=PATH_XDG_CONFIG / "shepherd/ssl_certificate.pem"
+    )
     # ca_certs seems to be optional
-    ssl_ca_certs: Path = PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
+    ssl_ca_certs: Path = dcoup_cfg(
+        "SSL_CA_CERTS", default=PATH_XDG_CONFIG / "shepherd/ssl_ca_certs.pem"
+    )
     # user auth
     auth_salt: bytes = dcoup_cfg("AUTH_SALT").encode("UTF-8")
     secret_key: str = dcoup_cfg("SECRET_KEY", default="replace me")

@@ -1,0 +1,16 @@
+[Unit]
+Description=Redirect for http/https to get to the documentation
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=3
+EnvironmentFile=/home/service/.env
+ExecStart=/home/service/.local/bin/shepherd-server -v run-redirect
+
+[Install]
+WantedBy=multi-user.target
+
+# systemctl status shepherd-redirect
+# systemctl restart shepherd-redirect
+# journalctl --follow -u shepherd-redirect.service

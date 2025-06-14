@@ -51,8 +51,8 @@ class FastMailEngine(MailEngine):
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
-                subject="Shepherd Testbed Approval",
-                body="Welcome to the Shepherd Testbed! "
+                subject="[Shepherd] Testbed Approval",
+                body="Welcome to the Shepherd Nova Testbed! "
                 f"Use the following token for registering this Email-Address: {token}",
                 subtype=MessageType.plain,
             )
@@ -66,8 +66,8 @@ class FastMailEngine(MailEngine):
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
-                subject="Shepherd Testbed Email Verification",
-                body="Welcome to the Shepherd Testbed! "
+                subject="[Shepherd] Email Verification",
+                body="Welcome to the Shepherd Nova Testbed! "
                 f"You just need to verify your email to complete registration: {_url}",
                 subtype=MessageType.plain,  # TODO: replace with HTTP + Link
             )
@@ -79,7 +79,7 @@ class FastMailEngine(MailEngine):
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
-                subject="Shepherd Testbed Registration Complete",
+                subject="[Shepherd] Registration Complete",
                 body="You are now fully registered and can use the Testbed",
                 subtype=MessageType.plain,
             )
@@ -94,8 +94,8 @@ class FastMailEngine(MailEngine):
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
-                subject="Shepherd Testbed Password Reset",
-                body="Click the link to reset your Shepherd Testbed account password: "
+                subject="[Shepherd] Password Reset",
+                body="Click the link to reset your Testbed account password: "
                 f"{_url}\nIf you did not request this, please ignore this email",
                 subtype=MessageType.plain,
             )

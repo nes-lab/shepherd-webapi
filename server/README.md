@@ -15,6 +15,12 @@ uv tool install git+https://github.com/nes-lab/shepherd@main#subdirectory=softwa
 uv tool install --with git+https://github.com/nes-lab/shepherd@main#subdirectory=software/shepherd-herd git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server --force
 ```
 
+Create an admin account with:
+
+```Shell
+shepherd-server create-admin mail@dail.de password
+```
+
 ## Prepare Config
 
 There is more than one way to alter the server configuration.
@@ -52,5 +58,5 @@ sudo systemctl enable shepherd-scheduler
 sudo systemctl status shepherd-api
 sudo systemctl status shepherd-redirect
 sudo systemctl status shepherd-scheduler
-sudo journalctl -n 20 -u shepherd-api
+sudo journalctl -n 20 -u shepherd-*
 ```

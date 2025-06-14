@@ -32,6 +32,7 @@ dependencies = [
     "exrex",  # for automatic password creation
     "pyaml",
     "typer",
+    "pip-system-certs", # to get certificate authority (CA)
 ]
 
 [project.optional-dependencies]

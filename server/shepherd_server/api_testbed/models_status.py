@@ -9,6 +9,8 @@ class SchedulerStatus(BaseModel):
     busy: bool = False
     dry_run: bool = False
     last_update: datetime | None = None
+    observer_count: int = 0
+    observers: list[str] | None = None
 
 
 class RedirectStatus(BaseModel):
@@ -21,9 +23,6 @@ class ApiStatus(BaseModel):
 
 
 class TestbedStatus(BaseModel):
-    observer_count: int = 0
-    observers: list[str] | None = None
-
     timestamp_timezone: str = "UTC"
 
     webapi: ApiStatus = ApiStatus()

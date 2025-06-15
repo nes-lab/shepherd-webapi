@@ -197,12 +197,12 @@ async def update_status(
     tb_.scheduler.busy = await WebExperiment.get_next_scheduling() is not None
     tb_.scheduler.last_update = local_now()
     if dry_run:
-        tb_.observer_count = 0
-        tb_.observers = None
+        tb_.scheduler.observer_count = 0
+        tb_.scheduler.observers = None
     else:
         with Herd(inventory=inventory) as herd:
-            tb_.observer_count = len(herd.group)
-            tb_.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
+            tb_.scheduler.observer_count = len(herd.group)
+            tb_.scheduler.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
     await tb_.save_changes()
 
 

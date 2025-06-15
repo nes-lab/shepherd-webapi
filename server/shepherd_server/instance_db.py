@@ -11,6 +11,7 @@ from pydantic import validate_call
 from shepherd_core import local_now
 
 from .api_experiment.models import WebExperiment
+from .api_testbed.model_scheduler import Scheduler
 from .api_user.models import PasswordStr
 from .api_user.models import User
 from .api_user.utils_mail import mail_engine
@@ -24,7 +25,7 @@ async def db_client() -> AgnosticDatabase:
     """Call this from within your event loop to get beanie setup."""
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     # Note: if ".shp" does not exist, it will be created
-    await init_beanie(database=client.shp, document_models=[User, WebExperiment])
+    await init_beanie(database=client.shp, document_models=[User, WebExperiment, Scheduler])
     return client.shp
 
 

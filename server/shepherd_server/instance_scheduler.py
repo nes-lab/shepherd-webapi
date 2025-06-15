@@ -1,11 +1,15 @@
 import asyncio
 import copy
+from collections.abc import Mapping
 from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
+from pathlib import PurePosixPath
 from tempfile import TemporaryDirectory
 
 import numpy as np
+from beanie import Link
+from fabric import Result
 from pydantic import UUID4
 from shepherd_core import Writer as CoreWriter
 from shepherd_core import local_now
@@ -14,11 +18,30 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
+from server.shepherd_server.api_user.models import User
+
 from .api_experiment.models import WebExperiment
+from .api_user.utils_mail import mail_engine
 from .config import config
 from .instance_db import db_available
 from .instance_db import db_client
 from .logger import log
+
+
+def replies2str(replies: Mapping[str, Result]) -> str:
+    """Log output-results of shell commands."""
+    # sort dict by key first
+    replies = dict(sorted(replies.items()))
+    string = ""
+    for hostname, reply in replies.items():
+        if len(reply.stdout) > 0:
+            string += f"\n************** {hostname} - stdout **************"
+            string += reply.stdout
+        if len(reply.stderr) > 0:
+            string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~"
+            string += reply.stderr
+        string += f"Exit-code of {hostname} = {reply.exited}"
+    return string
 
 
 async def run_web_experiment(
@@ -55,9 +78,29 @@ async def run_web_experiment(
                         current=np.zeros(10_000),
                     )
         else:
-            exit_code = herd.run_task(testbed_tasks, attach=True, quiet=True)
+            # force other sheep-instances to end
+            herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
+            # modified herd.run_task(testbed_tasks, attach=True, quiet=True)
+            remote_path = PurePosixPath("/etc/shepherd/config_for_herd.yaml")
+            herd.put_task(testbed_tasks, remote_path)
+            command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
+            replies = herd.run_cmd(sudo=True, cmd=command)
+            exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
+
             if exit_code > 0:
-                log.warning("Run had errors - could have been failed.")
+                log.error("Running Experiment failed on at least one Observer")
+                error_log = replies2str(replies)
+                await mail_engine().send_error_log_email(
+                    config.contact["email"], web_exp.id, experiment.name, error_log
+                )
+                if (
+                    isinstance(web_exp.owner, Link | User)
+                    and config.contact["email"] != web_exp.owner.email
+                ):
+                    await mail_engine().send_error_log_email(
+                        web_exp.owner.email, web_exp.id, experiment.name, error_log
+                    )
+
             await asyncio.sleep(20)  # finish IO, precaution
             paths_herd = testbed_tasks.get_output_paths()
             # TODO: hardcoded bending of observer to server path-structure
@@ -89,7 +132,6 @@ async def run_web_experiment(
                 paths_herd[observer] = path_srv
 
         log.info("finished task execution")
-        # TODO: email on error - extract logs & mail?
 
         # mark job as done in database
         _size = 0
@@ -103,12 +145,21 @@ async def run_web_experiment(
         if web_exp is None:
             log.warning("Dataset of Experiment not found after running it (deleted?)")
             return
-        web_exp.result_paths = paths_herd
+        if len(paths_herd) > 0:
+            web_exp.result_paths = paths_herd
         web_exp.result_size = _size
         web_exp.finished_at = datetime.now(tz=local_tz())
         await web_exp.update_time_start()
         await web_exp.save()
-        # TODO: send out Email here (if wanted)
+
+        # send out Mail if user wants it
+        if not isinstance(web_exp.owner, Link | User):
+            return
+        all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
+        if experiment.email_results or all_done:
+            await mail_engine().send_experiment_finished_email(
+                web_exp.owner.email, web_exp.id, experiment.name, all_done=all_done
+            )
 
 
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:

@@ -1,5 +1,9 @@
 """Mail server config."""
 
+from io import BytesIO
+from uuid import UUID
+
+from fastapi import UploadFile
 from fastapi_mail import ConnectionConfig
 from fastapi_mail import FastMail
 from fastapi_mail import MessageSchema
@@ -40,6 +44,16 @@ class MailEngine:
 
     @staticmethod
     async def send_password_reset_email(email: EmailStr, token: str) -> None: ...
+
+    @staticmethod
+    async def send_experiment_finished_email(
+        email: EmailStr, xp_id: UUID, xp_name: str, *, all_done: bool = False
+    ) -> None: ...
+
+    @staticmethod
+    async def send_error_log_email(
+        email: EmailStr, xp_id: UUID, xp_name: str, log_output: str
+    ) -> None: ...
 
 
 class FastMailEngine(MailEngine):
@@ -90,7 +104,7 @@ class FastMailEngine(MailEngine):
         """Send password reset email."""
         # Change this later to public endpoint
         _url = f"{config.server_url()}/user/reset-password/{token}"
-        log.debug("EMAIL POST to %s", _url)
+        log.debug("EMAIL RESET POST to %s", _url)
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
@@ -98,6 +112,40 @@ class FastMailEngine(MailEngine):
                 body="Click the link to reset your Testbed account password: "
                 f"{_url}\nIf you did not request this, please ignore this email",
                 subtype=MessageType.plain,
+            )
+            await mail.send_message(message)
+
+    @staticmethod
+    async def send_experiment_finished_email(
+        email: EmailStr, xp_id: UUID, xp_name: str, *, all_done: bool = False
+    ) -> None:
+        msg = f"Experiment {xp_name} ({xp_id}) is finished and can be downloaded."
+        if all_done:
+            msg += " There are no further experiments scheduled for you."
+        log.debug("EMAIL XP-Finished")
+        if config.mail_enabled:
+            message = MessageSchema(
+                recipients=[email],
+                subject="[Shepherd] Experiment finished",
+                body=msg,
+                subtype=MessageType.plain,
+            )
+            await mail.send_message(message)
+
+    @staticmethod
+    async def send_error_log_email(
+        email: EmailStr, xp_id: UUID, xp_name: str, log_output: str
+    ) -> None:
+        ufile = UploadFile(file=BytesIO(log_output.encode()))
+        log.debug("EMAIL XP-Failed")
+        if config.mail_enabled:
+            message = MessageSchema(
+                recipients=[email],
+                subject="[Shepherd] Failed Experiment",
+                body=f"Experiment {xp_name} ({xp_id}) encountered errors during execution.\n"
+                f"The Sheep-Output is attached in this mail",
+                subtype=MessageType.plain,
+                attachments=[ufile],
             )
             await mail.send_message(message)
 

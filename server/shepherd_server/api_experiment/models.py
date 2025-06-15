@@ -90,6 +90,20 @@ class WebExperiment(Document):
         return None
 
     @classmethod
+    async def has_scheduled_by_user(cls, user: User) -> bool:
+        xp_ = (
+            await cls.find(
+                cls.requested_execution_at != None,  # noqa: E711 beanie cannot handle 'is not None'
+                cls.started_at == None,  # noqa: E711
+                cls.owner.email == user.email,
+                fetch_links=True,
+            )
+            .limit(1)
+            .to_list()
+        )
+        return len(xp_) > 0
+
+    @classmethod
     async def reset_stuck_items(cls) -> None:
         """Find and reset scheduled, but unfinished experiments."""
         stuck_xps = await cls.find(
@@ -149,7 +163,7 @@ class WebExperiment(Document):
         if self.finished_at is not None:
             if self.result_paths is not None:
                 return "finished"
-            return "error"
+            return "failed"
         if self.started_at is not None:
             return "running"
         if self.requested_execution_at is not None:
@@ -168,7 +182,7 @@ class WebExperiment(Document):
 
     async def update_time_start(self) -> None:
         if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:
-            log.error("Could not update Experiment.time_start")
+            log.error("Could not update Experiment.time_start from files")
             return
         with CoreReader(next(iter(self.result_paths.values()))) as shp_rd:
             time_start = shp_rd.get_time_start()

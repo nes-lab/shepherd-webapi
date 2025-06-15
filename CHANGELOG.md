@@ -1,5 +1,16 @@
 # History of Changes
 
+## v2025.06.2
+
+- client - now warns if scheduler is not running or API is inaccessible
+- server
+  - root URL has status-info about the testbed (scheduler, observers, ...)
+  - send emails when xp are done (if activated in config) or scheduler has no more tasks from you
+  - send emails to admin and user if experiment failed (with error-log)
+  - improve scheduler - 
+  - deleting an experiment now also deletes the directories
+  - put server-tasks into systemd-services that run with local account
+
 ## v2025.06.1
 
 - added client that allows

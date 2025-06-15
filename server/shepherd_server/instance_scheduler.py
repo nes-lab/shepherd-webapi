@@ -194,6 +194,7 @@ async def update_status(
     tb_ = await TestbedDB.get_one()
     tb_.scheduler.active = active
     tb_.scheduler.dry_run = dry_run
+    tb_.scheduler.busy = await WebExperiment.get_next_scheduling() is not None
     tb_.scheduler.last_update = local_now()
     if dry_run:
         tb_.observer_count = 0
@@ -202,7 +203,7 @@ async def update_status(
         with Herd(inventory=inventory) as herd:
             tb_.observer_count = len(herd.group)
             tb_.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
-    await tb_.save()
+    await tb_.save_changes()
 
 
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
@@ -224,8 +225,8 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
             await update_status(inventory=inventory, active=True, dry_run=dry_run)
             next_experiment = await WebExperiment.get_next_scheduling()
             if next_experiment is None:
-                log.debug("... waiting 10 s")
-                await asyncio.sleep(10)
+                log.debug("... waiting 20 s")
+                await asyncio.sleep(20)
                 continue
 
             log.debug("Scheduling experiment '%s'", next_experiment.experiment.name)

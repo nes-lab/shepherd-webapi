@@ -100,7 +100,7 @@ async def update_status() -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.webapi.activated = local_now()
-    await tb_.save()
+    await tb_.save_changes()
 
 
 def run() -> None:

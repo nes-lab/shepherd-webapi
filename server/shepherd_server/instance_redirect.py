@@ -35,7 +35,7 @@ async def update_status(*, active: bool = False) -> None:
     tb_ = await TestbedDB.get_one()
     tb_.redirect.active = active
     tb_.redirect.last_update = local_now()
-    await tb_.save()
+    await tb_.save_changes()
 
 
 def run() -> None:

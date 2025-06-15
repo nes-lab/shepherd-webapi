@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class SchedulerStatus(BaseModel):
     active: bool = False
+    busy: bool = False
     dry_run: bool = False
     last_update: datetime | None = None
 
@@ -31,7 +32,14 @@ class TestbedStatus(BaseModel):
 
 
 class TestbedDB(TestbedStatus, Document):
+    class Settings:
+        use_state_management = True
+        state_management_save_previous = True
+
     @classmethod
     async def get_one(cls) -> "TestbedDB":
         wtb = await cls.find_one()
-        return cls() if wtb is None else wtb
+        if wtb is None:
+            wtb = cls()
+            wtb.save()
+        return wtb

@@ -64,9 +64,27 @@ class UserClient(WebClient):
         if save_credentials:
             self._cfg.to_file()
         super().__init__()
-
+        self.status()
         self._auth: dict | None = None
         self.authenticate()
+
+    # ####################################################################
+    # Testbed-Status
+    # ####################################################################
+
+    def status(self) -> None:
+        rsp = requests.get(
+            url=f"{self._cfg.server}/",
+            timeout=3,
+        )
+        if rsp.ok:
+            scheduler = rsp.json().get("scheduler")
+            if isinstance(scheduler, dict):
+                active = scheduler.get("active")
+                if not active:
+                    logger.warning("Scheduler not active!")
+        else:
+            logger.warning("Failed to fetch status from WebApi: %s", msg(rsp))
 
     # ####################################################################
     # Account

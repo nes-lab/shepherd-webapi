@@ -194,7 +194,7 @@ async def update_status(
     tb_ = await TestbedDB.get_one()
     tb_.scheduler.active = active
     tb_.scheduler.dry_run = dry_run
-    tb_.scheduler.last_seen = local_now()
+    tb_.scheduler.last_update = local_now()
     if dry_run:
         tb_.observer_count = 0
         tb_.observers = None

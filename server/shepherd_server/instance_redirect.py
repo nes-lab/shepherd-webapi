@@ -3,12 +3,17 @@ run with: uvicorn prototype_redirect:app --reload
 run with: python3 ./prototype_redirect.py
 """
 
+import asyncio
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
+from shepherd_core import local_now
 
+from .api_testbed.models_status import TestbedDB
 from .config import config
+from .instance_db import db_client
 from .logger import log
 from .version import version
 
@@ -23,6 +28,14 @@ app = FastAPI(
 @app.get("/")
 async def redir() -> RedirectResponse:
     return RedirectResponse(config.redirect_url)
+
+
+async def update_status(*, active: bool = False) -> None:
+    _client = await db_client()
+    tb_ = await TestbedDB.get_one()
+    tb_.redirect.active = active
+    tb_.redirect.last_update = local_now()
+    await tb_.save()
 
 
 def run() -> None:
@@ -43,5 +56,8 @@ def run() -> None:
         uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
         if config.ssl_ca_certs.exists():
             uvi_args["ssl_ca_certs"] = config.ssl_ca_certs.as_posix()
-
-    uvicorn.run(**uvi_args)
+    asyncio.run(update_status(active=True))
+    try:
+        uvicorn.run(**uvi_args)
+    except SystemExit:
+        asyncio.run(update_status())

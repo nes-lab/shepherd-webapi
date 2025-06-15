@@ -7,12 +7,16 @@ from pydantic import BaseModel
 class SchedulerStatus(BaseModel):
     active: bool = False
     dry_run: bool = False
-    last_seen: datetime | None = None
+    last_update: datetime | None = None
 
 
 class RedirectStatus(BaseModel):
     active: bool = False
-    last_seen: datetime | None = None
+    last_update: datetime | None = None
+
+
+class ApiStatus(BaseModel):
+    activated: datetime | None = None
 
 
 class TestbedStatus(BaseModel):
@@ -21,6 +25,7 @@ class TestbedStatus(BaseModel):
 
     timestamp_timezone: str = "UTC"
 
+    webapi: ApiStatus = ApiStatus()
     scheduler: SchedulerStatus = SchedulerStatus()
     redirect: RedirectStatus = RedirectStatus()
 

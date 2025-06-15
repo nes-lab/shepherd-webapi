@@ -11,10 +11,12 @@ small excurse into what HTTP-Verb to use:
 
 """
 
+import asyncio
 from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
+from shepherd_core import local_now
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.responses import FileResponse
@@ -26,6 +28,7 @@ from .api_testbed.models_status import TestbedStatus
 from .api_user.router import router as user_router
 from .config import config
 from .instance_db import db_available
+from .instance_db import db_client
 from .instance_db import db_context
 from .logger import log
 from .version import version
@@ -93,6 +96,13 @@ async def favicon2() -> FileResponse:
     return FileResponse((path_favicon / "favicon.svg").as_posix())
 
 
+async def update_status() -> None:
+    _client = await db_client()
+    tb_ = await TestbedDB.get_one()
+    tb_.webapi.activated = local_now()
+    await tb_.save()
+
+
 def run() -> None:
     ssl_enabled = config.ssl_available()
     if ssl_enabled:
@@ -115,5 +125,5 @@ def run() -> None:
         uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
         if config.ssl_ca_certs.exists():
             uvi_args["ssl_ca_certs"] = config.ssl_ca_certs.as_posix()
-
+    asyncio.run(update_status())
     uvicorn.run(**uvi_args)

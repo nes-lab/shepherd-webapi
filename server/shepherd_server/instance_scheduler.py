@@ -191,6 +191,7 @@ async def run_web_experiment(
 async def update_status(
     inventory: Path | None = None, *, active: bool = False, dry_run: bool = False
 ) -> None:
+    _client = await db_client()
     sdl = await Scheduler.get_one()
     sdl.active = active
     sdl.dry_run = dry_run
@@ -202,12 +203,16 @@ async def update_status(
         with Herd(inventory=inventory) as herd:
             sdl.observer_count = len(herd.group)
             sdl.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
-    sdl.save()
+    await sdl.save()
+
+
+def run_update_status(inventory: Path | None = None, *, dry_run: bool = False) -> None:
+    asyncio.run(update_status(inventory, dry_run=dry_run))
 
 
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
     _client = await db_client()
-    atexit.register(update_status, inventory=inventory, active=False, dry_run=dry_run)
+    atexit.register(run_update_status, inventory=inventory, dry_run=dry_run)
 
     # allow running dry in temp-folder
     with TemporaryDirectory() as temp_dir:

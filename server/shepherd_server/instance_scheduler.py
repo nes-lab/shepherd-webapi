@@ -1,7 +1,6 @@
 import asyncio
 import copy
 from collections.abc import Mapping
-from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -91,14 +90,20 @@ async def run_web_experiment(
                 log.error("Running Experiment failed on at least one Observer")
                 error_log = replies2str(replies)
                 await mail_engine().send_error_log_email(
-                    config.contact["email"], web_exp.id, experiment.name, error_log
+                    config.contact["email"],
+                    web_exp.id,
+                    experiment.name,
+                    error_log,
                 )
                 if (
                     isinstance(web_exp.owner, Link | User)
                     and config.contact["email"] != web_exp.owner.email
                 ):
                     await mail_engine().send_error_log_email(
-                        web_exp.owner.email, web_exp.id, experiment.name, error_log
+                        web_exp.owner.email,
+                        web_exp.id,
+                        experiment.name,
+                        error_log,
                     )
 
             await asyncio.sleep(20)  # finish IO, precaution
@@ -166,28 +171,26 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
     _client = await db_client()
 
     # allow running dry in temp-folder
-    stack = ExitStack()
-    _temp_dir = TemporaryDirectory()
-    stack.enter_context(_temp_dir)
-    temp_path: Path | None = None
-    if dry_run:
-        log.warning("Dry run mode - not executing tasks!")
-        temp_path = Path(_temp_dir.name)
-        log.debug("Temp path: %s", temp_path.resolve())
+    with TemporaryDirectory() as temp_dir:
+        temp_path: Path | None = None
+        if dry_run:
+            log.warning("Dry run mode - not executing tasks!")
+            temp_path = Path(temp_dir.name)
+            log.debug("Temp path: %s", temp_path.resolve())
 
-    # TODO: how to make sure there is only one scheduler? Singleton
-    log.info("Checking experiment scheduling FIFO")
-    await WebExperiment.reset_stuck_items()
+        # TODO: how to make sure there is only one scheduler? Singleton
+        log.info("Checking experiment scheduling FIFO")
+        await WebExperiment.reset_stuck_items()
 
-    while True:
-        next_experiment = await WebExperiment.get_next_scheduling()
-        if next_experiment is None:
-            log.debug("... waiting 10 s")
-            await asyncio.sleep(10)
-            continue
+        while True:
+            next_experiment = await WebExperiment.get_next_scheduling()
+            if next_experiment is None:
+                log.debug("... waiting 10 s")
+                await asyncio.sleep(10)
+                continue
 
-        log.debug("Scheduling experiment '%s'", next_experiment.experiment.name)
-        await run_web_experiment(next_experiment.id, inventory=inventory, temp_path=temp_path)
+            log.debug("Scheduling experiment '%s'", next_experiment.experiment.name)
+            await run_web_experiment(next_experiment.id, inventory=inventory, temp_path=temp_path)
 
 
 def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
@@ -195,8 +198,6 @@ def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
         log.error("No connection to database! Will exit scheduler now.")
         return
 
-    # loop = asyncio.new_event_loop()
-    # loop.run_until_complete(scheduler(inventory, dry_run=dry_run))
     asyncio.run(scheduler(inventory, dry_run=dry_run))
 
 

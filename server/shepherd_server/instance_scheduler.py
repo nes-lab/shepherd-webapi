@@ -1,5 +1,4 @@
 import asyncio
-import atexit
 import copy
 from collections.abc import Mapping
 from datetime import datetime
@@ -206,20 +205,15 @@ async def update_status(
     await sdl.save()
 
 
-def run_update_status(inventory: Path | None = None, *, dry_run: bool = False) -> None:
-    asyncio.run(update_status(inventory, dry_run=dry_run))
-
-
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
     _client = await db_client()
-    atexit.register(run_update_status, inventory=inventory, dry_run=dry_run)
 
     # allow running dry in temp-folder
     with TemporaryDirectory() as temp_dir:
         temp_path: Path | None = None
         if dry_run:
             log.warning("Dry run mode - not executing tasks!")
-            temp_path = Path(temp_dir.name)
+            temp_path = Path(temp_dir)
             log.debug("Temp path: %s", temp_path.resolve())
 
         # TODO: how to make sure there is only one scheduler? Singleton
@@ -243,7 +237,10 @@ def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
         log.error("No connection to database! Will exit scheduler now.")
         return
 
-    asyncio.run(scheduler(inventory, dry_run=dry_run))
+    try:
+        asyncio.run(scheduler(inventory, dry_run=dry_run))
+    except SystemExit:
+        asyncio.run(update_status(inventory, dry_run=dry_run))
 
 
 if __name__ == "__main__":

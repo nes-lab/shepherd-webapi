@@ -9,6 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import EmailStr
 from pydantic import validate_call
 from shepherd_core import local_now
+from shepherd_core.config import config as core_cfg
 
 from .api_experiment.models import WebExperiment
 from .api_testbed.model_scheduler import Scheduler
@@ -19,6 +20,8 @@ from .api_user.utils_misc import calculate_hash
 from .api_user.utils_misc import calculate_password_hash
 from .config import config
 from .logger import log
+
+core_cfg.TESTBED = config.testbed_name
 
 
 async def db_client() -> AgnosticDatabase:

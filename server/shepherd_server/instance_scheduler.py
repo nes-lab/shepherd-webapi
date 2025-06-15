@@ -48,15 +48,14 @@ def obtain_access_permissions(path: Path) -> None:
     ret = subprocess.run(  # noqa: S603
         ["/usr/bin/sudo", "/usr/bin/chmod", "a+rw", "-R", path.as_posix()],
         timeout=20,
-        capture_output=True,
         check=False,
     ).returncode
     if ret != 0:
-        log.warning("Permission denied for %s", path)
+        log.warning("Changing permission denied for %s", path)
 
 
 async def run_web_experiment(
-    xp_id: UUID4, inventory: Path | None = None, temp_path: Path | None = None
+    xp_id: UUID4, temp_path: Path, inventory: Path | None = None, *, dry_run: bool = False
 ) -> None:
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
@@ -76,7 +75,7 @@ async def run_web_experiment(
         paths_result: dict[str, Path] = {}
         paths_content: dict[str, Path] = {}
 
-        if temp_path is not None:
+        if dry_run:
             await asyncio.sleep(10)  # mocked length
             # create mocked files
             paths_task = testbed_tasks.get_output_paths()
@@ -94,9 +93,11 @@ async def run_web_experiment(
         else:
             # force other sheep-instances to end
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
-            # modified herd.run_task(testbed_tasks, attach=True, quiet=True)
+            # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
             remote_path = PurePosixPath("/etc/shepherd/config_for_herd.yaml")
-            herd.put_task(testbed_tasks, remote_path)
+            local_path = temp_path / "config.yaml"
+            testbed_tasks.to_file(local_path)  # TODO: workaround - because StringIO overflows?
+            herd.put_task(task=local_path, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
             replies = herd.run_cmd(sudo=True, cmd=command)
             exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
@@ -132,6 +133,8 @@ async def run_web_experiment(
                 obtain_access_permissions(path_srv)
                 try:
                     path_srv_exists = path_srv.exists()
+                    if not path_srv_exists:
+                        log.warning("Path doesn't exist: %s", path_srv.as_posix())
                 except PermissionError:
                     path_srv_exists = False
                 if not path_srv_exists:
@@ -139,8 +142,9 @@ async def run_web_experiment(
                     continue
                 paths_content[observer] = path_srv
 
-            # paths to direct files
-            paths_result = testbed_tasks.get_output_paths()
+            # paths to direct files, only process of content-directories are avail
+            if len(paths_content) > 0:
+                paths_result = testbed_tasks.get_output_paths()
             # TODO: hardcoded bending of observer to server path-structure
             #       from sheep-path: /var/shepherd/experiments/xp_name
             #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
@@ -185,8 +189,12 @@ async def run_web_experiment(
             return
         if len(paths_result) > 0:
             web_exp.result_paths = paths_result
+        else:
+            log.warning("Skipped adding empty result path list")
         if len(paths_content) > 0:
             web_exp.content_paths = paths_content
+        else:
+            log.warning("Skipped adding empty content path list")
         web_exp.result_size = _size
         web_exp.finished_at = datetime.now(tz=local_tz())
         await web_exp.update_time_start()
@@ -226,11 +234,11 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
 
     # allow running dry in temp-folder
     with TemporaryDirectory() as temp_dir:
-        temp_path: Path | None = None
+        temp_path: Path = Path(temp_dir)
+        log.debug("Temp path: %s", temp_path.resolve())
+
         if dry_run:
             log.warning("Dry run mode - not executing tasks!")
-            temp_path = Path(temp_dir)
-            log.debug("Temp path: %s", temp_path.resolve())
 
         # TODO: how to make sure there is only one scheduler? Singleton
         log.info("Checking experiment scheduling FIFO")
@@ -245,7 +253,9 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
                 continue
 
             log.debug("Scheduling experiment '%s'", next_experiment.experiment.name)
-            await run_web_experiment(next_experiment.id, inventory=inventory, temp_path=temp_path)
+            await run_web_experiment(
+                next_experiment.id, inventory=inventory, temp_path=temp_path, dry_run=dry_run
+            )
 
 
 def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:

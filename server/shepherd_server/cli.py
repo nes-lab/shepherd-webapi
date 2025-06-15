@@ -22,7 +22,10 @@ from .instance_scheduler import run as run_scheduler_server
 from .logger import log
 from .logger import set_verbosity
 
-cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
+cli = typer.Typer(
+    help="Web-Server & -API for the Shepherd-Testbed",
+    pretty_exceptions_enable=False,
+)
 
 
 def exit_gracefully(_signum: int, _frame: FrameType | None) -> None:

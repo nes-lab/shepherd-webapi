@@ -1,3 +1,4 @@
+import shutil
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
@@ -46,6 +47,11 @@ class WebExperiment(Document):
 
     result_paths: dict[str, Path] | None = None
     result_size: int = 0
+    content_paths: dict[str, Path] | None = None
+    """
+    Content-path is currently the parent of result-path.
+    Besides the H5-files, it contains firmware and meta-data.
+    """
 
     @classmethod
     async def get_by_id(cls, experiment_id: UUID) -> "None | WebExperiment":
@@ -173,12 +179,15 @@ class WebExperiment(Document):
     async def delete_content(self) -> None:
         # TODO: just overwrite default delete-method?
         if isinstance(self.result_paths, dict):
-            # TODO: removing files for now - should switch to paths
-            #       (leftover firmware and meta-data)
+            # removing large result-files first
             for result_file in self.result_paths.values():
                 if result_file.exists() and result_file.is_file():
                     result_file.unlink()
             self.result_paths = None
+        if isinstance(self.content_paths, dict):
+            # remove leftover firmware and meta-data
+            for content_dir in self.result_paths.values():
+                shutil.rmtree(content_dir, ignore_errors=True)
 
     async def update_time_start(self) -> None:
         if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:

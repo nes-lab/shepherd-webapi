@@ -61,15 +61,18 @@ async def run_web_experiment(
 
     with Herd(inventory=inventory) as herd:
         log.info("starting testbed tasks through herd-tool")
-        paths_herd: dict[str, Path] = {}
+        paths_result: dict[str, Path] = {}
+        paths_content: dict[str, Path] = {}
 
         if temp_path is not None:
             await asyncio.sleep(10)  # mocked length
             # create mocked files
             paths_task = testbed_tasks.get_output_paths()
+            paths_content["all"] = temp_path / experiment.folder_name()
             for name, path_task in paths_task.items():
-                paths_herd[name] = temp_path / experiment.folder_name() / path_task.name
-                with CoreWriter(paths_herd[name]) as writer:
+                paths_result[name] = temp_path / experiment.folder_name() / path_task.name
+
+                with CoreWriter(paths_result[name]) as writer:
                     writer.store_hostname(name)
                     writer.append_iv_data_si(
                         timestamp=local_now().timestamp(),
@@ -107,15 +110,16 @@ async def run_web_experiment(
                     )
 
             await asyncio.sleep(20)  # finish IO, precaution
-            paths_herd = testbed_tasks.get_output_paths()
+            # paths to direct files
+            paths_result = testbed_tasks.get_output_paths()
             # TODO: hardcoded bending of observer to server path-structure
             #       from sheep-path: /var/shepherd/experiments/xp_name
             #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
-            for observer in copy.deepcopy(paths_herd):
-                path_obs = paths_herd[observer].absolute()
+            for observer in copy.deepcopy(paths_result):
+                path_obs = paths_result[observer].absolute()
                 if not path_obs.is_relative_to("/var/shepherd/experiments"):
                     log.error("Path outside of experiment-location? %s", path_obs.as_posix())
-                    paths_herd.pop(observer)
+                    paths_result.pop(observer)
                     continue
                 try:
                     path_obs_exists = path_obs.exists()
@@ -132,15 +136,29 @@ async def run_web_experiment(
                     path_srv_exists = False
                 if not path_srv_exists:
                     log.error("Server-Path must exist on server! %s", path_srv.as_posix())
-                    paths_herd.pop(observer)
+                    paths_result.pop(observer)
                     continue
-                paths_herd[observer] = path_srv
+                paths_result[observer] = path_srv
+            # paths to directories with all content like firmware, h5-results, ...
+            paths_content = testbed_tasks.get_output_paths()
+            for observer in copy.deepcopy(paths_content):
+                path_obs = paths_content[observer].absolute().parent
+                path_rel = path_obs.relative_to("/var/shepherd/experiments")
+                path_srv = Path("/var/shepherd/experiments") / observer / path_rel
+                try:
+                    path_srv_exists = path_srv.exists()
+                except PermissionError:
+                    path_srv_exists = False
+                if not path_srv_exists:
+                    paths_content.pop(observer)
+                    continue
+                paths_content[observer] = path_srv
 
         log.info("finished task execution")
 
         # mark job as done in database
         _size = 0
-        for path in paths_herd.values():
+        for path in paths_result.values():
             if path.exists() and path.is_file():
                 _size += path.stat().st_size
             else:
@@ -150,8 +168,10 @@ async def run_web_experiment(
         if web_exp is None:
             log.warning("Dataset of Experiment not found after running it (deleted?)")
             return
-        if len(paths_herd) > 0:
-            web_exp.result_paths = paths_herd
+        if len(paths_result) > 0:
+            web_exp.result_paths = paths_result
+        if len(paths_content) > 0:
+            web_exp.content_paths = paths_content
         web_exp.result_size = _size
         web_exp.finished_at = datetime.now(tz=local_tz())
         await web_exp.update_time_start()

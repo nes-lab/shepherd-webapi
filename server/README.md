@@ -28,6 +28,15 @@ Currently, the services expect variables set in `/home/service/.env`.
 Additionally, the `herd.yaml` can be put in `/etc/shepherd/`.
 Same for the SSL-key & -certificates.
 
+## Prepare folders
+
+Add network-storage and make sure the server can access the data.
+The following command adds read and write to all files and subdirectories in `/var/shepherd`:
+
+```Shell
+ sudo chmod a+rw -R /var/shepherd
+```
+
 ## Install MongoDB
 
 The [official setup-guide](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/) was used without complications.

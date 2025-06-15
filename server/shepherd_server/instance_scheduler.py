@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import subprocess
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
@@ -41,6 +42,17 @@ def replies2str(replies: Mapping[str, Result]) -> str:
             string += reply.stderr
         string += f"Exit-code of {hostname} = {reply.exited}"
     return string
+
+
+def obtain_access_permissions(path: Path) -> None:
+    ret = subprocess.run(  # noqa: S603
+        ["/usr/bin/sudo", "/usr/bin/chmod", "a+rw", "-R", path.as_posix()],
+        timeout=20,
+        capture_output=True,
+        check=False,
+    ).returncode
+    if ret != 0:
+        log.warning("Permission denied for %s", path)
 
 
 async def run_web_experiment(
@@ -110,6 +122,23 @@ async def run_web_experiment(
                     )
 
             await asyncio.sleep(20)  # finish IO, precaution
+
+            # paths to directories with all content like firmware, h5-results, ...
+            paths_content = testbed_tasks.get_output_paths()
+            for observer in copy.deepcopy(paths_content):
+                path_obs = paths_content[observer].absolute().parent
+                path_rel = path_obs.relative_to("/var/shepherd/experiments")
+                path_srv = Path("/var/shepherd/experiments") / observer / path_rel
+                obtain_access_permissions(path_srv)
+                try:
+                    path_srv_exists = path_srv.exists()
+                except PermissionError:
+                    path_srv_exists = False
+                if not path_srv_exists:
+                    paths_content.pop(observer)
+                    continue
+                paths_content[observer] = path_srv
+
             # paths to direct files
             paths_result = testbed_tasks.get_output_paths()
             # TODO: hardcoded bending of observer to server path-structure
@@ -139,20 +168,6 @@ async def run_web_experiment(
                     paths_result.pop(observer)
                     continue
                 paths_result[observer] = path_srv
-            # paths to directories with all content like firmware, h5-results, ...
-            paths_content = testbed_tasks.get_output_paths()
-            for observer in copy.deepcopy(paths_content):
-                path_obs = paths_content[observer].absolute().parent
-                path_rel = path_obs.relative_to("/var/shepherd/experiments")
-                path_srv = Path("/var/shepherd/experiments") / observer / path_rel
-                try:
-                    path_srv_exists = path_srv.exists()
-                except PermissionError:
-                    path_srv_exists = False
-                if not path_srv_exists:
-                    paths_content.pop(observer)
-                    continue
-                paths_content[observer] = path_srv
 
         log.info("finished task execution")
 

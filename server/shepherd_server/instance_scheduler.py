@@ -18,10 +18,9 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
-from server.shepherd_server.api_testbed.model_scheduler import Scheduler
-from server.shepherd_server.api_user.models import User
-
 from .api_experiment.models import WebExperiment
+from .api_testbed.model_scheduler import Scheduler
+from .api_user.models import User
 from .api_user.utils_mail import mail_engine
 from .config import config
 from .instance_db import db_available

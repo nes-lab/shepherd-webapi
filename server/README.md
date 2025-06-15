@@ -58,5 +58,5 @@ sudo systemctl enable shepherd-scheduler
 sudo systemctl status shepherd-api
 sudo systemctl status shepherd-redirect
 sudo systemctl status shepherd-scheduler
-sudo journalctl -n 20 -u shepherd-*
+sudo journalctl -n 20 -u shepherd-* --follow
 ```

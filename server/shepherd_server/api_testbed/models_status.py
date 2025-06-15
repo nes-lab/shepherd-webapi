@@ -23,6 +23,8 @@ class ApiStatus(BaseModel):
 
 
 class TestbedStatus(BaseModel):
+    restrictions: list[str] | None = None
+
     timestamp_timezone: str = "UTC"
 
     webapi: ApiStatus = ApiStatus()

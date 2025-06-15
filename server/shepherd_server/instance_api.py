@@ -83,7 +83,12 @@ app.include_router(experiment_router)
 async def root() -> TestbedStatus:
     # TODO: this should probably also go into a router
     # return {"message": "Hello World - from Shepherd Nova WebApi"}
-    return await TestbedDB.get_one()
+    tb_ = await TestbedDB.get_one()
+    tb_.restrictions = [
+        "NW-Storage of the Beaglebones is currently only ~ 30 MB/s (accumulated) and latency is 5 to 10 seconds.",
+        "Target 1 (sheep05) fails to program nRF52",
+    ]
+    return tb_
 
 
 @app.get("/favicon.ico", include_in_schema=False)

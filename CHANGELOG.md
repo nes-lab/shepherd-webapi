@@ -7,8 +7,8 @@
   - root URL has status-info about the testbed (scheduler, observers, ...)
   - send emails when xp are done (if activated in config) or scheduler has no more tasks from you
   - send emails to admin and user if experiment failed (with error-log)
-  - improve scheduler - 
-  - deleting an experiment now also deletes the directories
+  - improve scheduler - handle edge-cases and collect files afterwards
+  - deleting an experiment now also deletes the directories (and by-products)
   - put server-tasks into systemd-services that run with local account
 
 ## v2025.06.1

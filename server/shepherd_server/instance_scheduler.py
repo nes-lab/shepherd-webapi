@@ -18,7 +18,7 @@ from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
 from .api_experiment.models import WebExperiment
-from .api_testbed.model_scheduler import Scheduler
+from .api_testbed.models_status import TestbedDB
 from .api_user.models import User
 from .api_user.utils_mail import mail_engine
 from .config import config
@@ -191,18 +191,18 @@ async def update_status(
     inventory: Path | None = None, *, active: bool = False, dry_run: bool = False
 ) -> None:
     _client = await db_client()
-    sdl = await Scheduler.get_one()
-    sdl.active = active
-    sdl.dry_run = dry_run
-    sdl.last_seen = local_now()
+    tb_ = await TestbedDB.get_one()
+    tb_.scheduler.active = active
+    tb_.scheduler.dry_run = dry_run
+    tb_.scheduler.last_seen = local_now()
     if dry_run:
-        sdl.observer_count = 0
-        sdl.observers = None
+        tb_.observer_count = 0
+        tb_.observers = None
     else:
         with Herd(inventory=inventory) as herd:
-            sdl.observer_count = len(herd.group)
-            sdl.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
-    await sdl.save()
+            tb_.observer_count = len(herd.group)
+            tb_.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
+    await tb_.save()
 
 
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:

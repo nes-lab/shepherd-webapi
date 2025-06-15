@@ -1,4 +1,5 @@
 import asyncio
+import atexit
 import copy
 from collections.abc import Mapping
 from datetime import datetime
@@ -17,6 +18,7 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
+from server.shepherd_server.api_testbed.model_scheduler import Scheduler
 from server.shepherd_server.api_user.models import User
 
 from .api_experiment.models import WebExperiment
@@ -187,8 +189,26 @@ async def run_web_experiment(
             )
 
 
+async def update_status(
+    inventory: Path | None = None, *, active: bool = False, dry_run: bool = False
+) -> None:
+    sdl = await Scheduler.get_one()
+    sdl.active = active
+    sdl.dry_run = dry_run
+    sdl.last_seen = local_now()
+    if dry_run:
+        sdl.observer_count = 0
+        sdl.observers = None
+    else:
+        with Herd(inventory=inventory) as herd:
+            sdl.observer_count = len(herd.group)
+            sdl.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
+    sdl.save()
+
+
 async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
     _client = await db_client()
+    atexit.register(update_status, inventory=inventory, active=False, dry_run=dry_run)
 
     # allow running dry in temp-folder
     with TemporaryDirectory() as temp_dir:
@@ -203,6 +223,7 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
         await WebExperiment.reset_stuck_items()
 
         while True:
+            await update_status(inventory=inventory, active=True, dry_run=dry_run)
             next_experiment = await WebExperiment.get_next_scheduling()
             if next_experiment is None:
                 log.debug("... waiting 10 s")

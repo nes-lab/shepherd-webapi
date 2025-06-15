@@ -21,6 +21,7 @@ from starlette.responses import FileResponse
 
 from .api_auth.router import router as auth_router
 from .api_experiment.router import router as experiment_router
+from .api_testbed.model_scheduler import Scheduler
 from .api_user.router import router as user_router
 from .config import config
 from .instance_db import db_available
@@ -75,9 +76,10 @@ app.include_router(experiment_router)
 
 
 @app.get("/")
-async def root() -> dict[str, str]:
+async def root() -> Scheduler:
     # TODO: this should probably also go into a router
-    return {"message": "Hello World - from Shepherd Nova WebApi"}
+    # return {"message": "Hello World - from Shepherd Nova WebApi"}
+    return await Scheduler.get_one()
 
 
 @app.get("/favicon.ico", include_in_schema=False)

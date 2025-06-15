@@ -85,7 +85,8 @@ async def root() -> TestbedStatus:
     # return {"message": "Hello World - from Shepherd Nova WebApi"}
     tb_ = await TestbedDB.get_one()
     tb_.restrictions = [
-        "NW-Storage of the Beaglebones is currently only ~ 30 MB/s (accumulated) and latency is 5 to 10 seconds.",
+        "NW-Storage of the Beaglebones is currently only ~ 30 MB/s (accumulated) "
+        "and latency is 5 to 10 seconds.",
         "Target 1 (sheep05) fails to program nRF52",
     ]
     return tb_

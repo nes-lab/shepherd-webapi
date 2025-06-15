@@ -1,6 +1,6 @@
 """Mail server config."""
 
-from io import BytesIO
+from io import StringIO
 from uuid import UUID
 
 from fastapi import UploadFile
@@ -136,7 +136,7 @@ class FastMailEngine(MailEngine):
     async def send_error_log_email(
         email: EmailStr, xp_id: UUID, xp_name: str, log_output: str
     ) -> None:
-        ufile = UploadFile(file=BytesIO(log_output.encode()))
+        ufile = UploadFile(filename="error.log", file=StringIO(log_output))
         log.debug("EMAIL XP-Failed")
         if config.mail_enabled:
             message = MessageSchema(

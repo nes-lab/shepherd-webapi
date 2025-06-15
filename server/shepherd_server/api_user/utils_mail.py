@@ -143,7 +143,8 @@ class FastMailEngine(MailEngine):
                 recipients=[email],
                 subject="[Shepherd] Failed Experiment",
                 body=f"Experiment {xp_name} ({xp_id}) encountered errors during execution.\n"
-                f"The Sheep-Output is attached in this mail",
+                "The Observer-Outputs are attached in this mail. "
+                "This has also been sent to the admin.",
                 subtype=MessageType.plain,
                 attachments=[ufile],
             )

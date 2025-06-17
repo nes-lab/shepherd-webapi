@@ -95,7 +95,7 @@ async def run_web_experiment(
             # force other sheep-instances to end
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
             # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
-            remote_path = PurePosixPath("/etc/shepherd/config_for_herd.yaml")
+            remote_path = PurePosixPath("/etc/shepherd/config_for_herd.pickle")
             herd.put_task(task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
             replies = herd.run_cmd(sudo=True, cmd=command)

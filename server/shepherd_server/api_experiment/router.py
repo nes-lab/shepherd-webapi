@@ -39,6 +39,7 @@ async def create_experiment(
     )
     # TODO: is there a reason why not to automatically schedule?
     # TODO: internal paths need to be checked - to not leak data (should be done in core-lib)
+    #       use tasks.is_contained()
     await web_experiment.save()
     return web_experiment.id
 

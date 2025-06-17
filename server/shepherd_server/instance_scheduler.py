@@ -71,108 +71,106 @@ async def run_web_experiment(
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
     # TODO: set custom time if possible herd.start_delay_s = 5 * 60, herd.find_consensus_time()
 
-    with Herd(inventory=inventory) as herd:
-        log.info("starting testbed tasks through herd-tool")
-        paths_result: dict[str, Path] = {}
-        paths_content: dict[str, Path] = {}
+    log.info("starting testbed tasks through herd-tool")
+    paths_result: dict[str, Path] = {}
+    paths_content: dict[str, Path] = {}
 
-        if dry_run:
-            await asyncio.sleep(10)  # mocked length
-            # create mocked files
-            paths_task = testbed_tasks.get_output_paths()
-            paths_content["all"] = temp_path / experiment.folder_name()
-            for name, path_task in paths_task.items():
-                paths_result[name] = temp_path / experiment.folder_name() / path_task.name
+    if dry_run:
+        await asyncio.sleep(10)  # mocked length
+        # create mocked files
+        paths_task = testbed_tasks.get_output_paths()
+        paths_content["all"] = temp_path / experiment.folder_name()
+        for name, path_task in paths_task.items():
+            paths_result[name] = temp_path / experiment.folder_name() / path_task.name
 
-                with CoreWriter(paths_result[name]) as writer:
-                    writer.store_hostname(name)
-                    writer.append_iv_data_si(
-                        timestamp=local_now().timestamp(),
-                        voltage=np.zeros(10_000),
-                        current=np.zeros(10_000),
-                    )
-        else:
+            with CoreWriter(paths_result[name]) as writer:
+                writer.store_hostname(name)
+                writer.append_iv_data_si(
+                    timestamp=local_now().timestamp(),
+                    voltage=np.zeros(10_000),
+                    current=np.zeros(10_000),
+                )
+    else:
+        with Herd(inventory=inventory) as herd:
             # force other sheep-instances to end
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
             # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
             remote_path = PurePosixPath("/etc/shepherd/config_for_herd.yaml")
-            local_path = temp_path / "config.yaml"
-            testbed_tasks.to_file(local_path)  # TODO: workaround - because StringIO overflows?
-            herd.put_task(task=local_path, remote_path=remote_path)
+            herd.put_task(task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
             replies = herd.run_cmd(sudo=True, cmd=command)
             exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
 
-            if exit_code > 0:
-                log.error("Running Experiment failed on at least one Observer")
-                error_log = replies2str(replies)
+        if exit_code > 0:
+            log.error("Running Experiment failed on at least one Observer")
+            error_log = replies2str(replies)
+            await mail_engine().send_error_log_email(
+                config.contact["email"],
+                web_exp.id,
+                experiment.name,
+                error_log,
+            )
+            if (
+                isinstance(web_exp.owner, Link | User)
+                and config.contact["email"] != web_exp.owner.email
+            ):
                 await mail_engine().send_error_log_email(
-                    config.contact["email"],
+                    web_exp.owner.email,
                     web_exp.id,
                     experiment.name,
                     error_log,
                 )
-                if (
-                    isinstance(web_exp.owner, Link | User)
-                    and config.contact["email"] != web_exp.owner.email
-                ):
-                    await mail_engine().send_error_log_email(
-                        web_exp.owner.email,
-                        web_exp.id,
-                        experiment.name,
-                        error_log,
-                    )
 
-            await asyncio.sleep(20)  # finish IO, precaution
+        await asyncio.sleep(20)  # finish IO, precaution
 
-            # paths to directories with all content like firmware, h5-results, ...
-            paths_content = testbed_tasks.get_output_paths()
-            for observer in copy.deepcopy(paths_content):
-                path_obs = paths_content[observer].absolute().parent
-                path_rel = path_obs.relative_to("/var/shepherd/experiments")
-                path_srv = Path("/var/shepherd/experiments") / observer / path_rel
-                obtain_access_permissions(path_srv)
-                try:
-                    path_srv_exists = path_srv.exists()
-                    if not path_srv_exists:
-                        log.warning("Path doesn't exist: %s", path_srv.as_posix())
-                except PermissionError:
-                    path_srv_exists = False
+        # paths to directories with all content like firmware, h5-results, ...
+        paths_content = testbed_tasks.get_output_paths()
+        for observer in copy.deepcopy(paths_content):
+            path_obs = paths_content[observer].absolute().parent
+            path_rel = path_obs.relative_to("/var/shepherd/experiments")
+            path_srv = Path("/var/shepherd/experiments") / observer / path_rel
+            obtain_access_permissions(path_srv)
+            try:
+                path_srv_exists = path_srv.exists()
                 if not path_srv_exists:
-                    paths_content.pop(observer)
-                    continue
-                paths_content[observer] = path_srv
+                    log.warning("Path doesn't exist: %s", path_srv.as_posix())
+            except PermissionError:
+                path_srv_exists = False
+            if not path_srv_exists:
+                paths_content.pop(observer)
+                continue
+            paths_content[observer] = path_srv
 
-            # paths to direct files, only process of content-directories are avail
-            if len(paths_content) > 0:
-                paths_result = testbed_tasks.get_output_paths()
-            # TODO: hardcoded bending of observer to server path-structure
-            #       from sheep-path: /var/shepherd/experiments/xp_name
-            #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
-            for observer in copy.deepcopy(paths_result):
-                path_obs = paths_result[observer].absolute()
-                if not path_obs.is_relative_to("/var/shepherd/experiments"):
-                    log.error("Path outside of experiment-location? %s", path_obs.as_posix())
-                    paths_result.pop(observer)
-                    continue
-                try:
-                    path_obs_exists = path_obs.exists()
-                except PermissionError:
-                    path_obs_exists = False
-                if path_obs_exists:
-                    log.warning("Observer-Path should not exist on server! %s", path_obs.as_posix())
-                path_rel = path_obs.relative_to("/var/shepherd/experiments")
-                path_srv = Path("/var/shepherd/experiments") / observer / path_rel
-                try:
-                    path_srv_exists = path_srv.exists()
-                except PermissionError:
-                    log.error("Permission-Error on Server-Path -> will skip!")
-                    path_srv_exists = False
-                if not path_srv_exists:
-                    log.error("Server-Path must exist on server! %s", path_srv.as_posix())
-                    paths_result.pop(observer)
-                    continue
-                paths_result[observer] = path_srv
+        # paths to direct files, only process of content-directories are avail
+        if len(paths_content) > 0:
+            paths_result = testbed_tasks.get_output_paths()
+        # TODO: hardcoded bending of observer to server path-structure
+        #       from sheep-path: /var/shepherd/experiments/xp_name
+        #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
+        for observer in copy.deepcopy(paths_result):
+            path_obs = paths_result[observer].absolute()
+            if not path_obs.is_relative_to("/var/shepherd/experiments"):
+                log.error("Path outside of experiment-location? %s", path_obs.as_posix())
+                paths_result.pop(observer)
+                continue
+            try:
+                path_obs_exists = path_obs.exists()
+            except PermissionError:
+                path_obs_exists = False
+            if path_obs_exists:
+                log.warning("Observer-Path should not exist on server! %s", path_obs.as_posix())
+            path_rel = path_obs.relative_to("/var/shepherd/experiments")
+            path_srv = Path("/var/shepherd/experiments") / observer / path_rel
+            try:
+                path_srv_exists = path_srv.exists()
+            except PermissionError:
+                log.error("Permission-Error on Server-Path -> will skip!")
+                path_srv_exists = False
+            if not path_srv_exists:
+                log.error("Server-Path must exist on server! %s", path_srv.as_posix())
+                paths_result.pop(observer)
+                continue
+            paths_result[observer] = path_srv
 
         log.info("Herd finished task execution")
 

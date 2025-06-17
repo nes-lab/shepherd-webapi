@@ -35,12 +35,12 @@ def replies2str(replies: Mapping[str, Result]) -> str:
     string = ""
     for hostname, reply in replies.items():
         if len(reply.stdout) > 0:
-            string += f"\n************** {hostname} - stdout **************"
+            string += f"\n************** {hostname} - stdout **************\n"
             string += reply.stdout
         if len(reply.stderr) > 0:
-            string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~"
+            string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~\n"
             string += reply.stderr
-        string += f"Exit-code of {hostname} = {reply.exited}"
+        string += f"\nExit-code of {hostname} = {reply.exited}\n"
     return string
 
 
@@ -69,6 +69,7 @@ async def run_web_experiment(
 
     testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
+    # TODO: set custom time if possible herd.start_delay_s = 5 * 60, herd.find_consensus_time()
 
     with Herd(inventory=inventory) as herd:
         log.info("starting testbed tasks through herd-tool")
@@ -173,7 +174,7 @@ async def run_web_experiment(
                     continue
                 paths_result[observer] = path_srv
 
-        log.info("finished task execution")
+        log.info("Herd finished task execution")
 
         # mark job as done in database
         _size = 0

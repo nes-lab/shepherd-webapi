@@ -11,7 +11,7 @@ from pydantic import Field
 from pydantic import HttpUrl
 from pydantic import StringConstraints
 from shepherd_core import local_now
-from shepherd_core import logger
+from shepherd_core.logger import log
 from shepherd_core.data_models import Wrapper
 from yaml import Node
 from yaml import SafeDumper
@@ -72,7 +72,7 @@ class Config(BaseModel):
     def from_file(cls) -> Self:
         """Load from yaml."""
         if not path_shp_config.exists():
-            logger.debug("No config found, will use default")
+            log.debug("No config found, will use default")
             return cls()
         with path_shp_config.open() as cfg_file:
             cfg_dict = yaml.safe_load(cfg_file)

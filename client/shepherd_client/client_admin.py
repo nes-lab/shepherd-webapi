@@ -5,7 +5,7 @@ import requests
 from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import validate_call
-from shepherd_core import logger
+from shepherd_core.logger import log
 
 from .client_user import UserClient
 from .client_user import msg
@@ -48,9 +48,9 @@ class AdminClient(UserClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Approval of '%s' failed with: %s", user, msg(rsp))
+            log.warning("Approval of '%s' failed with: %s", user, msg(rsp))
         else:
-            logger.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
+            log.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
 
     def extend_quota(
         self,
@@ -78,6 +78,6 @@ class AdminClient(UserClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Extension of Quota failed with: %s", msg(rsp))
+            log.warning("Extension of Quota failed with: %s", msg(rsp))
         else:
-            logger.info("Extension of Quota succeeded with: %s", rsp.json())
+            log.info("Extension of Quota succeeded with: %s", rsp.json())

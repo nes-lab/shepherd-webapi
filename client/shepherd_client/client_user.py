@@ -9,7 +9,7 @@ from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import validate_call
 from requests import Response
-from shepherd_core import logger
+from shepherd_core.logger import log
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import increase_verbose_level
 
@@ -82,9 +82,9 @@ class UserClient(WebClient):
             if isinstance(scheduler, dict):
                 active = scheduler.get("active")
                 if not active:
-                    logger.warning("Scheduler not active!")
+                    log.warning("Scheduler not active!")
         else:
-            logger.warning("Failed to fetch status from WebApi: %s", msg(rsp))
+            log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
 
     # ####################################################################
     # Account
@@ -103,12 +103,12 @@ class UserClient(WebClient):
         if rsp.ok:
             self._auth = {"Authorization": f"Bearer {rsp.json()['access_token']}"}
         else:
-            logger.warning("Authentication failed with: %s", msg(rsp))
+            log.warning("Authentication failed with: %s", msg(rsp))
 
     def register_user(self, token: str) -> None:
         """Create a user account with a valid token."""
         if self._auth is not None:
-            logger.error("User already registered and authenticated")
+            log.error("User already registered and authenticated")
         rsp = requests.post(
             url=f"{self._cfg.server}/user/register",
             json={
@@ -120,9 +120,9 @@ class UserClient(WebClient):
             timeout=3,
         )
         if rsp.ok:
-            logger.info(f"User {self._cfg.user_email} registered - check mail to verify account.")
+            log.info(f"User {self._cfg.user_email} registered - check mail to verify account.")
         else:
-            logger.warning("Registration failed with: %s", msg(rsp))
+            log.warning("Registration failed with: %s", msg(rsp))
 
     def delete_user(self) -> None:
         """Remove account and content from server."""
@@ -132,9 +132,9 @@ class UserClient(WebClient):
             timeout=3,
         )
         if rsp.ok:
-            logger.info(f"User {self._cfg.user_email} deleted")
+            log.info(f"User {self._cfg.user_email} deleted")
         else:
-            logger.warning("User-Deletion failed with: %s", msg(rsp))
+            log.warning("User-Deletion failed with: %s", msg(rsp))
 
     def get_user_info(self) -> dict:
         """Query user info stored on the server."""
@@ -145,9 +145,9 @@ class UserClient(WebClient):
         )
         if rsp.ok:
             info = rsp.json()
-            logger.debug("User-Info: %s", info)
+            log.debug("User-Info: %s", info)
         else:
-            logger.warning("Query for User-Info failed with: %s", msg(rsp))
+            log.warning("Query for User-Info failed with: %s", msg(rsp))
             info = {}
         return info
 
@@ -180,7 +180,7 @@ class UserClient(WebClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Experiment creation failed with: %s", msg(rsp))
+            log.warning("Experiment creation failed with: %s", msg(rsp))
             return None
         return UUID(rsp.json())
 
@@ -192,7 +192,7 @@ class UserClient(WebClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Getting experiment failed with: %s", msg(rsp))
+            log.warning("Getting experiment failed with: %s", msg(rsp))
             return None
 
         return Experiment(**rsp.json())
@@ -205,7 +205,7 @@ class UserClient(WebClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Deleting experiment failed with: %s", msg(rsp))
+            log.warning("Deleting experiment failed with: %s", msg(rsp))
         return rsp.ok
 
     def get_experiment_state(self, xp_id: UUID) -> str | None:
@@ -219,11 +219,11 @@ class UserClient(WebClient):
             timeout=3,
         )
         if not rsp.ok:
-            logger.warning("Getting experiment state failed with: %s", msg(rsp))
+            log.warning("Getting experiment state failed with: %s", msg(rsp))
             return None
 
         state = rsp.json()
-        logger.info("Experiment state: %s", state)
+        log.info("Experiment state: %s", state)
         return state
 
     def schedule_experiment(self, xp_id: UUID) -> bool:
@@ -237,9 +237,9 @@ class UserClient(WebClient):
             timeout=3,
         )
         if rsp.ok:
-            logger.info("Experiment %s scheduled", xp_id)
+            log.info("Experiment %s scheduled", xp_id)
         else:
-            logger.warning("Scheduling experiment failed with: %s", msg(rsp))
+            log.warning("Scheduling experiment failed with: %s", msg(rsp))
         return rsp.ok
 
     def _get_experiment_downloads(self, xp_id: UUID) -> list[str] | None:
@@ -257,7 +257,7 @@ class UserClient(WebClient):
         """Download a specific node/observer-file for a finished experiment."""
         path_file = path / f"{node_id}.h5"
         if path_file.exists():
-            logger.warning("File already exists - will skip download: %s", path_file)
+            log.warning("File already exists - will skip download: %s", path_file)
         rsp = requests.get(
             f"{self._cfg.server}/experiment/{xp_id}/download/{node_id}",
             headers=self._auth,
@@ -265,11 +265,11 @@ class UserClient(WebClient):
             stream=True,
         )
         if not rsp.ok:
-            logger.warning("Downloading %s - %s failed with: %s", xp_id, node_id, msg(rsp))
+            log.warning("Downloading %s - %s failed with: %s", xp_id, node_id, msg(rsp))
             return False
         with path_file.open("wb") as fp:
             shutil.copyfileobj(rsp.raw, fp)
-        logger.info("Download of file completed: %s", path_file)
+        log.info("Download of file completed: %s", path_file)
         return True
 
     def download_experiment(

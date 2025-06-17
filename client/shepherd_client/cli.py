@@ -5,13 +5,13 @@ from types import FrameType
 import shepherd_core
 import typer
 from shepherd_core.logger import increase_verbose_level
-from shepherd_core.logger import logger
+from shepherd_core.logger import log
 
 cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
 
 
 def exit_gracefully(_signum: int, _frame: FrameType | None) -> None:
-    logger.warning("Exiting!")
+    log.warning("Exiting!")
     sys.exit(0)
 
 
@@ -42,11 +42,11 @@ def version() -> None:
 
     from .version import version as client_version
 
-    logger.info("shepherd-client v%s", client_version)
-    logger.debug("shepherd-core v%s", shepherd_core.__version__)
-    logger.debug("Python v%s", sys.version)
-    logger.debug("typer v%s", typer.__version__)
-    logger.debug("click v%s", click.__version__)
+    log.info("shepherd-client v%s", client_version)
+    log.debug("shepherd-core v%s", shepherd_core.__version__)
+    log.debug("Python v%s", sys.version)
+    log.debug("typer v%s", typer.__version__)
+    log.debug("click v%s", click.__version__)
 
 
 # #######################################################################

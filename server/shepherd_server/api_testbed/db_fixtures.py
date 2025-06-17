@@ -12,7 +12,7 @@ from pydantic import validate_call
 from shepherd_core import local_now
 from shepherd_core import local_tz
 from shepherd_core.data_models import Wrapper
-from shepherd_core.logger import logger
+from shepherd_core.logger import log
 from shepherd_core.testbed_client.cache_path import cache_user_path
 from typing_extensions import Self
 
@@ -101,7 +101,7 @@ class Fixture:
                     raise ValueError(msg)
                 chain.append(base_name)
             fixture_base = copy.copy(self[fixture_name])
-            logger.debug("'%s' will inherit from '%s'", self.model_type, fixture_name)
+            log.debug("'%s' will inherit from '%s'", self.model_type, fixture_name)
             fixture_base["name"] = fixture_name
             chain.append(fixture_name)
             base_dict, chain = self.inheritance(values=fixture_base, chain=chain)
@@ -178,7 +178,7 @@ class Fixtures:
             # speedup
             with save_path.open("rb", buffering=-1) as fd:
                 self.components = pickle.load(fd)  # noqa: S301
-            logger.debug(" -> found & used pickled fixtures")
+            log.debug(" -> found & used pickled fixtures")
         else:
             if self.file_path.is_file():
                 files = [self.file_path]
@@ -186,7 +186,7 @@ class Fixtures:
                 files = list(
                     self.file_path.glob("**/*" + self.suffix)
                 )  # for py>=3.12: case_sensitive=False
-                logger.debug(" -> got %s %s-files", len(files), self.suffix)
+                log.debug(" -> got %s %s-files", len(files), self.suffix)
             else:
                 raise ValueError("Path must either be file or directory (or empty)")
 

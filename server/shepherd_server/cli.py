@@ -16,7 +16,7 @@ from .api_user.models import User
 from .database_backup import backup_db
 from .database_prune import prune_db
 from .instance_api import run as run_api_server
-from .instance_db import db_create_admin
+from .instance_db import db_create_admin, db_delete_all_experiments
 from .instance_redirect import run as run_redirect_server
 from .instance_scheduler import run as run_scheduler_server
 from .logger import log
@@ -131,6 +131,7 @@ def prune(*, delete: bool = False) -> None:
 def init() -> None:
     """Creates structures in database, can also recover data from a backup"""
     # TODO: implement
+    asyncio.run(db_delete_all_experiments())
 
 
 @cli.command()

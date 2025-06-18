@@ -71,3 +71,8 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
     )
     await User.insert_one(admin)
     log.info("Admin user added to DB")
+
+
+async def db_delete_all_experiments() -> None:
+    await db_client()
+    await WebExperiment.delete_all()

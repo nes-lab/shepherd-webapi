@@ -251,7 +251,7 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
                 await asyncio.sleep(20)
                 continue
 
-            log.debug("Scheduling experiment '%s'", next_experiment.experiment.name)
+            log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
             await run_web_experiment(
                 next_experiment.id, inventory=inventory, temp_path=temp_path, dry_run=dry_run
             )

@@ -16,7 +16,8 @@ from .api_user.models import User
 from .database_backup import backup_db
 from .database_prune import prune_db
 from .instance_api import run as run_api_server
-from .instance_db import db_create_admin, db_delete_all_experiments
+from .instance_db import db_create_admin
+from .instance_db import db_delete_all_experiments
 from .instance_redirect import run as run_redirect_server
 from .instance_scheduler import run as run_scheduler_server
 from .logger import log

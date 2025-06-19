@@ -205,7 +205,7 @@ async def run_web_experiment(
         all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
         if experiment.email_results or all_done:
             await mail_engine().send_experiment_finished_email(
-                web_exp.owner.email, web_exp.id, experiment.name, all_done=all_done
+                web_exp.owner.email, web_exp, all_done=all_done
             )
 
 

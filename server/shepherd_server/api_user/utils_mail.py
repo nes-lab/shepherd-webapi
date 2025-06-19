@@ -10,6 +10,7 @@ from fastapi_mail import MessageSchema
 from fastapi_mail import MessageType
 from pydantic import EmailStr
 
+from shepherd_server.api_experiment.models import WebExperiment
 from shepherd_server.config import config
 from shepherd_server.logger import log
 
@@ -47,7 +48,7 @@ class MailEngine:
 
     @staticmethod
     async def send_experiment_finished_email(
-        email: EmailStr, xp_id: UUID, xp_name: str, *, all_done: bool = False
+        email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
     ) -> None: ...
 
     @staticmethod
@@ -61,7 +62,7 @@ class FastMailEngine(MailEngine):
     async def send_approval_email(email: EmailStr, token: str) -> None:
         """Send approval request to admin / contact email."""
         # Change this later to public endpoint
-        log.debug("EMAIL APPROVAL")
+        log.debug("-> EMAIL APPROVAL")
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
@@ -89,7 +90,7 @@ class FastMailEngine(MailEngine):
 
     @staticmethod
     async def send_registration_complete_email(email: EmailStr) -> None:
-        log.debug("EMAIL REGISTRATION")
+        log.debug("-> EMAIL REGISTRATION")
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
@@ -104,7 +105,7 @@ class FastMailEngine(MailEngine):
         """Send password reset email."""
         # Change this later to public endpoint
         _url = f"{config.server_url()}/user/reset-password/{token}"
-        log.debug("EMAIL RESET POST to %s", _url)
+        log.debug("-> EMAIL RESET POST to %s", _url)
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
@@ -117,12 +118,18 @@ class FastMailEngine(MailEngine):
 
     @staticmethod
     async def send_experiment_finished_email(
-        email: EmailStr, xp_id: UUID, xp_name: str, *, all_done: bool = False
+        email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
     ) -> None:
-        msg = f"Experiment {xp_name} ({xp_id}) is finished and can be downloaded."
+        xp_size_MiB = round(web_exp.result_size / 2**20)
+        xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
+        msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) is finished."
+        if xp_files_n > 0:
+            msg += f"\nIt can now be downloaded ({xp_files_n} files, {xp_size_MiB} MiB)."
+        else:
+            msg += "\nIt seems that no files were generated."
         if all_done:
-            msg += " There are no further experiments scheduled for you."
-        log.debug("EMAIL XP-Finished")
+            msg += "\nThere are no further experiments scheduled for you."
+        log.debug("-> EMAIL XP-Finished")
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
@@ -137,7 +144,7 @@ class FastMailEngine(MailEngine):
         email: EmailStr, xp_id: UUID, xp_name: str, log_output: str
     ) -> None:
         ufile = UploadFile(filename="error.log", file=StringIO(log_output))
-        log.debug("EMAIL XP-Failed")
+        log.debug("-> EMAIL XP-Failed")
         if config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],

@@ -14,6 +14,7 @@ from pydantic import UUID4
 from shepherd_core import Writer as CoreWriter
 from shepherd_core import local_now
 from shepherd_core import local_tz
+from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
@@ -54,8 +55,20 @@ def obtain_access_permissions(path: Path) -> None:
         log.warning("Changing permission denied for %s", path)
 
 
+def tbt_patch_time_start(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
+    tb_ts_dict = tb_ts.model_dump()
+    ots_new = []
+    for ots in tb_ts_dict.get("observer_tasks"):
+        emu_dict = ots.emulation
+        if isinstance(emu_dict, EmulationTask):
+            ots["emulation"]["time_start"] = time_start
+        ots_new.append(ots)
+    tb_ts_dict["observer_tasks"] = ots_new
+    return TestbedTasks(**tb_ts_dict)
+
+
 async def run_web_experiment(
-    xp_id: UUID4, temp_path: Path, inventory: Path | None = None, *, dry_run: bool = False
+    xp_id: UUID4, temp_path: Path, inventory: Path | str | None = None, *, dry_run: bool = False
 ) -> None:
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
@@ -96,6 +109,11 @@ async def run_web_experiment(
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
             # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
             remote_path = PurePosixPath("/etc/shepherd/config_for_herd.pickle")
+            # TODO: this is a workaround to force synced start
+            #       it wastes time but keeps logs of pre-tasks (programming) in result-file
+            herd.start_delay_s = 5 * 60  # TODO: there is a setting in Testbed-model
+            time_start, _ = herd.find_consensus_time()
+            testbed_tasks = tbt_patch_time_start(testbed_tasks, time_start=time_start)
             herd.put_task(task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
             replies = herd.run_cmd(sudo=True, cmd=command)
@@ -225,6 +243,7 @@ async def update_status(
         with Herd(inventory=inventory) as herd:
             tb_.scheduler.observer_count = len(herd.group)
             tb_.scheduler.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
+    # TODO: include storage, warn via mail if low
     await tb_.save_changes()
 
 

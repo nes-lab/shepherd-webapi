@@ -4,10 +4,12 @@ import shutil
 from pathlib import Path
 from uuid import UUID
 
+import certifi
 import requests
 from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import validate_call
+from requests import JSONDecodeError
 from requests import Response
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import increase_verbose_level
@@ -19,7 +21,10 @@ from .config import PasswordStr
 
 
 def msg(rsp: Response) -> str:
-    return f"{rsp.reason} - {rsp.json()['detail']}"
+    try:
+        return f"{rsp.reason} - {rsp.json()['detail']}"
+    except JSONDecodeError:
+        return f"{rsp.reason}"
 
 
 class UserClient(WebClient):
@@ -99,6 +104,7 @@ class UserClient(WebClient):
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},  # TODO: needed?
             timeout=3,
+            verify=certifi.where(),  # optional
         )
         if rsp.ok:
             self._auth = {"Authorization": f"Bearer {rsp.json()['access_token']}"}

@@ -125,6 +125,7 @@ def run() -> None:
         "reload": False,
         "port": config.root_port,
         "host": config.root_url,
+        # TODO: add resource limits - https://www.uvicorn.org/settings/#resource-limits
     }
     if ssl_enabled:
         uvi_args["ssl_keyfile"] = config.ssl_keyfile.as_posix()

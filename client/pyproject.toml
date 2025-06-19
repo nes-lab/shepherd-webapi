@@ -28,11 +28,11 @@ requires-python = ">=3.10"
 dependencies = [
     "requests",
     "pydantic[email]>=2.11.5",
-    "shepherd_core>=2025.6.3",
+    "shepherd_core>=2025.6.4",
     "exrex",  # for automatic password creation
     "pyaml",
     "typer",
-    "pip-system-certs", # to get certificate authority (CA)
+    "certifi>=2025.6.15",
 ]
 
 [project.optional-dependencies]

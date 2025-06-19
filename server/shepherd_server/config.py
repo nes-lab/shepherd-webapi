@@ -33,7 +33,8 @@ class ConfigDefault(BaseModel):
     }
     ssl_keyfile: Path = Path("/etc/shepherd/ssl_private_key.pem")
     ssl_certfile: Path = Path("/etc/shepherd/ssl_certificate.pem")
-    # ca_certs seems to be optional
+    # ca_certs seems to be not included when requesting a cert
+    # -> visit API in browser - view cert - download `PEM (chain)`
     ssl_ca_certs: Path = Path("/etc/shepherd/ssl_ca_certs.pem")
 
     # user auth

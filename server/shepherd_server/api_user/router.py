@@ -35,7 +35,7 @@ router = APIRouter(prefix="/user", tags=["User"])
 @router.get("")
 async def user_info(user: Annotated[User, Depends(current_active_user)]) -> UserOut:
     user.quota_storage_free = user.quota_storage - await WebExperiment.get_storage(user)
-    await user.save()
+    await user.save_changes()
     return user
 
 
@@ -51,7 +51,7 @@ async def update_user(
             raise HTTPException(406, "Email already exists")
         user.update_email(new_email)
     user = user.model_copy(update=fields)
-    await user.save()
+    await user.save_changes()
     return user
 
 
@@ -89,7 +89,7 @@ async def update_quota(
         _user.custom_quota_duration = quota.custom_quota_duration
     if quota.custom_quota_storage is not None:
         _user.custom_quota_storage = quota.custom_quota_storage
-    await _user.save()
+    await _user.save_changes()
     # TODO: inform user about it?
     return _user
 
@@ -110,7 +110,7 @@ async def forgot_password(
         return Response(status_code=200)
     user.token_pw_reset = calculate_hash(user.email + str(local_now()))[-12:]
     await mail_sys.send_password_reset_email(email, user.token_pw_reset)
-    await user.save()
+    await user.save_changes()
     return Response(status_code=200)
 
 
@@ -125,7 +125,7 @@ async def reset_password(
     if user is None:
         raise HTTPException(404, "Invalid password reset token")
     user.password_hash = calculate_password_hash(password)
-    await user.save()
+    await user.save_changes()
     return user
 
 
@@ -200,5 +200,5 @@ async def verify_email(
     user.token_verification = None
     user.disabled = False
     await mail_sys.send_registration_complete_email(user.email)
-    await user.save()
+    await user.save_changes()
     return Response(status_code=200, content="Verification successful")

@@ -63,7 +63,7 @@ async def run_web_experiment(
         log.warning("Dataset of Experiment not found before running it (deleted?)")
         return
     web_exp.started_at = datetime.now(tz=local_tz())
-    await web_exp.save()
+    await web_exp.save_changes()
 
     experiment = web_exp.experiment
 
@@ -197,7 +197,7 @@ async def run_web_experiment(
         web_exp.result_size = _size
         web_exp.finished_at = datetime.now(tz=local_tz())
         await web_exp.update_time_start()
-        await web_exp.save()
+        await web_exp.save_changes()
 
         # send out Mail if user wants it
         if not isinstance(web_exp.owner, Link | User):

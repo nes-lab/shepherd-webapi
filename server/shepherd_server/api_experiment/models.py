@@ -53,6 +53,10 @@ class WebExperiment(Document):
     Besides the H5-files, it contains firmware and meta-data.
     """
 
+    class Settings:  # allows using .save_changes()
+        use_state_management = True
+        state_management_save_previous = True
+
     @classmethod
     async def get_by_id(cls, experiment_id: UUID) -> "None | WebExperiment":
         return await cls.find_one(
@@ -119,7 +123,7 @@ class WebExperiment(Document):
         for _xp in stuck_xps:
             log.info("Resetting experiment: %s", _xp.id)
             _xp.started_at = None
-            await _xp.save()
+            await _xp.save_changes()
 
     @classmethod
     async def prune(cls, users: list[User] | None = None, *, dry_run: bool = True) -> int:

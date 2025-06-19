@@ -33,7 +33,7 @@ class TestbedStatus(BaseModel):
 
 
 class TestbedDB(TestbedStatus, Document):
-    class Settings:
+    class Settings:  # allows using .save_changes()
         use_state_management = True
         state_management_save_previous = True
 
@@ -42,5 +42,5 @@ class TestbedDB(TestbedStatus, Document):
         wtb = await cls.find_one()
         if wtb is None:
             wtb = cls()
-            wtb.save()
+            wtb.save_changes()
         return wtb

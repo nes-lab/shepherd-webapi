@@ -192,6 +192,7 @@ class WebExperiment(Document):
             # remove leftover firmware and meta-data
             for content_dir in self.content_paths.values():
                 shutil.rmtree(content_dir, ignore_errors=True)
+            self.content_paths = None
 
     async def update_time_start(self) -> None:
         if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:

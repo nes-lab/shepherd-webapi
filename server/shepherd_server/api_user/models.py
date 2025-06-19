@@ -121,9 +121,10 @@ class User(Document, UserOut):
         return str(self.email)
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, User):
-            return self.email == other.email
-        return False
+        return isinstance(other, User) and self.email == other.email
+
+    def __hash__(self) -> int:  # sync with __eq__
+        return hash(self.email)
 
     @property
     def created(self) -> datetime | None:

@@ -55,7 +55,7 @@ class UserQuota(BaseModel):
     custom_quota_expire_date: datetime | None = None
     custom_quota_duration: timedelta | None = None
     custom_quota_storage: PositiveInt | None = None
-    quota_storage_free: PositiveInt | None = None
+    storage_available: PositiveInt | None = None
     """updated when user asks for its info.
     fill level should be computed_field/property, but created circular import"""
 

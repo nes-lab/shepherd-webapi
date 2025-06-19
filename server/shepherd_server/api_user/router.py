@@ -34,7 +34,7 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 @router.get("")
 async def user_info(user: Annotated[User, Depends(current_active_user)]) -> UserOut:
-    user.quota_storage_free = user.quota_storage - await WebExperiment.get_storage(user)
+    user.storage_available = user.quota_storage - await WebExperiment.get_storage(user)
     await user.save_changes()
     return user
 

@@ -82,12 +82,14 @@ def run_api() -> None:
 
 
 @cli.command()
-def run_scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
+def run_scheduler(
+    inventory: Path | None = None, *, dry_run: bool = False, only_elevated: bool = False
+) -> None:
     """Start scheduler to coordinate the testbed.
 
     This is separate to webAPI to allow starting/stopping both individually
     """
-    run_scheduler_server(inventory, dry_run=dry_run)
+    run_scheduler_server(inventory, dry_run=dry_run, only_elevated=only_elevated)
 
 
 @cli.command()

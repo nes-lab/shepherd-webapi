@@ -29,6 +29,7 @@ class UserRole(str, Enum):
     """Options for roles."""
 
     user = "user"
+    elevated = "elevated"
     admin = "admin"
     # TODO: add group-admin, elevated user (VIP privileges like faster path for scheduler)
 

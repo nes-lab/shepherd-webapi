@@ -1,5 +1,9 @@
+import copy
 import shutil
+import subprocess
+from collections.abc import Mapping
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 from uuid import UUID
 from uuid import uuid4
@@ -7,17 +11,146 @@ from uuid import uuid4
 import pymongo
 from beanie import Document
 from beanie import Link
+from beanie.operators import In
+from fabric import Result
+from fastapi import UploadFile
+from pydantic import BaseModel
 from pydantic import Field
 from shepherd_core import Reader as CoreReader
 from shepherd_core import local_now
 from shepherd_core.data_models import Experiment
 
 from shepherd_server.api_user.models import User
+from shepherd_server.api_user.models import UserRole
 from shepherd_server.config import config
 from shepherd_server.logger import log
 
 
-class WebExperiment(Document):
+def obtain_access_permissions(path: Path) -> None:
+    ret = subprocess.run(  # noqa: S603
+        ["/usr/bin/sudo", "/usr/bin/chmod", "a+rw", "-R", path.as_posix()],
+        capture_output=False,
+        timeout=20,
+        check=False,
+    ).returncode
+    if ret != 0:
+        log.warning("Changing permission denied for %s", path)
+
+
+class ResultData(BaseModel):
+    result_paths: dict[str, Path] | None = None
+    result_size: int = 0
+    content_paths: dict[str, Path] | None = None
+    """
+    Content-path is currently the parent of result-path.
+    Besides the H5-files, it contains firmware and meta-data.
+    """
+
+    async def update_size(self) -> None:
+        _size = 0
+        for path in self.result_paths.values():
+            if path.exists() and path.is_file():
+                _size += path.stat().st_size
+            else:
+                log.warning(f"file '{path}' does not exist after the experiment")
+        self.result_size = _size
+        await self.save_changes()
+
+    async def update_result(self, paths: dict[str, Path]) -> None:
+        self.result_paths = copy.deepcopy(paths)
+        # TODO: hardcoded bending of observer to server path-structure
+        #       from sheep-path: /var/shepherd/experiments/xp_name
+        #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
+        for observer in paths:  # noqa: PLC0206
+            path_obs = paths[observer].absolute()
+            if not path_obs.is_relative_to("/var/shepherd/experiments"):
+                log.error("Path outside of experiment-location? %s", path_obs.as_posix())
+                self.result_paths.pop(observer)
+                continue
+            try:
+                path_obs_exists = path_obs.exists()
+            except PermissionError:
+                path_obs_exists = False
+            if path_obs_exists:
+                log.warning("Observer-Path should not exist on server! %s", path_obs.as_posix())
+            path_rel = path_obs.relative_to("/var/shepherd/experiments")
+            path_srv = Path("/var/shepherd/experiments") / observer / path_rel
+            obtain_access_permissions(path_srv.parent)
+            try:
+                path_srv_exists = path_srv.exists()
+
+            except PermissionError:
+                log.error("Permission-Error on Server-Path -> will skip!")
+                path_srv_exists = False
+            if not path_srv_exists:
+                log.error("Server-Path must exist on server! %s", path_srv.as_posix())
+                self.result_paths.pop(observer)
+                continue
+            self.result_paths[observer] = path_srv
+        if len(self.result_paths) > 0:
+            self.content_paths = {key: path.parent for key, path in self.result_paths.items()}
+            await self.update_size()
+        else:
+            log.warning("Skipped adding empty content path list")
+            self.content_paths = None
+            self.result_paths = None
+        await self.save_changes()
+
+    async def delete_content(self) -> None:
+        # TODO: just overwrite default delete-method?
+        if isinstance(self.result_paths, dict):
+            # removing large result-files first
+            for result_file in self.result_paths.values():
+                if result_file.exists() and result_file.is_file():
+                    result_file.unlink()
+            self.result_paths = None
+        if isinstance(self.content_paths, dict):
+            # remove leftover firmware and meta-data
+            for content_dir in self.content_paths.values():
+                shutil.rmtree(content_dir, ignore_errors=True)
+            self.content_paths = None
+        await self.save_changes()
+
+
+class ErrorData(BaseModel):
+    # status & error - log
+    observers_list: list[str] | None = None
+    observers_used: list[str] | None = None
+
+    observers_output: Mapping[str, Result] | None = None
+
+    def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
+        """Log output-results of shell commands."""
+        # sort dict by key first
+        replies = dict(sorted(self.observers_output.items()))
+        files = []
+        for hostname, reply in replies.items():
+            if only_faulty and abs(reply.exited) == 0:
+                continue
+            string = ""
+            if len(reply.stdout) > 0:
+                string += f"\n************** {hostname} - stdout **************\n"
+                string += reply.stdout
+            if len(reply.stderr) > 0:
+                string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~\n"
+                string += reply.stderr
+            string += f"\nExit-code of {hostname} = {reply.exited}\n"
+            files.append(UploadFile(filename="error.log", file=StringIO(string)))
+        return files
+
+    @property
+    def missing_observers(self) -> list[str]:
+        if self.observers_list is None or self.observers_used is None:
+            return []
+        return list(set(self.observers_list) - set(self.observers_used))
+
+    @property
+    def had_errors(self) -> bool:
+        exit_code = max([0] + [abs(reply.exited) for reply in self.observers_output.values()])
+        return exit_code > 0
+
+
+class WebExperiment(Document, ResultData, ErrorData):
     id: UUID = Field(default_factory=uuid4)
     owner: Link[User] | None = None
     experiment: Experiment
@@ -43,14 +176,6 @@ class WebExperiment(Document):
     """
     None, when the experiment is not yet finished (still executing or not yet started).
     Set to current wall-clock time by the web runner when the testbed finished execution.
-    """
-
-    result_paths: dict[str, Path] | None = None
-    result_size: int = 0
-    content_paths: dict[str, Path] | None = None
-    """
-    Content-path is currently the parent of result-path.
-    Besides the H5-files, it contains firmware and meta-data.
     """
 
     class Settings:  # allows using .save_changes()
@@ -81,15 +206,18 @@ class WebExperiment(Document):
         return sum(_xp.result_size for _xp in _xps)
 
     @classmethod
-    async def get_next_scheduling(cls) -> "None | WebExperiment":
+    async def get_next_scheduling(cls, *, only_elevated: bool = False) -> "None | WebExperiment":
         """
         Finds the WebExperiment with the oldest scheduling_at datetime,
         that has not been executed yet (status less than active).
         """
+        roles_allow = [UserRole.admin, UserRole.elevated] if only_elevated else UserRole
         next_experiments = (
             await cls.find(
                 cls.requested_execution_at != None,  # noqa: E711 beanie cannot handle 'is not None'
                 cls.started_at == None,  # noqa: E711
+                In(cls.owner.role, roles_allow),
+                fetch_links=True,
             )
             .sort((WebExperiment.requested_execution_at, pymongo.ASCENDING))
             .limit(1)
@@ -180,20 +308,6 @@ class WebExperiment(Document):
             return "scheduled"
         return "created"
 
-    async def delete_content(self) -> None:
-        # TODO: just overwrite default delete-method?
-        if isinstance(self.result_paths, dict):
-            # removing large result-files first
-            for result_file in self.result_paths.values():
-                if result_file.exists() and result_file.is_file():
-                    result_file.unlink()
-            self.result_paths = None
-        if isinstance(self.content_paths, dict):
-            # remove leftover firmware and meta-data
-            for content_dir in self.content_paths.values():
-                shutil.rmtree(content_dir, ignore_errors=True)
-            self.content_paths = None
-
     async def update_time_start(self) -> None:
         if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:
             log.error("Could not update Experiment.time_start from files")
@@ -203,3 +317,4 @@ class WebExperiment(Document):
         xp = self.experiment.model_dump()
         xp["time_start"] = time_start
         self.experiment = Experiment(**xp)
+        await self.save_changes()

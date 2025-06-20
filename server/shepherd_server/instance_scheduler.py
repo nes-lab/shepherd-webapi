@@ -1,7 +1,4 @@
 import asyncio
-import copy
-import subprocess
-from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -9,7 +6,6 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 from beanie import Link
-from fabric import Result
 from pydantic import UUID4
 from shepherd_core import Writer as CoreWriter
 from shepherd_core import local_now
@@ -27,32 +23,6 @@ from .config import config
 from .instance_db import db_available
 from .instance_db import db_client
 from .logger import log
-
-
-def replies2str(replies: Mapping[str, Result]) -> str:
-    """Log output-results of shell commands."""
-    # sort dict by key first
-    replies = dict(sorted(replies.items()))
-    string = ""
-    for hostname, reply in replies.items():
-        if len(reply.stdout) > 0:
-            string += f"\n************** {hostname} - stdout **************\n"
-            string += reply.stdout
-        if len(reply.stderr) > 0:
-            string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~\n"
-            string += reply.stderr
-        string += f"\nExit-code of {hostname} = {reply.exited}\n"
-    return string
-
-
-def obtain_access_permissions(path: Path) -> None:
-    ret = subprocess.run(  # noqa: S603
-        ["/usr/bin/sudo", "/usr/bin/chmod", "a+rw", "-R", path.as_posix()],
-        timeout=20,
-        check=False,
-    ).returncode
-    if ret != 0:
-        log.warning("Changing permission denied for %s", path)
 
 
 def tbt_patch_time_start(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
@@ -78,24 +48,18 @@ async def run_web_experiment(
     web_exp.started_at = datetime.now(tz=local_tz())
     await web_exp.save_changes()
 
-    experiment = web_exp.experiment
-
     testbed = Testbed(name=config.testbed_name)
-    testbed_tasks = TestbedTasks.from_xp(experiment, testbed)
-    # TODO: set custom time if possible herd.start_delay_s = 5 * 60, herd.find_consensus_time()
-
+    testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     log.info("starting testbed tasks through herd-tool")
-    paths_result: dict[str, Path] = {}
-    paths_content: dict[str, Path] = {}
 
     if dry_run:
         await asyncio.sleep(10)  # mocked length
         # create mocked files
         paths_task = testbed_tasks.get_output_paths()
-        paths_content["all"] = temp_path / experiment.folder_name()
+        paths_result: dict[str, Path] = {}
+        xp_folder = web_exp.experiment.folder_name()
         for name, path_task in paths_task.items():
-            paths_result[name] = temp_path / experiment.folder_name() / path_task.name
-
+            paths_result[name] = temp_path / xp_folder / path_task.name
             with CoreWriter(paths_result[name]) as writer:
                 writer.store_hostname(name)
                 writer.append_iv_data_si(
@@ -103,10 +67,18 @@ async def run_web_experiment(
                     voltage=np.zeros(10_000),
                     current=np.zeros(10_000),
                 )
+        await web_exp.update_result(paths_result)
     else:
         with Herd(inventory=inventory) as herd:
+            web_exp.observers_list = list(herd.hostnames.values())
+            web_exp.observers_used = [herd.hostnames[cnx.host] for cnx in herd.group]
+            web_exp.save_changes()
             # force other sheep-instances to end
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
+
+            # TODO: add target-cleaner (chip erase) - at least flash sleep
+            # TODO: add missing nodes to error-log of web_exp
+
             # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
             remote_path = PurePosixPath("/etc/shepherd/config_for_herd.pickle")
             # TODO: this is a workaround to force synced start
@@ -117,111 +89,39 @@ async def run_web_experiment(
             herd.put_task(task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
             replies = herd.run_cmd(sudo=True, cmd=command)
-            exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
 
+        exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
         if exit_code > 0:
-            log.error("Running Experiment failed on at least one Observer")
-            error_log = replies2str(replies)
-            await mail_engine().send_error_log_email(
-                config.contact["email"],
-                web_exp.id,
-                experiment.name,
-                error_log,
-            )
-            if (
-                isinstance(web_exp.owner, Link | User)
-                and config.contact["email"] != web_exp.owner.email
-            ):
-                await mail_engine().send_error_log_email(
-                    web_exp.owner.email,
-                    web_exp.id,
-                    experiment.name,
-                    error_log,
-                )
+            log.error("Herd failed on at least one Observer")
+        else:
+            log.info("Herd finished task execution successfully")
 
-        await asyncio.sleep(20)  # finish IO, precaution
-
-        # paths to directories with all content like firmware, h5-results, ...
-        paths_content = testbed_tasks.get_output_paths()
-        for observer in copy.deepcopy(paths_content):
-            path_obs = paths_content[observer].absolute().parent
-            path_rel = path_obs.relative_to("/var/shepherd/experiments")
-            path_srv = Path("/var/shepherd/experiments") / observer / path_rel
-            obtain_access_permissions(path_srv)
-            try:
-                path_srv_exists = path_srv.exists()
-                if not path_srv_exists:
-                    log.warning("Path doesn't exist: %s", path_srv.as_posix())
-            except PermissionError:
-                path_srv_exists = False
-            if not path_srv_exists:
-                paths_content.pop(observer)
-                continue
-            paths_content[observer] = path_srv
-
-        # paths to direct files, only process of content-directories are avail
-        if len(paths_content) > 0:
-            paths_result = testbed_tasks.get_output_paths()
-        # TODO: hardcoded bending of observer to server path-structure
-        #       from sheep-path: /var/shepherd/experiments/xp_name
-        #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
-        for observer in copy.deepcopy(paths_result):
-            path_obs = paths_result[observer].absolute()
-            if not path_obs.is_relative_to("/var/shepherd/experiments"):
-                log.error("Path outside of experiment-location? %s", path_obs.as_posix())
-                paths_result.pop(observer)
-                continue
-            try:
-                path_obs_exists = path_obs.exists()
-            except PermissionError:
-                path_obs_exists = False
-            if path_obs_exists:
-                log.warning("Observer-Path should not exist on server! %s", path_obs.as_posix())
-            path_rel = path_obs.relative_to("/var/shepherd/experiments")
-            path_srv = Path("/var/shepherd/experiments") / observer / path_rel
-            try:
-                path_srv_exists = path_srv.exists()
-            except PermissionError:
-                log.error("Permission-Error on Server-Path -> will skip!")
-                path_srv_exists = False
-            if not path_srv_exists:
-                log.error("Server-Path must exist on server! %s", path_srv.as_posix())
-                paths_result.pop(observer)
-                continue
-            paths_result[observer] = path_srv
-
-        log.info("Herd finished task execution")
-
-        # mark job as done in database
-        _size = 0
-        for path in paths_result.values():
-            if path.exists() and path.is_file():
-                _size += path.stat().st_size
-            else:
-                log.warning(f"file '{path}' does not exist after the experiment")
         # Reload XP to avoid race-condition / working on old data
         web_exp = await WebExperiment.get_by_id(xp_id)
         if web_exp is None:
             log.warning("Dataset of Experiment not found after running it (deleted?)")
             return
-        if len(paths_result) > 0:
-            web_exp.result_paths = paths_result
-        else:
-            log.warning("Skipped adding empty result path list")
-        if len(paths_content) > 0:
-            web_exp.content_paths = paths_content
-        else:
-            log.warning("Skipped adding empty content path list")
-        web_exp.result_size = _size
-        web_exp.finished_at = datetime.now(tz=local_tz())
-        await web_exp.update_time_start()
-        await web_exp.save_changes()
 
+        await asyncio.sleep(20)  # finish IO, precaution
+        # paths to directories with all content like firmware, h5-results, ...
+        web_exp.observers_output = replies
+        web_exp.finished_at = datetime.now(tz=local_tz())
+        await web_exp.save_changes()
+        await web_exp.update_result(testbed_tasks.get_output_paths())
+        await web_exp.update_time_start()
+
+        all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
+        if exit_code > 0:
+            await mail_engine().send_experiment_finished_email(
+                config.contact["email"],
+                web_exp, all_done=all_done
+            )
+            return
         # send out Mail if user wants it
         if not isinstance(web_exp.owner, Link | User):
             return
-        all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
-        if experiment.email_results or all_done:
+
+        if web_exp.experiment.email_results or all_done:
             await mail_engine().send_experiment_finished_email(
                 web_exp.owner.email, web_exp, all_done=all_done
             )
@@ -247,7 +147,12 @@ async def update_status(
     await tb_.save_changes()
 
 
-async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> None:
+async def scheduler(
+    inventory: Path | None = None,
+    *,
+    dry_run: bool = False,
+    only_elevated: bool = False,
+) -> None:
     _client = await db_client()
 
     # allow running dry in temp-folder
@@ -264,7 +169,8 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
 
         while True:
             await update_status(inventory=inventory, active=True, dry_run=dry_run)
-            next_experiment = await WebExperiment.get_next_scheduling()
+            # TODO: status could generate usable inventory, so missing nodes
+            next_experiment = await WebExperiment.get_next_scheduling(only_elevated=only_elevated)
             if next_experiment is None:
                 log.debug("... waiting 20 s")
                 await asyncio.sleep(20)
@@ -276,13 +182,15 @@ async def scheduler(inventory: Path | None = None, *, dry_run: bool = False) -> 
             )
 
 
-def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
+def run(
+    inventory: Path | None = None, *, dry_run: bool = False, only_elevated: bool = False
+) -> None:
     if not db_available(timeout=5):
         log.error("No connection to database! Will exit scheduler now.")
         return
 
     try:
-        asyncio.run(scheduler(inventory, dry_run=dry_run))
+        asyncio.run(scheduler(inventory, dry_run=dry_run, only_elevated=only_elevated))
     except SystemExit:
         asyncio.run(update_status(inventory, dry_run=dry_run))
 

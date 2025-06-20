@@ -1,9 +1,5 @@
 """Mail server config."""
 
-from io import StringIO
-from uuid import UUID
-
-from fastapi import UploadFile
 from fastapi_mail import ConnectionConfig
 from fastapi_mail import FastMail
 from fastapi_mail import MessageSchema
@@ -49,11 +45,6 @@ class MailEngine:
     @staticmethod
     async def send_experiment_finished_email(
         email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
-    ) -> None: ...
-
-    @staticmethod
-    async def send_error_log_email(
-        email: EmailStr, xp_id: UUID, xp_name: str, log_output: str
     ) -> None: ...
 
 
@@ -122,38 +113,35 @@ class FastMailEngine(MailEngine):
     ) -> None:
         xp_size_MiB = round(web_exp.result_size / 2**20)
         xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
-        msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) is finished."
+        msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) finished.\n"
+
+        if web_exp.had_errors:
+            msg += (
+                "\nErrors were encountered during execution. "
+                "The Console-Outputs of failing Observers are attached in this mail and "
+                "have also been sent to the admin.\n"
+            )
         if xp_files_n > 0:
-            msg += f"\nIt can now be downloaded ({xp_files_n} files, {xp_size_MiB} MiB)."
+            msg += f"\nResults can now be downloaded ({xp_files_n} files, {xp_size_MiB} MiB).\n"
         else:
-            msg += "\nIt seems that no files were generated."
+            msg += "\nIt seems that no files were generated.\n"
         if all_done:
-            msg += "\nThere are no further experiments scheduled for you."
-        log.debug("-> EMAIL XP-Finished")
+            msg += "\nThere are no further experiments scheduled for you.\n"
+        unavail_obs = web_exp.missing_observers
+        if len(unavail_obs) > 0:
+            msg += (
+                f"\nDuring the experiment {len(unavail_obs)} observers "
+                f"were unavailable: {', '.join(unavail_obs)}\n"
+            )
+        extra_subj = " with errors" if web_exp.had_errors else ""
+        log.debug("-> EMAIL XP-Finished" + extra_subj)
         if config.mail_enabled:
             message = MessageSchema(
-                recipients=[email],
-                subject="[Shepherd] Experiment finished",
+                recipients=list({email, config.contact["email"]}),
+                subject="[Shepherd] Experiment finished" + extra_subj,
                 body=msg,
                 subtype=MessageType.plain,
-            )
-            await mail.send_message(message)
-
-    @staticmethod
-    async def send_error_log_email(
-        email: EmailStr, xp_id: UUID, xp_name: str, log_output: str
-    ) -> None:
-        ufile = UploadFile(filename="error.log", file=StringIO(log_output))
-        log.debug("-> EMAIL XP-Failed")
-        if config.mail_enabled:
-            message = MessageSchema(
-                recipients=[email],
-                subject="[Shepherd] Failed Experiment",
-                body=f"Experiment {xp_name} ({xp_id}) encountered errors during execution.\n"
-                "The Observer-Outputs are attached in this mail. "
-                "This has also been sent to the admin.",
-                subtype=MessageType.plain,
-                attachments=[ufile],
+                attachments=[web_exp.get_terminal_output(only_faulty=True)],
             )
             await mail.send_message(message)
 

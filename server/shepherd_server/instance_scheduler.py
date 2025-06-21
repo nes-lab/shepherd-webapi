@@ -50,12 +50,12 @@ async def run_web_experiment(
     await web_exp.save_changes()
 
     testbed = Testbed(name=config.testbed_name)
+    testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     log.info("starting testbed tasks through herd-tool")
 
     if dry_run:
         await asyncio.sleep(10)  # mocked length
         # create mocked files
-        testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
         paths_task = testbed_tasks.get_output_paths()
         paths_result: dict[str, Path] = {}
         xp_folder = web_exp.experiment.folder_name()
@@ -73,6 +73,7 @@ async def run_web_experiment(
         with Herd(inventory=inventory) as herd:
             web_exp.observers_list = list(herd.hostnames.values())
             web_exp.observers_used = [herd.hostnames[cnx.host] for cnx in herd.group]
+            await web_exp.update_time_start(local_now())
             await web_exp.save_changes()
             # force other sheep-instances to end
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
@@ -84,10 +85,9 @@ async def run_web_experiment(
             remote_path = PurePosixPath("/etc/shepherd/config_for_herd.pickle")
             # TODO: this is a workaround to force synced start
             #       it wastes time but keeps logs of pre-tasks (programming) in result-file
-            herd.start_delay_s = testbed.prep_duration.total_seconds()  # is 5 min
+            herd.start_delay_s = 5 * 60  # testbed.prep_duration.total_seconds()
             time_start, _ = herd.find_consensus_time()
-            await web_exp.update_time_start(time_start)
-            testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
+
             testbed_tasks = tbt_patch_time_start(testbed_tasks, time_start=time_start)
             herd.put_task(task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"

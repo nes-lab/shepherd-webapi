@@ -52,7 +52,8 @@ async def run_command(cmd: str) -> Response:
             else:
                 return Response(status_code=404, content="Herd-Command not implemented")
     elif cmd in ["start-scheduler", "stop-scheduler"]:
-        ret = subprocess.run(  # noqa: S603
+        # asyncio.create_subprocess_shell
+        ret = subprocess.run(  # noqa: S603,
             [
                 "/usr/bin/sudo",
                 "/usr/bin/systemctl",

@@ -72,7 +72,7 @@ async def run_web_experiment(
         with Herd(inventory=inventory) as herd:
             web_exp.observers_list = list(herd.hostnames.values())
             web_exp.observers_used = [herd.hostnames[cnx.host] for cnx in herd.group]
-            web_exp.save_changes()
+            await web_exp.save_changes()
             # force other sheep-instances to end
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
 

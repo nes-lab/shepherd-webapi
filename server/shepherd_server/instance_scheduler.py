@@ -52,7 +52,6 @@ async def run_web_experiment(
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     web_exp.observer_paths = testbed_tasks.get_output_paths()
     await web_exp.save_changes()
-    log.info("Starting Testbed-tasks through Herd-tool")
 
     if dry_run:
         await asyncio.sleep(10)  # mocked length
@@ -74,7 +73,7 @@ async def run_web_experiment(
         with Herd(inventory=inventory) as herd:
             web_exp.observers_list = list(herd.hostnames.values())
             web_exp.observers_used = [herd.hostnames[cnx.host] for cnx in herd.group]
-            await web_exp.update_time_start(local_now())
+            await web_exp.update_time_start(local_now(), force=True)
             await web_exp.save_changes()
             # force other sheep-instances to end
             herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")

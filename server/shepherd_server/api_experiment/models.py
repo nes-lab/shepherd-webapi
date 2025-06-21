@@ -332,8 +332,10 @@ class WebExperiment(Document, ResultData, ErrorData):
             return "scheduled"
         return "created"
 
-    async def update_time_start(self, time_start: datetime | None = None) -> None:
-        if self.experiment.time_start is not None:  # do not force if already there
+    async def update_time_start(
+        self, time_start: datetime | None = None, *, force: bool = False
+    ) -> None:
+        if not force and self.experiment.time_start is not None:  # do not force if already there
             return
         if time_start is None:
             if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:

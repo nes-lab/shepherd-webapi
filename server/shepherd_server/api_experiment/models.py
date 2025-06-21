@@ -213,7 +213,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         Finds the WebExperiment with the oldest scheduling_at datetime,
         that has not been executed yet (status less than active).
         """
-        roles_allow = [UserRole.admin, UserRole.elevated] if only_elevated else UserRole
+        roles_allow = [UserRole.admin, UserRole.elevated] if only_elevated else list(UserRole)
         next_experiments = (
             await cls.find(
                 cls.requested_execution_at != None,  # noqa: E711 beanie cannot handle 'is not None'

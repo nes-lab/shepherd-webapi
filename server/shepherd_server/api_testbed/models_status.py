@@ -42,5 +42,5 @@ class TestbedDB(TestbedStatus, Document):
         wtb = await cls.find_one()
         if wtb is None:
             wtb = cls()
-            wtb.save_changes()
+            wtb.save()
         return wtb

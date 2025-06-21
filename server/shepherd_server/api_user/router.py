@@ -16,6 +16,7 @@ from .models import User
 from .models import UserOut
 from .models import UserQuota
 from .models import UserRegistration
+from .models import UserRole
 from .models import UserUpdate
 from .utils_mail import MailEngine
 from .utils_mail import mail_engine
@@ -51,7 +52,7 @@ async def update_user(
             raise HTTPException(406, "Email already exists")
         user.update_email(new_email)
     user = user.model_copy(update=fields)
-    await user.save_changes()
+    await user.save()
     return user
 
 
@@ -173,6 +174,7 @@ async def user_registration(
         disabled=False,
         email_confirmed_at=local_now(),
         token_verification=None,
+        role=UserRole.user,
     )
     await user.create()
     await mail_sys.send_registration_complete_email(user_reg.email)

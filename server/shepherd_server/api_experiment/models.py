@@ -11,10 +11,8 @@ import pymongo
 from beanie import Document
 from beanie import Link
 from beanie.operators import In
-from fabric import Result
 from fastapi import UploadFile
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Field
 from shepherd_core import Reader as CoreReader
 from shepherd_core import local_now
@@ -112,14 +110,20 @@ class ResultData(BaseModel):
         await self.save_changes()
 
 
+class ReplyData(BaseModel):
+    exited: int
+    stdout: str
+    stderr: str
+
+
 class ErrorData(BaseModel):
     # status & error - log
     observers_list: list[str] | None = None
     observers_used: list[str] | None = None
 
-    observers_output: dict[str, Result] | None = None
+    observers_output: dict[str, ReplyData] | None = None
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""

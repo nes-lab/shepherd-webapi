@@ -15,6 +15,7 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd.herd import Herd
 
+from .api_experiment.models import ReplyData
 from .api_experiment.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
 from .api_user.models import User
@@ -104,7 +105,10 @@ async def run_web_experiment(
 
         await asyncio.sleep(20)  # finish IO, precaution
         # paths to directories with all content like firmware, h5-results, ...
-        web_exp.observers_output = replies
+        web_exp.observers_output = {
+            k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr)
+            for k, v in replies.items()
+        }
         web_exp.finished_at = datetime.now(tz=local_tz())
         await web_exp.save_changes()
         await web_exp.update_result(testbed_tasks.get_output_paths())

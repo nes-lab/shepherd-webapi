@@ -131,8 +131,8 @@ class FastMailEngine(MailEngine):
         unavail_obs = web_exp.missing_observers
         if len(unavail_obs) > 0:
             msg += (
-                f"\nDuring the experiment {len(unavail_obs)} observers "
-                f"were unavailable: {', '.join(unavail_obs)}\n"
+                f"\nDuring the experiment {len(unavail_obs)} observer(s) "
+                f"was/were unavailable: {', '.join(unavail_obs)}\n"
             )
         extra_subj = " with errors" if web_exp.had_errors else ""
         log.debug("-> EMAIL XP-Finished" + extra_subj)

@@ -307,6 +307,8 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     @property
     def state(self) -> str:
+        if self.scheduler_panic:
+            return "failed"
         if self.finished_at is not None:
             if self.result_paths is not None:
                 return "finished"
@@ -317,14 +319,15 @@ class WebExperiment(Document, ResultData, ErrorData):
             return "scheduled"
         return "created"
 
-    async def update_time_start(self) -> None:
+    async def update_time_start(self, time_start: datetime | None = None) -> None:
         if self.experiment.time_start is not None:  # do not force if already there
             return
-        if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:
-            log.error("Could not update Experiment.time_start from files")
-            return
-        with CoreReader(next(iter(self.result_paths.values()))) as shp_rd:
-            time_start = shp_rd.get_time_start()
+        if time_start is None:
+            if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:
+                log.error("Could not update Experiment.time_start from files")
+                return
+            with CoreReader(next(iter(self.result_paths.values()))) as shp_rd:
+                time_start = shp_rd.get_time_start()
         xp = self.experiment.model_dump()
         xp["time_start"] = time_start
         self.experiment = Experiment(**xp)

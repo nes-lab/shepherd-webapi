@@ -36,6 +36,10 @@ def obtain_access_permissions(path: Path) -> None:
 
 
 class ResultData(BaseModel):
+    observer_paths: dict[str, Path] | None = None
+    """Observer paths are used as future (will be filled by observers)
+    """
+
     result_paths: dict[str, Path] | None = None
     result_size: int = 0
     content_paths: dict[str, Path] | None = None
@@ -54,12 +58,17 @@ class ResultData(BaseModel):
         self.result_size = _size
         await self.save_changes()
 
-    async def update_result(self, paths: dict[str, Path]) -> None:
+    async def update_result(self, paths: dict[str, Path] | None = None) -> None:
+        if paths is None:
+            if self.observer_paths is not None:
+                paths = self.observer_paths
+            else:
+                raise ValueError("Update_result() needs data")
         self.result_paths = copy.deepcopy(paths)
         # TODO: hardcoded bending of observer to server path-structure
         #       from sheep-path: /var/shepherd/experiments/xp_name
         #       to server-path:  /var/shepherd/experiments/sheep_name/xp_name
-        for observer in paths:  # noqa: PLC0206
+        for observer in paths:
             path_obs = paths[observer].absolute()
             if not path_obs.is_relative_to("/var/shepherd/experiments"):
                 log.error("Path outside of experiment-location? %s", path_obs.as_posix())
@@ -126,9 +135,11 @@ class ErrorData(BaseModel):
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""
+        files = []
+        if self.observers_output is None:
+            return files
         # sort dict by key first
         replies = dict(sorted(self.observers_output.items()))
-        files = []
         for hostname, reply in replies.items():
             if only_faulty and abs(reply.exited) == 0:
                 continue
@@ -151,6 +162,8 @@ class ErrorData(BaseModel):
 
     @property
     def max_exit_code(self) -> int:
+        if self.observers_output is None:
+            return 0
         return max([0] + [abs(reply.exited) for reply in self.observers_output.values()])
 
     @property

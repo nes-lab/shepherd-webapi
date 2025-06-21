@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 from pathlib import PurePosixPath
 from tempfile import TemporaryDirectory
@@ -47,11 +48,11 @@ async def run_web_experiment(
         log.warning("Dataset of Experiment not found before running it (deleted?)")
         return
     web_exp.started_at = datetime.now(tz=local_tz())
-    await web_exp.save_changes()
-
     testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
-    log.info("starting testbed tasks through herd-tool")
+    web_exp.observer_paths = testbed_tasks.get_output_paths()
+    await web_exp.save_changes()
+    log.info("Starting Testbed-tasks through Herd-tool")
 
     if dry_run:
         await asyncio.sleep(10)  # mocked length
@@ -86,12 +87,17 @@ async def run_web_experiment(
             # TODO: this is a workaround to force synced start
             #       it wastes time but keeps logs of pre-tasks (programming) in result-file
             herd.start_delay_s = 5 * 60  # testbed.prep_duration.total_seconds()
-            time_start, _ = herd.find_consensus_time()
-
+            time_start, delay_s = herd.find_consensus_time()
+            log.info(
+                "Experiment will start in %d seconds: %s (obs-time)",
+                delay_s,
+                time_start.isoformat(),
+            )
             testbed_tasks = tbt_patch_time_start(testbed_tasks, time_start=time_start)
             herd.put_task(task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
             replies = herd.run_cmd(sudo=True, cmd=command)
+            # TODO: this can lock - not the best approach, try asyncio.wait_for()
 
         exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
         if exit_code > 0:
@@ -114,7 +120,7 @@ async def run_web_experiment(
         }
         web_exp.finished_at = datetime.now(tz=local_tz())
         await web_exp.save_changes()
-        await web_exp.update_result(testbed_tasks.get_output_paths())
+        await web_exp.update_result()
         await web_exp.update_time_start()
 
 
@@ -185,10 +191,23 @@ async def scheduler(
                 continue
 
             log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
+            timeout = next_experiment.experiment.duration + timedelta(minutes=10)
             try:
-                await run_web_experiment(
-                    next_experiment.id, inventory=inventory, temp_path=temp_path, dry_run=dry_run
+                await asyncio.wait_for(
+                    run_web_experiment(
+                        next_experiment.id,
+                        inventory=inventory,
+                        temp_path=temp_path,
+                        dry_run=dry_run,
+                    ),
+                    timeout=timeout.total_seconds(),
                 )
+            except asyncio.TimeoutError:
+                # TODO: test
+                log.warning("Timeout waiting for experiment '%s'", next_experiment.experiment.name)
+                next_experiment.finished_at = datetime.now(tz=local_tz())
+                await next_experiment.update_result()
+                await next_experiment.update_time_start()
             except Exception:  # noqa: BLE001
                 # TODO: send info about the exception
                 next_experiment.scheduler_panic = True

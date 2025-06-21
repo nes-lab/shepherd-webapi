@@ -49,6 +49,8 @@ test = [
     "coverage",
 ]
 
+all = ["shepherd-client[dev,test]"]
+
 [project.urls]
 Documentation = "https://github.com/nes-lab/shepherd-webapi/blob/main/README.md"
 Issues = "https://github.com/nes-lab/shepherd-webapi/issues"

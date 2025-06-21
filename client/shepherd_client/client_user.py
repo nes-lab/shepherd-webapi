@@ -298,6 +298,7 @@ class UserClient(WebClient):
             return False
         path_xp = path / xp.folder_name()
         path_xp.mkdir(parents=True, exist_ok=True)
+        xp.to_file(path_xp / "experiment_config.yaml", comment=f"Shepherd Nova ID: {xp_id}")
         downloads_ok: bool = True
         for node_id in node_ids:
             downloads_ok &= self._download_file(xp_id, node_id, path_xp)

@@ -1,10 +1,13 @@
 import subprocess
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Response
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd import Herd
+
 from shepherd_server.api_user.utils_misc import active_user_is_admin
 from shepherd_server.config import config
 
@@ -15,12 +18,16 @@ router = APIRouter(prefix="/testbed", tags=["Testbed"])
 async def testbed_info() -> Testbed:
     return Testbed(name=config.testbed_name)
 
+
 herd_cmds = {"restart", "resync", "inventorize", "stop-measurement", "min-space"}
 server_cmds = {"start-scheduler", "stop-scheduler"}
 
 router.get("/command", dependencies=[Depends(active_user_is_admin)])
+
+
 async def get_command() -> Response:
     return Response(status_code=200, content=list(herd_cmds) + list(server_cmds))
+
 
 @router.patch("/command", dependencies=[Depends(active_user_is_admin)])
 async def run_command(cmd: str) -> Response:
@@ -46,7 +53,12 @@ async def run_command(cmd: str) -> Response:
                 return Response(status_code=404, content="Herd-Command not implemented")
     elif cmd in ["start-scheduler", "stop-scheduler"]:
         ret = subprocess.run(  # noqa: S603
-            ["/usr/bin/sudo", "/usr/bin/systemctl", cmd.split("-")[0], "shepherd-scheduler.service"],
+            [
+                "/usr/bin/sudo",
+                "/usr/bin/systemctl",
+                cmd.split("-")[0],
+                "shepherd-scheduler.service",
+            ],
             capture_output=False,
             timeout=20,
             check=False,
@@ -56,5 +68,4 @@ async def run_command(cmd: str) -> Response:
 
     if ret in [0, False]:
         return Response(status_code=200, content="Command successful executed")
-    else:
-        return Response(status_code=400, content="Command failed on at least one Host")
+    return Response(status_code=400, content="Command failed on at least one Host")

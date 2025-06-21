@@ -1,7 +1,6 @@
 import copy
 import shutil
 import subprocess
-from collections.abc import Mapping
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
@@ -15,6 +14,7 @@ from beanie.operators import In
 from fabric import Result
 from fastapi import UploadFile
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from shepherd_core import Reader as CoreReader
 from shepherd_core import local_now
@@ -117,7 +117,9 @@ class ErrorData(BaseModel):
     observers_list: list[str] | None = None
     observers_used: list[str] | None = None
 
-    observers_output: Mapping[str, Result] | None = None
+    observers_output: dict[str, Result] | None = None
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""

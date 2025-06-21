@@ -10,7 +10,6 @@ from beanie import Link
 from pydantic import UUID4
 from shepherd_core import Writer as CoreWriter
 from shepherd_core import local_now
-from shepherd_core import local_tz
 from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
@@ -18,6 +17,7 @@ from shepherd_herd.herd import Herd
 
 from .api_experiment.models import ReplyData
 from .api_experiment.models import WebExperiment
+from .api_testbed.models_status import SchedulerStatus
 from .api_testbed.models_status import TestbedDB
 from .api_user.models import User
 from .api_user.utils_mail import mail_engine
@@ -39,6 +39,34 @@ def tbt_patch_time_start(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTa
     return TestbedTasks(**tb_ts_dict)
 
 
+def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
+    with Herd(inventory=inventory) as herd:
+        # force other sheep-instances to end
+        herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
+
+        # TODO: add target-cleaner (chip erase) - at least flash sleep
+        # TODO: add missing nodes to error-log of web_exp
+
+        # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
+        remote_path = PurePosixPath("/etc/shepherd/config_for_herd.pickle")
+        # TODO: this is a workaround to force synced start
+        #       it wastes time but keeps logs of pre-tasks (programming) in result-file
+        herd.start_delay_s = 5 * 60  # testbed.prep_duration.total_seconds()
+        time_start, delay_s = herd.find_consensus_time()
+        log.info(
+            "Experiment will start in %d seconds: %s (obs-time)",
+            int(delay_s),
+            time_start.isoformat(),
+        )
+        testbed_tasks = tbt_patch_time_start(tb_tasks, time_start=time_start)
+        herd.put_task(task=testbed_tasks, remote_path=remote_path)
+        command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
+        replies = herd.run_cmd(sudo=True, cmd=command)
+    return {
+        k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr) for k, v in replies.items()
+    }
+
+
 async def run_web_experiment(
     xp_id: UUID4, temp_path: Path, inventory: Path | str | None = None, *, dry_run: bool = False
 ) -> None:
@@ -47,10 +75,14 @@ async def run_web_experiment(
     if web_exp is None:
         log.warning("Dataset of Experiment not found before running it (deleted?)")
         return
-    web_exp.started_at = datetime.now(tz=local_tz())
+    web_exp.started_at = local_now()
     testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     web_exp.observer_paths = testbed_tasks.get_output_paths()
+    tb_status = await TestbedDB.get_one()
+    web_exp.observers_online = tb_status.scheduler.observers_online
+    web_exp.observers_offline = tb_status.scheduler.observers_offline
+    await web_exp.update_time_start(web_exp.started_at, force=True)
     await web_exp.save_changes()
 
     if dry_run:
@@ -70,59 +102,46 @@ async def run_web_experiment(
                 )
         await web_exp.update_result(paths_result)
     else:
-        with Herd(inventory=inventory) as herd:  # TODO: this can also be blocking
-            web_exp.observers_list = list(herd.hostnames.values())
-            web_exp.observers_used = [herd.hostnames[cnx.host] for cnx in herd.group]
-            await web_exp.update_time_start(local_now(), force=True)
-            await web_exp.save_changes()
-            # force other sheep-instances to end
-            await asyncio.to_thread(herd.run_cmd, sudo=True, cmd="pkill shepherd-sheep")
-
-            # TODO: add target-cleaner (chip erase) - at least flash sleep
-            # TODO: add missing nodes to error-log of web_exp
-
-            # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
-            remote_path = PurePosixPath("/etc/shepherd/config_for_herd.pickle")
-            # TODO: this is a workaround to force synced start
-            #       it wastes time but keeps logs of pre-tasks (programming) in result-file
-            herd.start_delay_s = 5 * 60  # testbed.prep_duration.total_seconds()
-            time_start, delay_s = await asyncio.to_thread(herd.find_consensus_time)
-            log.info(
-                "Experiment will start in %d seconds: %s (obs-time)",
-                int(delay_s),
-                time_start.isoformat(),
-            )
-            testbed_tasks = tbt_patch_time_start(testbed_tasks, time_start=time_start)
-            await asyncio.to_thread(herd.put_task, task=testbed_tasks, remote_path=remote_path)
-            command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
+        # TODO: loading herd seems to kill this local log-fn
+        timeout = web_exp.experiment.duration + timedelta(minutes=10)
+        try:
             log.info("NOW starting RUN()")
-            replies = await asyncio.to_thread(herd.run_cmd, sudo=True, cmd=command)
+            replies = await asyncio.wait_for(
+                asyncio.to_thread(
+                    run_herd_noasync,
+                    inventory=inventory,
+                    tb_tasks=testbed_tasks,
+                ),
+                timeout=timeout.total_seconds(),
+            )
             log.info("FINISHED RUN()")
-            # TODO: this can lock - not the best approach, try asyncio.wait_for()
-
-        exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
-        if exit_code > 0:
-            log.error("Herd failed on at least one Observer")
-        else:
-            log.info("Herd finished task execution successfully")
+            exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
+            if exit_code > 0:
+                log.error("Herd failed on at least one Observer")
+            else:
+                log.info("Herd finished task execution successfully")
+            web_exp.observers_output = replies
+        except asyncio.TimeoutError:
+            # TODO: test
+            log.warning("Timeout waiting for experiment '%s'", web_exp.experiment.name)
+            web_exp.scheduler_timeout = True
+        except Exception:  # noqa: BLE001
+            # TODO: send info about the exception
+            log.warning("General Exception waiting for experiment '%s'", web_exp.experiment.name)
+            web_exp.scheduler_panic = True
 
         await asyncio.sleep(20)  # finish IO, precaution
+        web_exp.finished_at = local_now()
+        await web_exp.update_time_start()
+        await web_exp.update_result()
+        await web_exp.save_changes()
+        await notify_user(web_exp.id)
 
         # Reload XP to avoid race-condition / working on old data
         web_exp = await WebExperiment.get_by_id(xp_id)
         if web_exp is None:
             log.warning("Dataset of Experiment not found after running it (deleted?)")
             return
-
-        # paths to directories with all content like firmware, h5-results, ...
-        web_exp.observers_output = {
-            k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr)
-            for k, v in replies.items()
-        }
-        web_exp.finished_at = datetime.now(tz=local_tz())
-        await web_exp.save_changes()
-        await web_exp.update_result()
-        await web_exp.update_time_start()
 
 
 async def notify_user(xp_id: UUID4) -> None:
@@ -142,9 +161,15 @@ async def notify_user(xp_id: UUID4) -> None:
         )
 
 
-async def update_status(
-    inventory: Path | None = None, *, active: bool = False, dry_run: bool = False
-) -> None:
+def update_status_noasync(stat: SchedulerStatus) -> SchedulerStatus:
+    with Herd() as herd:  # inventory shouldn't be needed here
+        stat.observer_count = len(herd.group)
+        stat.observers_online = {herd.hostnames[cnx.host] for cnx in herd.group}
+        stat.observers_offline = set(herd.hostnames.values()) - stat.observers_online
+    return stat
+
+
+async def update_status(*, active: bool = False, dry_run: bool = False) -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.scheduler.active = active
@@ -153,11 +178,10 @@ async def update_status(
     tb_.scheduler.last_update = local_now()
     if dry_run:
         tb_.scheduler.observer_count = 0
-        tb_.scheduler.observers = None
+        tb_.scheduler.observers_online = None
+        tb_.scheduler.observers_offline = None
     else:
-        with Herd(inventory=inventory) as herd:  # inventory shouldn't be needed here
-            tb_.scheduler.observer_count = len(herd.group)
-            tb_.scheduler.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
+        tb_.scheduler = await asyncio.to_thread(update_status_noasync, tb_.scheduler)
     # TODO: include storage, warn via mail if low
     await tb_.save_changes()
 
@@ -183,7 +207,7 @@ async def scheduler(
         await WebExperiment.reset_stuck_items()
 
         while True:
-            await update_status(inventory=inventory, active=True, dry_run=dry_run)
+            await update_status(active=True, dry_run=dry_run)
             # TODO: status could generate usable inventory, so missing nodes
             next_experiment = await WebExperiment.get_next_scheduling(only_elevated=only_elevated)
             if next_experiment is None:
@@ -192,28 +216,12 @@ async def scheduler(
                 continue
 
             log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
-            timeout = next_experiment.experiment.duration + timedelta(minutes=10)
-            try:
-                await asyncio.wait_for(
-                    run_web_experiment(
-                        next_experiment.id,
-                        inventory=inventory,
-                        temp_path=temp_path,
-                        dry_run=dry_run,
-                    ),
-                    timeout=timeout.total_seconds(),
-                )
-            except asyncio.TimeoutError:
-                # TODO: test
-                log.warning("Timeout waiting for experiment '%s'", next_experiment.experiment.name)
-                next_experiment.finished_at = datetime.now(tz=local_tz())
-                await next_experiment.update_result()
-                await next_experiment.update_time_start()
-            except Exception:  # noqa: BLE001
-                # TODO: send info about the exception
-                next_experiment.scheduler_panic = True
-                next_experiment.save_changes()
-            await notify_user(next_experiment.id)
+            await run_web_experiment(
+                next_experiment.id,
+                inventory=inventory,
+                temp_path=temp_path,
+                dry_run=dry_run,
+            )
 
 
 def run(

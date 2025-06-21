@@ -129,11 +129,13 @@ class ReplyData(BaseModel):
 
 class ErrorData(BaseModel):
     # status & error - log
-    observers_list: list[str] | None = None
-    observers_used: list[str] | None = None
+    observers_online: set[str] | None = None
+    observers_offline: set[str] | None = None
 
     observers_output: dict[str, ReplyData] | None = None
+
     scheduler_panic: bool = False
+    scheduler_timeout: bool = False
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""
@@ -157,12 +159,6 @@ class ErrorData(BaseModel):
         return files
 
     @property
-    def missing_observers(self) -> list[str]:
-        if self.observers_list is None or self.observers_used is None:
-            return []
-        return list(set(self.observers_list) - set(self.observers_used))
-
-    @property
     def max_exit_code(self) -> int:
         if self.observers_output is None:
             return 0
@@ -170,7 +166,12 @@ class ErrorData(BaseModel):
 
     @property
     def had_errors(self) -> bool:
-        return (self.max_exit_code > 0) or self.scheduler_panic or len(self.missing_observers) > 0
+        return (
+            (self.max_exit_code > 0)
+            or self.scheduler_panic
+            or self.scheduler_timeout
+            or len(self.observers_offline) > 0
+        )
 
 
 class WebExperiment(Document, ResultData, ErrorData):

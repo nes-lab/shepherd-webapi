@@ -129,11 +129,10 @@ class FastMailEngine(MailEngine):
             msg += "\nIt seems that no files were generated.\n"
         if all_done:
             msg += "\nThere are no further experiments scheduled for you.\n"
-        unavail_obs = web_exp.missing_observers
-        if len(unavail_obs) > 0:
+        if len(web_exp.observers_offline) > 0:
             msg += (
-                f"\nDuring the experiment {len(unavail_obs)} observer(s) "
-                f"was/were unavailable: {', '.join(unavail_obs)}\n"
+                f"\nDuring the experiment {len(web_exp.observers_offline)} observer(s) "
+                f"was/were unavailable: {', '.join(web_exp.observers_offline)}\n"
             )
         extra_subj = " with errors" if web_exp.had_errors else ""
         log.debug("-> EMAIL XP-Finished" + extra_subj)

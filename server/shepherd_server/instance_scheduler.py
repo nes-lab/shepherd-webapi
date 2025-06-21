@@ -113,8 +113,7 @@ async def run_web_experiment(
         all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
         if exit_code > 0:
             await mail_engine().send_experiment_finished_email(
-                config.contact["email"],
-                web_exp, all_done=all_done
+                config.contact["email"], web_exp, all_done=all_done
             )
             return
         # send out Mail if user wants it
@@ -140,7 +139,7 @@ async def update_status(
         tb_.scheduler.observer_count = 0
         tb_.scheduler.observers = None
     else:
-        with Herd(inventory=inventory) as herd:
+        with Herd(inventory=inventory) as herd:  # inventory shouldn't be needed here
             tb_.scheduler.observer_count = len(herd.group)
             tb_.scheduler.observers = [herd.hostnames[cnx.host] for cnx in herd.group]
     # TODO: include storage, warn via mail if low

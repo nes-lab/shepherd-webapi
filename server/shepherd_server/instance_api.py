@@ -25,6 +25,7 @@ from .api_auth.router import router as auth_router
 from .api_experiment.router import router as experiment_router
 from .api_testbed.models_status import TestbedDB
 from .api_testbed.models_status import TestbedStatus
+from .api_testbed.router import router as testbed_router
 from .api_user.router import router as user_router
 from .config import config
 from .instance_db import db_available
@@ -77,6 +78,7 @@ app.include_router(auth_router)
 # app.include_router(testbed_router)
 app.include_router(user_router)
 app.include_router(experiment_router)
+app.include_router(testbed_router)
 
 
 @app.get("/")

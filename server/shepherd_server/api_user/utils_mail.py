@@ -111,17 +111,18 @@ class FastMailEngine(MailEngine):
     async def send_experiment_finished_email(
         email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
     ) -> None:
-        xp_size_MiB = round(web_exp.result_size / 2**20)
-        xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
         msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) finished.\n"
-
-        if web_exp.had_errors:
+        if web_exp.max_exit_code > 0:
             msg += (
                 "\nErrors were encountered during execution. "
                 "The Console-Outputs of failing Observers are attached in this mail and "
                 "have also been sent to the admin.\n"
             )
+        if web_exp.scheduler_panic:
+            msg += "\nThe Scheduler panicked during execution - files might be missing.\n"
+        xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
         if xp_files_n > 0:
+            xp_size_MiB = round(web_exp.result_size / 2**20)
             msg += f"\nResults can now be downloaded ({xp_files_n} files, {xp_size_MiB} MiB).\n"
         else:
             msg += "\nIt seems that no files were generated.\n"
@@ -137,11 +138,13 @@ class FastMailEngine(MailEngine):
         log.debug("-> EMAIL XP-Finished" + extra_subj)
         if config.mail_enabled:
             message = MessageSchema(
-                recipients=list({email, config.contact["email"]}),
+                recipients=list({email, config.contact["email"]})
+                if web_exp.had_errors
+                else [email],
                 subject="[Shepherd] Experiment finished" + extra_subj,
                 body=msg,
                 subtype=MessageType.plain,
-                attachments=[web_exp.get_terminal_output(only_faulty=True)],
+                attachments=web_exp.get_terminal_output(only_faulty=True),
             )
             await mail.send_message(message)
 

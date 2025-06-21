@@ -97,13 +97,14 @@ async def run_web_experiment(
         else:
             log.info("Herd finished task execution successfully")
 
+        await asyncio.sleep(20)  # finish IO, precaution
+
         # Reload XP to avoid race-condition / working on old data
         web_exp = await WebExperiment.get_by_id(xp_id)
         if web_exp is None:
             log.warning("Dataset of Experiment not found after running it (deleted?)")
             return
 
-        await asyncio.sleep(20)  # finish IO, precaution
         # paths to directories with all content like firmware, h5-results, ...
         web_exp.observers_output = {
             k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr)
@@ -114,20 +115,22 @@ async def run_web_experiment(
         await web_exp.update_result(testbed_tasks.get_output_paths())
         await web_exp.update_time_start()
 
-        all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
-        if exit_code > 0:
-            await mail_engine().send_experiment_finished_email(
-                config.contact["email"], web_exp, all_done=all_done
-            )
-            return
-        # send out Mail if user wants it
-        if not isinstance(web_exp.owner, Link | User):
-            return
 
-        if web_exp.experiment.email_results or all_done:
-            await mail_engine().send_experiment_finished_email(
-                web_exp.owner.email, web_exp, all_done=all_done
-            )
+async def notify_user(xp_id: UUID4) -> None:
+    web_exp = await WebExperiment.get_by_id(xp_id)
+    if web_exp is None:
+        log.warning("Dataset of Experiment not found before running it (deleted?)")
+        return
+
+    # send out Mail if user wants it
+    if web_exp.had_errors or not isinstance(web_exp.owner, Link | User):
+        await mail_engine().send_experiment_finished_email(config.contact["email"], web_exp)
+        return
+    all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
+    if web_exp.had_errors or web_exp.experiment.email_results or all_done:
+        await mail_engine().send_experiment_finished_email(
+            web_exp.owner.email, web_exp, all_done=all_done
+        )
 
 
 async def update_status(
@@ -180,9 +183,15 @@ async def scheduler(
                 continue
 
             log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
-            await run_web_experiment(
-                next_experiment.id, inventory=inventory, temp_path=temp_path, dry_run=dry_run
-            )
+            try:
+                await run_web_experiment(
+                    next_experiment.id, inventory=inventory, temp_path=temp_path, dry_run=dry_run
+                )
+            except Exception:  # noqa: BLE001
+                # TODO: send info about the exception
+                next_experiment.scheduler_panic = True
+                next_experiment.save_changes()
+            await notify_user(next_experiment.id)
 
 
 def run(

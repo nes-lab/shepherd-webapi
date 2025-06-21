@@ -122,8 +122,7 @@ class ErrorData(BaseModel):
     observers_used: list[str] | None = None
 
     observers_output: dict[str, ReplyData] | None = None
-
-    # model_config = ConfigDict(arbitrary_types_allowed=True)
+    scheduler_panic: bool = False
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""
@@ -151,9 +150,12 @@ class ErrorData(BaseModel):
         return list(set(self.observers_list) - set(self.observers_used))
 
     @property
+    def max_exit_code(self) -> int:
+        return max([0] + [abs(reply.exited) for reply in self.observers_output.values()])
+
+    @property
     def had_errors(self) -> bool:
-        exit_code = max([0] + [abs(reply.exited) for reply in self.observers_output.values()])
-        return exit_code > 0
+        return (self.max_exit_code > 0) or self.scheduler_panic or len(self.missing_observers) > 0
 
 
 class WebExperiment(Document, ResultData, ErrorData):
@@ -253,6 +255,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         stuck_xps = await cls.find(
             cls.finished_at == None,  # noqa: E711 beanie cannot handle 'is not None'
             cls.started_at != None,  # noqa: E711
+            cls.scheduler_panic == False,  # noqa: E712
         ).to_list()
         for _xp in stuck_xps:
             log.info("Resetting experiment: %s", _xp.id)
@@ -315,6 +318,8 @@ class WebExperiment(Document, ResultData, ErrorData):
         return "created"
 
     async def update_time_start(self) -> None:
+        if self.experiment.time_start is not None:  # do not force if already there
+            return
         if not isinstance(self.result_paths, dict) or len(self.result_paths) == 0:
             log.error("Could not update Experiment.time_start from files")
             return

@@ -39,7 +39,14 @@ def tbt_patch_time_start(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTa
     return TestbedTasks(**tb_ts_dict)
 
 
+def kill_herd_noasync() -> None:
+    with Herd() as herd:
+        herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
+
+
 def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
+    from shepherd_herd.logger import log as hog
+
     with Herd(inventory=inventory) as herd:
         # force other sheep-instances to end
         herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
@@ -53,11 +60,12 @@ def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> di
         #       it wastes time but keeps logs of pre-tasks (programming) in result-file
         herd.start_delay_s = 5 * 60  # testbed.prep_duration.total_seconds()
         time_start, delay_s = herd.find_consensus_time()
-        log.info(
+        hog.info(
             "Experiment will start in %d seconds: %s (obs-time)",
             int(delay_s),
             time_start.isoformat(),
         )
+        # TODO: is patching still needed? hopefully not
         testbed_tasks = tbt_patch_time_start(tb_tasks, time_start=time_start)
         herd.put_task(task=testbed_tasks, remote_path=remote_path)
         command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
@@ -102,10 +110,9 @@ async def run_web_experiment(
                 )
         await web_exp.update_result(paths_result)
     else:
-        # TODO: loading herd seems to kill this local log-fn
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
         try:
-            log.info("NOW starting RUN()")
+            log.info("NOW starting RUN() - timeout in %d seconds", int(timeout.total_seconds()))
             replies = await asyncio.wait_for(
                 asyncio.to_thread(
                     run_herd_noasync,
@@ -122,7 +129,6 @@ async def run_web_experiment(
                 log.info("Herd finished task execution successfully")
             web_exp.observers_output = replies
         except asyncio.TimeoutError:
-            # TODO: test
             log.warning("Timeout waiting for experiment '%s'", web_exp.experiment.name)
             web_exp.scheduler_timeout = True
         except Exception:  # noqa: BLE001
@@ -130,6 +136,9 @@ async def run_web_experiment(
             log.warning("General Exception waiting for experiment '%s'", web_exp.experiment.name)
             web_exp.scheduler_panic = True
 
+        if web_exp.scheduler_timeout or web_exp.observers_panic:
+            await asyncio.wait_for(asyncio.to_thread(kill_herd_noasync), timeout=40)
+            await asyncio.sleep(30)  # finish IO, precaution
         await asyncio.sleep(20)  # finish IO, precaution
         web_exp.finished_at = local_now()
         await web_exp.update_time_start()

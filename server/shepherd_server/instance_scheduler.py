@@ -70,13 +70,13 @@ async def run_web_experiment(
                 )
         await web_exp.update_result(paths_result)
     else:
-        with Herd(inventory=inventory) as herd:
+        with Herd(inventory=inventory) as herd:  # TODO: this can also be blocking
             web_exp.observers_list = list(herd.hostnames.values())
             web_exp.observers_used = [herd.hostnames[cnx.host] for cnx in herd.group]
             await web_exp.update_time_start(local_now(), force=True)
             await web_exp.save_changes()
             # force other sheep-instances to end
-            herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
+            await asyncio.to_thread(herd.run_cmd, sudo=True, cmd="pkill shepherd-sheep")
 
             # TODO: add target-cleaner (chip erase) - at least flash sleep
             # TODO: add missing nodes to error-log of web_exp
@@ -86,17 +86,17 @@ async def run_web_experiment(
             # TODO: this is a workaround to force synced start
             #       it wastes time but keeps logs of pre-tasks (programming) in result-file
             herd.start_delay_s = 5 * 60  # testbed.prep_duration.total_seconds()
-            time_start, delay_s = herd.find_consensus_time()
+            time_start, delay_s = await asyncio.to_thread(herd.find_consensus_time)
             log.info(
                 "Experiment will start in %d seconds: %s (obs-time)",
                 int(delay_s),
                 time_start.isoformat(),
             )
             testbed_tasks = tbt_patch_time_start(testbed_tasks, time_start=time_start)
-            herd.put_task(task=testbed_tasks, remote_path=remote_path)
+            await asyncio.to_thread(herd.put_task, task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
             log.info("NOW starting RUN()")
-            replies = herd.run_cmd(sudo=True, cmd=command)
+            replies = await asyncio.to_thread(herd.run_cmd, sudo=True, cmd=command)
             log.info("FINISHED RUN()")
             # TODO: this can lock - not the best approach, try asyncio.wait_for()
 

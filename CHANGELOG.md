@@ -1,5 +1,14 @@
 # History of Changes
 
+## v2025.06.3
+
+- client - add experiment config to downloaded files
+- server
+  - fix missing SSL CA
+  - improve scheduler (synced start, more robust, more meta information)
+  - improve result-mail (add error-log of faulty nodes, add list of missing nodes, number and size of result-files)
+  - make saving database-entries safer with .save_changes()
+
 ## v2025.06.2
 
 - client - now warns if scheduler is not running or API is inaccessible
@@ -7,7 +16,7 @@
   - root URL has status-info about the testbed (scheduler, observers, ...)
   - send emails when xp are done (if activated in config) or scheduler has no more tasks from you
   - send emails to admin and user if experiment failed (with error-log)
-  - improve scheduler - handle edge-cases and collect files afterwards
+  - improve scheduler - handle edge-cases and collect files afterward
   - deleting an experiment now also deletes the directories (and by-products)
   - put server-tasks into systemd-services that run with local account
 

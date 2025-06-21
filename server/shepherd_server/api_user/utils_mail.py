@@ -58,8 +58,9 @@ class FastMailEngine(MailEngine):
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Testbed Approval",
-                body="Welcome to the Shepherd Nova Testbed! "
-                f"Use the following token for registering this Email-Address: {token}",
+                body="Welcome to the Shepherd Nova Testbed!"
+                f"\n\nUse the following token for registering this Email-Address: {token}\n"
+                "The client is available at: https://pypi.org/project/shepherd-client/",
                 subtype=MessageType.plain,
             )
             await mail.send_message(message)

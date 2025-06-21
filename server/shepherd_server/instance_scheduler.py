@@ -89,13 +89,15 @@ async def run_web_experiment(
             time_start, delay_s = herd.find_consensus_time()
             log.info(
                 "Experiment will start in %d seconds: %s (obs-time)",
-                delay_s,
+                int(delay_s),
                 time_start.isoformat(),
             )
             testbed_tasks = tbt_patch_time_start(testbed_tasks, time_start=time_start)
             herd.put_task(task=testbed_tasks, remote_path=remote_path)
             command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
+            log.info("NOW starting RUN()")
             replies = herd.run_cmd(sudo=True, cmd=command)
+            log.info("FINISHED RUN()")
             # TODO: this can lock - not the best approach, try asyncio.wait_for()
 
         exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])

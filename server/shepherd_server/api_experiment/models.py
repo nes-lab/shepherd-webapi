@@ -30,6 +30,8 @@ def obtain_access_permissions(path: Path) -> None:
         capture_output=False,
         timeout=20,
         check=False,
+        stderr=None,
+        stdout=None,
     ).returncode
     if ret != 0:
         log.warning("Changing permission denied for %s", path)

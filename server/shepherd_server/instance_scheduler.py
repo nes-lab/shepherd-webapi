@@ -29,7 +29,7 @@ def tbt_patch_time_start(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTa
     tb_ts_dict = tb_ts.model_dump()
     ots_new = []
     for ots in tb_ts_dict.get("observer_tasks"):
-        emu_dict = ots.emulation
+        emu_dict = ots.get("emulation")
         if isinstance(emu_dict, EmulationTask):
             ots["emulation"]["time_start"] = time_start
         ots_new.append(ots)

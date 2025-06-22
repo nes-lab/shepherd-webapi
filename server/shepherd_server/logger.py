@@ -1,6 +1,6 @@
 import logging
 
-log = logging.getLogger("[shp_srv]")
+log = logging.getLogger("asyncio")  # TODO: test instead of [shp_srv]
 
 
 def set_verbosity(*, debug: bool = True) -> None:

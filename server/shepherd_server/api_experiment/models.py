@@ -134,8 +134,7 @@ class ErrorData(BaseModel):
 
     observers_output: dict[str, ReplyData] | None = None
 
-    scheduler_panic: bool = False
-    scheduler_timeout: bool = False
+    scheduler_error: str | None = None
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""
@@ -168,8 +167,7 @@ class ErrorData(BaseModel):
     def had_errors(self) -> bool:
         return (
             (self.max_exit_code > 0)
-            or self.scheduler_panic
-            or self.scheduler_timeout
+            or self.scheduler_error is not None
             or len(self.observers_offline) > 0
         )
 
@@ -271,7 +269,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         stuck_xps = await cls.find(
             cls.finished_at == None,  # noqa: E711 beanie cannot handle 'is not None'
             cls.started_at != None,  # noqa: E711
-            cls.scheduler_panic == False,  # noqa: E712
+            cls.scheduler_error == None,  # noqa: E711
         ).to_list()
         for _xp in stuck_xps:
             log.info("Resetting experiment: %s", _xp.id)
@@ -323,7 +321,7 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     @property
     def state(self) -> str:
-        if self.scheduler_panic:
+        if self.scheduler_error is not None:
             return "failed"
         if self.finished_at is not None:
             if self.result_paths is not None:

@@ -1,8 +1,8 @@
 import asyncio
+import time
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
-from pathlib import PurePosixPath
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -27,16 +27,30 @@ from .instance_db import db_client
 from .logger import log
 
 
-def tbt_patch_time_start(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
-    tb_ts_dict = tb_ts.model_dump()
+def tbt_patch_pre(tb_ts: TestbedTasks) -> TestbedTasks:
+    tb_ts_pre = tb_ts.model_dump()
     ots_new = []
-    for ots in tb_ts_dict.get("observer_tasks"):
+    for ots in tb_ts_pre.get("observer_tasks"):
+        ots["emulation"] = None
+        ots_new.append(ots)
+    tb_ts_pre["observer_tasks"] = ots_new
+    return TestbedTasks(**tb_ts_pre)
+
+
+def tbt_patch_emu(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
+    tb_ts_emu = tb_ts.model_dump()
+    ots_new = []
+    for ots in tb_ts_emu.get("observer_tasks"):
+        ots["fw1_mod"] = None
+        ots["fw1_prog"] = None
+        ots["fw2_mod"] = None
+        ots["fw2_prog"] = None
         emu_dict = ots.get("emulation")
         if isinstance(emu_dict, EmulationTask):
             ots["emulation"]["time_start"] = time_start
         ots_new.append(ots)
-    tb_ts_dict["observer_tasks"] = ots_new
-    return TestbedTasks(**tb_ts_dict)
+    tb_ts_emu["observer_tasks"] = ots_new
+    return TestbedTasks(**tb_ts_emu)
 
 
 def kill_herd_noasync() -> None:
@@ -50,28 +64,41 @@ def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> di
     with Herd(inventory=inventory) as herd:
         # force other sheep-instances to end
         herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
-
         # TODO: add target-cleaner (chip erase) - at least flash sleep
-        # TODO: add missing nodes to error-log of web_exp
 
-        # below is a modified herd.run_task(testbed_tasks, attach=True, quiet=True)
-        remote_path = PurePosixPath("/etc/shepherd/config_for_herd.pickle")
-        # TODO: this is a workaround to force synced start
-        #       it wastes time but keeps logs of pre-tasks (programming) in result-file
-        herd.start_delay_s = 5 * 60  # testbed.prep_duration.total_seconds()
+        while herd.check_status():
+            time.sleep(20)
+
+        tasks_pre = tbt_patch_pre(tb_tasks)
+        ret = herd.run_task(tasks_pre, attach=False, quiet=True)
+        if ret > 0:
+            raise RuntimeError("Starting preparation of XP failed")
+        while herd.check_status():
+            time.sleep(20)
+
+        herd.start_delay_s = 40
         time_start, delay_s = herd.find_consensus_time()
         hog.info(
-            "Experiment will start in %d seconds: %s (obs-time)",
+            "Start XP in %d seconds: %s (obs-time)",
             int(delay_s),
             time_start.isoformat(),
         )
-        # TODO: is patching still needed? hopefully not
-        testbed_tasks = tbt_patch_time_start(tb_tasks, time_start=time_start)
-        herd.put_task(task=testbed_tasks, remote_path=remote_path)
-        command = f"shepherd-sheep --verbose run {remote_path.as_posix()}"
-        replies = herd.run_cmd(sudo=True, cmd=command)
+        tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
+        ret = herd.run_task(tasks_emu, attach=False, quiet=True)
+        if ret > 0:
+            raise RuntimeError("Starting Emulation failed")
+        while herd.check_status():
+            time.sleep(20)
+
+        # TODO: switch to service - poll results
+        # TODO: collect results with: /usr/bin/sudo /usr/bin/journalctl --unit=shepherd.service
+        #                             --lines=60 --output=short-iso-precise
+        #                             --since=DATE  --utc  --no-pager
+        # TODO: clean up log with vacuum?
+        # TODO: get exit code with: systemctl is-failed shepherd-redirect
     return {
-        k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr) for k, v in replies.items()
+        #    k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr)
+        #    for k, v in replies.items()
     }
 
 
@@ -130,13 +157,13 @@ async def run_web_experiment(
             web_exp.observers_output = replies
         except asyncio.TimeoutError:
             log.warning("Timeout waiting for experiment '%s'", web_exp.experiment.name)
-            web_exp.scheduler_timeout = True
+            web_exp.scheduler_error = "Timeout waiting for Experiment to finish"
         except Exception:  # noqa: BLE001
             # TODO: send info about the exception
             log.warning("General Exception waiting for experiment '%s'", web_exp.experiment.name)
-            web_exp.scheduler_panic = True
+            web_exp.scheduler_error = "Caught general Exception during Execution"
 
-        if web_exp.scheduler_timeout or web_exp.observers_panic:
+        if web_exp.scheduler_error is not None:
             await asyncio.wait_for(asyncio.to_thread(kill_herd_noasync), timeout=40)
             await asyncio.sleep(30)  # finish IO, precaution
         await asyncio.sleep(20)  # finish IO, precaution

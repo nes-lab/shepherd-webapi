@@ -119,8 +119,9 @@ class FastMailEngine(MailEngine):
                 "The Console-Outputs of failing Observers are attached in this mail and "
                 "have also been sent to the admin.\n"
             )
-        if web_exp.scheduler_panic:
-            msg += "\nThe Scheduler panicked during execution - files might be missing.\n"
+        if web_exp.scheduler_error:
+            msg += f"\nThe Scheduler recorded an error: {web_exp.scheduler_error}\n"
+            msg += "Files might be missing.\n"
         xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
         if xp_files_n > 0:
             xp_size_MiB = round(web_exp.result_size / 2**20)

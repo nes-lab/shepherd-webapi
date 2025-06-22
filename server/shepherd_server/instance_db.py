@@ -76,3 +76,4 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
 async def db_delete_all_experiments() -> None:
     await db_client()
     await WebExperiment.delete_all()
+    await TestbedDB.delete_all()

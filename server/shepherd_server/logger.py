@@ -1,6 +1,17 @@
+import atexit
 import logging
+import multiprocessing
+from logging import handlers
 
-log = logging.getLogger("asyncio")  # TODO: test instead of [shp_srv]
+log = logging.getLogger("[shp_srv]")
+
+log.propagate = False
+queue = multiprocessing.Queue(-1)
+queue_handler = handlers.QueueHandler(queue)
+queue_handler.setLevel(logging.DEBUG)
+log.addHandler(queue_handler)
+
+listener = handlers.QueueListener(queue, logging.StreamHandler())
 
 
 def set_verbosity(*, debug: bool = True) -> None:
@@ -13,6 +24,17 @@ def set_verbosity(*, debug: bool = True) -> None:
 def get_verbosity() -> bool:
     return log.level == logging.DEBUG
 
+
+def clear_message_queue() -> None:
+    """If no one reads the queue, the thread will not finish, so add option to empty it"""
+    log.removeHandler(queue_handler)
+    listener.stop()
+    queue.cancel_join_thread()
+    queue.close()
+
+
+# last action on exit is to clear queue to prevent lockup
+atexit.register(clear_message_queue)
 
 # short reminder for format-strings:
 # %s    string

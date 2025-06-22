@@ -61,11 +61,7 @@ def kill_herd_noasync() -> None:
 
 
 def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
-    import logging
-    hog = logging.getLogger("[HerdProcess]")
-    hog.info("last output before Herd Open")
     with Herd(inventory=inventory) as herd:
-        hog.info("first output after Herd Open")
         # force other sheep-instances to end
         herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
         # TODO: log is garbage after .run_cmd() - threading.Thread inside asyncio-thread not OK?
@@ -83,7 +79,7 @@ def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> di
 
         herd.start_delay_s = 40
         time_start, delay_s = herd.find_consensus_time()
-        hog.info(
+        log.info(
             "Start XP in %d seconds: %s (obs-time)",
             int(delay_s),
             time_start.isoformat(),
@@ -95,7 +91,6 @@ def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> di
         while herd.check_status():
             time.sleep(20)
 
-        # TODO: switch to service - poll results
         # TODO: collect results with: /usr/bin/sudo /usr/bin/journalctl --unit=shepherd.service
         #                             --lines=60 --output=short-iso-precise
         #                             --since=DATE  --utc  --no-pager

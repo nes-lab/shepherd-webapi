@@ -60,8 +60,9 @@ def kill_herd_noasync() -> None:
 
 def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
     from shepherd_herd.logger import log as hog
-
+    log.info("last output before Herd Open")
     with Herd(inventory=inventory) as herd:
+        log.info("first output after Herd Open")
         # force other sheep-instances to end
         herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
         # TODO: add target-cleaner (chip erase) - at least flash sleep
@@ -78,7 +79,7 @@ def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> di
 
         herd.start_delay_s = 40
         time_start, delay_s = herd.find_consensus_time()
-        hog.info(
+        log.info(
             "Start XP in %d seconds: %s (obs-time)",
             int(delay_s),
             time_start.isoformat(),

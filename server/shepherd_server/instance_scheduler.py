@@ -1,5 +1,7 @@
 import asyncio
+import functools
 import time
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
@@ -59,12 +61,12 @@ def kill_herd_noasync() -> None:
 
 
 def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
-    from shepherd_herd.logger import log as hog
     log.info("last output before Herd Open")
     with Herd(inventory=inventory) as herd:
         log.info("first output after Herd Open")
         # force other sheep-instances to end
         herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
+        # TODO: log is garbage after .run_cmd() - threading.Thread inside asyncio-thread not OK?
         # TODO: add target-cleaner (chip erase) - at least flash sleep
 
         while herd.check_status():
@@ -141,14 +143,18 @@ async def run_web_experiment(
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
         try:
             log.info("NOW starting RUN() - timeout in %d seconds", int(timeout.total_seconds()))
-            replies = await asyncio.wait_for(
-                asyncio.to_thread(
-                    run_herd_noasync,
-                    inventory=inventory,
-                    tb_tasks=testbed_tasks,
-                ),
-                timeout=timeout.total_seconds(),
-            )
+            loop = asyncio.get_running_loop()
+            # herd_executor = ThreadPoolExecutor(max_workers=64)
+            with ProcessPoolExecutor() as hexecutor:
+                replies = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        executor=hexecutor,
+                        func=functools.partial(
+                            run_herd_noasync, inventory=inventory, tb_tasks=testbed_tasks
+                        ),
+                    ),
+                    timeout=timeout.total_seconds(),
+                )
             log.info("FINISHED RUN()")
             exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
             if exit_code > 0:

@@ -2,6 +2,7 @@ import asyncio
 import functools
 import time
 from concurrent.futures import ProcessPoolExecutor
+from contextlib import ExitStack
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
@@ -103,7 +104,11 @@ def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> di
 
 
 async def run_web_experiment(
-    xp_id: UUID4, temp_path: Path, inventory: Path | str | None = None, *, dry_run: bool = False
+    xp_id: UUID4,
+    temp_path: Path | None,
+    inventory: Path | str | None = None,
+    *,
+    dry_run: bool = False,
 ) -> None:
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
@@ -121,6 +126,8 @@ async def run_web_experiment(
     await web_exp.save_changes()
 
     if dry_run:
+        if temp_path is None:
+            raise RuntimeError("Dry-running Scheduler needs a temporary directory")
         await asyncio.sleep(10)  # mocked length
         # create mocked files
         paths_task = testbed_tasks.get_output_paths()
@@ -235,11 +242,13 @@ async def scheduler(
     _client = await db_client()
 
     # allow running dry in temp-folder
-    with TemporaryDirectory() as temp_dir:
-        temp_path: Path = Path(temp_dir)
-        log.debug("Temp path: %s", temp_path.resolve())
-
+    with ExitStack() as stack:
+        temp_path: Path | None = None
         if dry_run:
+            temp_dir = TemporaryDirectory(suffix="srv_scheduler_")
+            stack.enter_context(temp_dir)
+            temp_path: Path = Path(temp_dir)
+            log.debug("Temp path: %s", temp_path.resolve())
             log.warning("Dry run mode - not executing tasks!")
 
         # TODO: how to make sure there is only one scheduler? Singleton

@@ -5,13 +5,16 @@ from logging import handlers
 
 log = logging.getLogger("[shp_srv]")
 
+for hdlr in log.handlers:
+    log.removeHandler(hdlr)
 log.propagate = False
 queue = multiprocessing.Queue(-1)
 queue_handler = handlers.QueueHandler(queue)
-queue_handler.setLevel(logging.DEBUG)
+queue_handler.setLevel(logging.INFO)
 log.addHandler(queue_handler)
 
 listener = handlers.QueueListener(queue, logging.StreamHandler())
+listener.start()
 
 
 def set_verbosity(*, debug: bool = True) -> None:

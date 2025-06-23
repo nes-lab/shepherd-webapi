@@ -38,25 +38,18 @@ In the near future, the functionality will be extended to:
 
 ### Install
 
-You can install the client by using the package-manager of your choice. In the following example we show pip:
+You can install the client by using the package-manager of your choice. In the following example we show pip and uv:
 
 ```Shell
 pip3 install shepherd-client -U
+# or modern uv with automatic virtual environment
+uv pip install shepherd-client -U
 ```
 
 Newest features can be obtained by directly installing from GitHub:
 
-```
-pip install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=client
-
-# or modern venv
+```shell
 uv pip install git+https://github.com/nes-lab/shepherd-webapi.git@main
-
-# or old pipenv
-git clone https://github.com/nes-lab/shepherd-webapi.git
-cd shepherd-webapi
-pipenv install
-pipenv shell
 ```
 
 ### Usage

@@ -58,48 +58,44 @@ def tbt_patch_emu(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
 
 def kill_herd_noasync() -> None:
     with Herd() as herd:
-        herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
+        herd.kill_sheep_process()
 
 
 def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
     with Herd(inventory=inventory) as herd:
-        # force other sheep-instances to end
-        herd.run_cmd(sudo=True, cmd="pkill shepherd-sheep")
-        # TODO: log is garbage after .run_cmd() - threading.Thread inside asyncio-thread not OK?
-        # TODO: add target-cleaner (chip erase) - at least flash sleep
-
-        while herd.check_status():
+        # Prepare Testbed
+        herd.kill_sheep_process()
+        # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
+        while herd.service_is_active():
             time.sleep(20)
+        herd.service_erase_log()
 
+        # Prepare Targets
         tasks_pre = tbt_patch_pre(tb_tasks)
         ret = herd.run_task(tasks_pre, attach=False, quiet=True)
         if ret > 0:
             raise RuntimeError("Starting preparation of XP failed")
-        while herd.check_status():
+        while herd.service_is_active():
             time.sleep(20)
+        if not herd.service_is_failed():
+            # Start Experiment
+            herd.start_delay_s = 40
+            time_start, delay_s = herd.find_consensus_time()
+            log.info(
+                "Start XP in %d seconds: %s (obs-time)",
+                int(delay_s),
+                time_start.isoformat(),
+            )
+            tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
+            ret = herd.run_task(tasks_emu, attach=False, quiet=True)
+            if ret > 0:
+                raise RuntimeError("Starting Emulation failed")
+            while herd.service_is_active():
+                time.sleep(20)
 
-        herd.start_delay_s = 40
-        time_start, delay_s = herd.find_consensus_time()
-        log.info(
-            "Start XP in %d seconds: %s (obs-time)",
-            int(delay_s),
-            time_start.isoformat(),
-        )
-        tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
-        ret = herd.run_task(tasks_emu, attach=False, quiet=True)
-        if ret > 0:
-            raise RuntimeError("Starting Emulation failed")
-        while herd.check_status():
-            time.sleep(20)
-
-        # TODO: collect results with: /usr/bin/sudo /usr/bin/journalctl --unit=shepherd.service
-        #                             --lines=60 --output=short-iso-precise
-        #                             --since=DATE  --utc  --no-pager
-        # TODO: clean up log with vacuum?
-        # TODO: get exit code with: systemctl is-failed shepherd-redirect
+        replies = herd.service_get_logs()
     return {
-        #    k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr)
-        #    for k, v in replies.items()
+        k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr) for k, v in replies.items()
     }
 
 
@@ -158,9 +154,11 @@ async def run_web_experiment(
                         ),
                     ),
                     timeout=timeout.total_seconds(),
+                    # TODO: no advantage observed in comparison to .to_thread()
                 )
             log.info("FINISHED RUN()")
             exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
+            # TODO: detect when experiment was not run (failed early during prep)
             if exit_code > 0:
                 log.error("Herd failed on at least one Observer")
             else:
@@ -175,7 +173,7 @@ async def run_web_experiment(
             web_exp.scheduler_error = "Caught general Exception during Execution"
 
         if web_exp.scheduler_error is not None:
-            await asyncio.wait_for(asyncio.to_thread(kill_herd_noasync), timeout=40)
+            await asyncio.wait_for(asyncio.to_thread(kill_herd_noasync), timeout=30)
             await asyncio.sleep(30)  # finish IO, precaution
         await asyncio.sleep(20)  # finish IO, precaution
         web_exp.finished_at = local_now()
@@ -219,16 +217,19 @@ def update_status_noasync(stat: SchedulerStatus) -> SchedulerStatus:
 async def update_status(*, active: bool = False, dry_run: bool = False) -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
-    tb_.scheduler.active = active
     tb_.scheduler.dry_run = dry_run
     tb_.scheduler.busy = await WebExperiment.get_next_scheduling() is not None
     tb_.scheduler.last_update = local_now()
+    if not active:
+        tb_.scheduler.activated = None
     if dry_run:
         tb_.scheduler.observer_count = 0
         tb_.scheduler.observers_online = None
         tb_.scheduler.observers_offline = None
     else:
-        tb_.scheduler = await asyncio.to_thread(update_status_noasync, tb_.scheduler)
+        tb_.scheduler = await asyncio.wait_for(
+            asyncio.to_thread(update_status_noasync, tb_.scheduler), timeout=30
+        )
     # TODO: include storage, warn via mail if low
     await tb_.save_changes()
 
@@ -240,6 +241,9 @@ async def scheduler(
     only_elevated: bool = False,
 ) -> None:
     _client = await db_client()
+    tb_ = await TestbedDB.get_one()
+    tb_.scheduler.activated = local_now()
+    tb_.save_changes()
 
     # allow running dry in temp-folder
     with ExitStack() as stack:

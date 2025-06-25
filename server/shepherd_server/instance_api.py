@@ -89,8 +89,8 @@ async def root() -> TestbedStatus:
     tb_.restrictions = [
         "NW-Storage of the Beaglebones is currently only ~ 30 MB/s (accumulated) "
         "and latency is 5 to 10 seconds.",
-        "Target 1 (sheep05) fails to program nRF52",
-    ]
+        "samplerate < 100k in PowerTracer() is crashing observers (API will reject experiments)",
+    ]  # TODO: remove hardcode - as there is now a getter, setter
     return tb_
 
 

@@ -2,10 +2,11 @@ from datetime import datetime
 
 from beanie import Document
 from pydantic import BaseModel
+from pydantic import HttpUrl
 
 
 class SchedulerStatus(BaseModel):
-    active: bool = False
+    activated: datetime | None = None
     busy: bool = False
     dry_run: bool = False
     last_update: datetime | None = None
@@ -15,8 +16,8 @@ class SchedulerStatus(BaseModel):
 
 
 class RedirectStatus(BaseModel):
-    active: bool = False
-    last_update: datetime | None = None
+    activated: datetime | None = None
+    url: HttpUrl | None = None
 
 
 class ApiStatus(BaseModel):

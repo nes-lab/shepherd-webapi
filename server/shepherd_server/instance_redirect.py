@@ -33,8 +33,8 @@ async def redir() -> RedirectResponse:
 async def update_status(*, active: bool = False) -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
-    tb_.redirect.active = active
-    tb_.redirect.last_update = local_now()
+    tb_.redirect.activated = local_now() if active else None
+    tb_.redirect.url = config.redirect_url
     await tb_.save_changes()
 
 

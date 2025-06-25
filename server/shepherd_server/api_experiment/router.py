@@ -33,6 +33,10 @@ async def create_experiment(
         raise HTTPException(
             403, f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)"
         )
+    for tgt_cfg in experiment.target_configs:
+        # TODO: only temporary until numpy is updated
+        if tgt_cfg.power_tracing is not None and tgt_cfg.power_tracing.samplerate != 100_000:
+            raise HTTPException(403, "power_tracing.samplerate must be 100 kHz (unstable)")
     web_experiment = WebExperiment(
         experiment=experiment,
         owner=user,

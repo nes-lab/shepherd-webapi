@@ -8,6 +8,7 @@ from fastapi import Response
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd import Herd
 
+from shepherd_server.api_testbed.models_status import TestbedDB
 from shepherd_server.api_user.utils_misc import active_user_is_admin
 from shepherd_server.config import config
 
@@ -17,6 +18,20 @@ router = APIRouter(prefix="/testbed", tags=["Testbed"])
 @router.get("")
 async def testbed_info() -> Testbed:
     return Testbed(name=config.testbed_name)
+
+
+@router.get("/restrictions")
+async def get_restrictions() -> list[str]:
+    tb_ = await TestbedDB.get_one()
+    return tb_.restrictions
+
+
+@router.patch("/restrictions", dependencies=[Depends(active_user_is_admin)])
+async def set_restrictions(restrictions: list[str]) -> Response:
+    tb_ = await TestbedDB.get_one()
+    tb_.restrictions = restrictions
+    tb_.save_changes()
+    return Response(status_code=200, content="Command successful executed")
 
 
 herd_cmds = {"restart", "resync", "inventorize", "stop-measurement", "min-space"}
@@ -37,7 +52,7 @@ def run_command_noasync(cmd: str) -> Response:
     if cmd in herd_cmds:
         with Herd() as herd:
             if cmd == "restart":
-                ret = herd.poweroff(restart=True)
+                ret = herd.reboot()
             elif cmd == "resync":
                 ret = herd.resync()
             elif cmd == "inventorize":

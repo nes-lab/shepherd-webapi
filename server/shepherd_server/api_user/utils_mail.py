@@ -114,15 +114,22 @@ class FastMailEngine(MailEngine):
     ) -> None:
         msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) finished.\n"
         if web_exp.had_errors:
-            msg += "\nErrors were encountered during execution. "
-        if web_exp.max_exit_code > 0 or web_exp.has_missing_data:
+            msg += "\nErrors were encountered during execution.\n"
+        if web_exp.has_missing_data:
+            msg += "- one or more files are missing\n"
+        if web_exp.max_exit_code > 0:
             msg += (
-                "The Console-Outputs of failing Observers are attached in this mail and "
+                "- Console-Outputs of failing Observers are attached in this mail and "
                 "have also been sent to the admin.\n"
             )
         if web_exp.scheduler_error:
-            msg += f"\nThe Scheduler recorded an error: {web_exp.scheduler_error}\n"
-            msg += "Files might be missing.\n"
+            msg += f"- the Scheduler recorded an error: {web_exp.scheduler_error}\n"
+        if len(web_exp.missing_observers) > 0:
+            msg += (
+                f"- {len(web_exp.missing_observers)} requested observer(s) "
+                f"was/were unavailable: {', '.join(web_exp.missing_observers)}\n"
+            )
+
         xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
         if xp_files_n > 0:
             xp_size_MiB = round(web_exp.result_size / 2**20)
@@ -131,11 +138,7 @@ class FastMailEngine(MailEngine):
             msg += "\nIt seems that no files were generated.\n"
         if all_done:
             msg += "\nThere are no further experiments scheduled for you.\n"
-        if len(web_exp.missing_observers) > 0:
-            msg += (
-                f"\nDuring the experiment {len(web_exp.missing_observers)} requested observer(s) "
-                f"was/were unavailable: {', '.join(web_exp.missing_observers)}\n"
-            )
+
         extra_subj = " with errors" if web_exp.had_errors else ""
         log.debug("-> EMAIL XP-Finished" + extra_subj)
         if config.mail_enabled:

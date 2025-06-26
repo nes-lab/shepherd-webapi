@@ -114,6 +114,7 @@ async def run_web_experiment(
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     web_exp.observer_paths = testbed_tasks.get_output_paths()
     tb_status = await TestbedDB.get_one()
+    web_exp.observers_requested = testbed_tasks.get_observers()
     web_exp.observers_online = tb_status.scheduler.observers_online
     web_exp.observers_offline = tb_status.scheduler.observers_offline
     await web_exp.update_time_start(web_exp.started_at, force=True)
@@ -194,7 +195,7 @@ async def notify_user(xp_id: UUID4) -> None:
     if web_exp.had_errors or not isinstance(web_exp.owner, Link | User):
         await mail_engine().send_experiment_finished_email(config.contact["email"], web_exp)
         return
-    all_done = await WebExperiment.has_scheduled_by_user(web_exp.owner)
+    all_done = not await WebExperiment.has_scheduled_by_user(web_exp.owner)
     if web_exp.had_errors or web_exp.experiment.email_results or all_done:
         await mail_engine().send_experiment_finished_email(
             web_exp.owner.email, web_exp, all_done=all_done

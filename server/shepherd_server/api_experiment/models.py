@@ -37,7 +37,76 @@ def obtain_access_permissions(path: Path) -> None:
         log.warning("Changing permission denied for %s", path)
 
 
-class ResultData(BaseModel):
+class ReplyData(BaseModel):
+    exited: int
+    stdout: str
+    stderr: str
+
+
+class ErrorData(BaseModel):
+    # status & error - log
+    observers_requested: set[str] | None = None
+    observers_online: set[str] | None = None
+    observers_offline: set[str] | None = None
+
+    observers_output: dict[str, ReplyData] | None = None
+    observers_had_data: dict[str, bool] | None = None
+
+    scheduler_error: str | None = None
+
+    def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
+        """Log output-results of shell commands."""
+        files = []
+        if self.observers_output is None:
+            return files
+        # sort dict by key first
+        replies = dict(sorted(self.observers_output.items()))
+        for hostname, reply in replies.items():
+            had_error = abs(reply.exited) != 0 and not self.observers_had_data.get(hostname, False)
+            if only_faulty and not had_error:
+                continue
+            string = ""
+            if len(reply.stdout) > 0:
+                string += f"\n************** {hostname} - stdout **************\n"
+                string += reply.stdout
+            if len(reply.stderr) > 0:
+                string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~\n"
+                string += reply.stderr
+            string += f"\nExit-code of {hostname} = {reply.exited}\n"
+            files.append(UploadFile(filename=f"{hostname}_error.log", file=StringIO(string)))
+        return files
+
+    @property
+    def max_exit_code(self) -> int:
+        # note that missing (but requested) observers don't count here
+        if self.observers_requested is None or self.observers_output is None:
+            return 0
+        obs_exited = {obs: abs(reply.exited) for obs, reply in self.observers_output.items()}
+        return max([0] + [obs_exited.get(obs, 0) for obs in self.observers_requested])
+
+    @property
+    def has_missing_data(self) -> bool:
+        if self.observers_requested is None or self.observers_had_data is None:
+            return False
+        return not all(self.observers_had_data.get(obs, False) for obs in self.observers_requested)
+
+    @property
+    def has_missing_observer(self) -> bool:
+        if self.observers_requested is None or self.observers_offline:
+            return False
+        return any(obs in self.observers_offline for obs in self.observers_requested)
+
+    @property
+    def had_errors(self) -> bool:
+        return (
+            (self.max_exit_code > 0)
+            or self.scheduler_error is not None
+            or self.has_missing_data
+            or self.has_missing_observer
+        )
+
+
+class ResultData(ErrorData):
     observer_paths: dict[str, Path] | None = None
     """Observer paths are used as future (will be filled by observers)
     """
@@ -96,6 +165,10 @@ class ResultData(BaseModel):
                 self.result_paths.pop(observer)
                 continue
             self.result_paths[observer] = path_srv
+        for observer in self.observers_requested:
+            path = self.result_paths.get(observer)
+            self.observers_had_data[observer] = path is not None and path.exists()
+
         if len(self.result_paths) > 0:
             self.content_paths = {key: path.parent for key, path in self.result_paths.items()}
             await self.update_size()
@@ -119,57 +192,6 @@ class ResultData(BaseModel):
                 shutil.rmtree(content_dir, ignore_errors=True)
             self.content_paths = None
         await self.save_changes()
-
-
-class ReplyData(BaseModel):
-    exited: int
-    stdout: str
-    stderr: str
-
-
-class ErrorData(BaseModel):
-    # status & error - log
-    observers_online: set[str] | None = None
-    observers_offline: set[str] | None = None
-
-    observers_output: dict[str, ReplyData] | None = None
-
-    scheduler_error: str | None = None
-
-    def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
-        """Log output-results of shell commands."""
-        files = []
-        if self.observers_output is None:
-            return files
-        # sort dict by key first
-        replies = dict(sorted(self.observers_output.items()))
-        for hostname, reply in replies.items():
-            if only_faulty and abs(reply.exited) == 0:
-                continue
-            string = ""
-            if len(reply.stdout) > 0:
-                string += f"\n************** {hostname} - stdout **************\n"
-                string += reply.stdout
-            if len(reply.stderr) > 0:
-                string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~\n"
-                string += reply.stderr
-            string += f"\nExit-code of {hostname} = {reply.exited}\n"
-            files.append(UploadFile(filename=f"{hostname}_error.log", file=StringIO(string)))
-        return files
-
-    @property
-    def max_exit_code(self) -> int:
-        if self.observers_output is None:
-            return 0
-        return max([0] + [abs(reply.exited) for reply in self.observers_output.values()])
-
-    @property
-    def had_errors(self) -> bool:
-        return (
-            (self.max_exit_code > 0)
-            or self.scheduler_error is not None
-            or len(self.observers_offline) > 0
-        )
 
 
 class WebExperiment(Document, ResultData, ErrorData):

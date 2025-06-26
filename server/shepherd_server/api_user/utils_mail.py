@@ -113,9 +113,10 @@ class FastMailEngine(MailEngine):
         email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
     ) -> None:
         msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) finished.\n"
-        if web_exp.max_exit_code > 0:
+        if web_exp.had_errors:
+            msg += "\nErrors were encountered during execution. "
+        if web_exp.max_exit_code > 0 or web_exp.has_missing_date:
             msg += (
-                "\nErrors were encountered during execution. "
                 "The Console-Outputs of failing Observers are attached in this mail and "
                 "have also been sent to the admin.\n"
             )
@@ -130,10 +131,11 @@ class FastMailEngine(MailEngine):
             msg += "\nIt seems that no files were generated.\n"
         if all_done:
             msg += "\nThere are no further experiments scheduled for you.\n"
-        if len(web_exp.observers_offline) > 0:
+        if web_exp.has_missing_observer:
+            obs_missing = web_exp.observers_requested and web_exp.observers_missing
             msg += (
-                f"\nDuring the experiment {len(web_exp.observers_offline)} observer(s) "
-                f"was/were unavailable: {', '.join(web_exp.observers_offline)}\n"
+                f"\nDuring the experiment {len(obs_missing)} observer(s) "
+                f"was/were unavailable: {', '.join(obs_missing)}\n"
             )
         extra_subj = " with errors" if web_exp.had_errors else ""
         log.debug("-> EMAIL XP-Finished" + extra_subj)

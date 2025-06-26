@@ -243,7 +243,7 @@ async def scheduler(
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.scheduler.activated = local_now()
-    tb_.save_changes()
+    await tb_.save_changes()
 
     # allow running dry in temp-folder
     with ExitStack() as stack:
@@ -287,7 +287,7 @@ def run(
     try:
         asyncio.run(scheduler(inventory, dry_run=dry_run, only_elevated=only_elevated))
     except SystemExit:
-        asyncio.run(update_status(inventory, dry_run=dry_run))
+        asyncio.run(update_status(dry_run=dry_run))
 
 
 if __name__ == "__main__":

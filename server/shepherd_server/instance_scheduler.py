@@ -220,8 +220,8 @@ async def update_status(*, active: bool = False, dry_run: bool = False) -> None:
         tb_.scheduler.activated = None
     if dry_run:
         tb_.scheduler.observer_count = 0
-        tb_.scheduler.observers_online = None
-        tb_.scheduler.observers_offline = None
+        tb_.scheduler.observers_online = set()
+        tb_.scheduler.observers_offline = set()
     else:
         tb_.scheduler = await asyncio.wait_for(
             asyncio.to_thread(update_status_noasync, tb_.scheduler), timeout=30

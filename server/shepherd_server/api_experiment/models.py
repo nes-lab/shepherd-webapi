@@ -45,9 +45,9 @@ class ReplyData(BaseModel):
 
 class ErrorData(BaseModel):
     # status & error - log
-    observers_requested: set[str] | None = None
-    observers_online: set[str] | None = None
-    observers_offline: set[str] | None = None
+    observers_requested: set[str] = set()
+    observers_online: set[str] = set()
+    observers_offline: set[str] = set()
 
     observers_output: dict[str, ReplyData] | None = None
     observers_had_data: dict[str, bool] | None = None
@@ -79,30 +79,28 @@ class ErrorData(BaseModel):
     @property
     def max_exit_code(self) -> int:
         # note that missing (but requested) observers don't count here
-        if self.observers_requested is None or self.observers_output is None:
+        if self.observers_output is None:
             return 0
         obs_exited = {obs: abs(reply.exited) for obs, reply in self.observers_output.items()}
         return max([0] + [obs_exited.get(obs, 0) for obs in self.observers_requested])
 
     @property
     def has_missing_data(self) -> bool:
-        if self.observers_requested is None or self.observers_had_data is None:
+        if self.observers_had_data is None:
             return False
         return not all(self.observers_had_data.get(obs, False) for obs in self.observers_requested)
 
     @property
-    def has_missing_observer(self) -> bool:
-        if self.observers_requested is None or self.observers_offline:
-            return False
-        return any(obs in self.observers_offline for obs in self.observers_requested)
+    def missing_observers(self) -> set[str]:
+        return self.observers_requested - self.observers_online
 
     @property
     def had_errors(self) -> bool:
         return (
-            (self.max_exit_code > 0)
+            self.max_exit_code > 0
             or self.scheduler_error is not None
             or self.has_missing_data
-            or self.has_missing_observer
+            or len(self.missing_observers) > 0
         )
 
 

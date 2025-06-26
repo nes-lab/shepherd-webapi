@@ -33,6 +33,10 @@ class TestbedStatus(BaseModel):
     scheduler: SchedulerStatus = SchedulerStatus()
     redirect: RedirectStatus = RedirectStatus()
 
+    server_version: str | None = None
+    herd_version: str | None = None
+    core_version: str | None = None
+
 
 class TestbedDB(TestbedStatus, Document):
     class Settings:  # allows using .save_changes()

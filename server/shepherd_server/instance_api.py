@@ -105,9 +105,17 @@ async def favicon2() -> FileResponse:
 
 
 async def update_status() -> None:
+    from shepherd_core.version import version as core_version
+    from shepherd_herd import __version__ as herd_version
+
+    from .version import version as server_version
+
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.webapi.activated = local_now()
+    tb_.server_version = server_version
+    tb_.core_version = core_version
+    tb_.herd_version = herd_version
     await tb_.save_changes()
 
 

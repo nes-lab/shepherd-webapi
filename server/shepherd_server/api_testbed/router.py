@@ -9,7 +9,7 @@ from shepherd_core.data_models.testbed import Testbed
 from shepherd_herd import Herd
 
 from shepherd_server.api_testbed.models_status import TestbedDB
-from shepherd_server.api_user.utils_misc import active_user_is_admin
+from shepherd_server.api_user.utils_misc import active_user_is_elevated
 from shepherd_server.config import config
 
 router = APIRouter(prefix="/testbed", tags=["Testbed"])
@@ -38,7 +38,7 @@ herd_cmds = {"restart", "resync", "inventorize", "stop-measurement", "min-space"
 server_cmds = {"start-scheduler", "stop-scheduler"}
 
 
-@router.get("/command", dependencies=[Depends(active_user_is_admin)])
+@router.get("/command", dependencies=[Depends(active_user_is_elevated)])
 async def get_command() -> Response:
     return Response(status_code=200, content=list(herd_cmds) + list(server_cmds))
 
@@ -84,6 +84,6 @@ def run_command_noasync(cmd: str) -> Response:
     return Response(status_code=400, content="Command failed on at least one Host")
 
 
-@router.patch("/command", dependencies=[Depends(active_user_is_admin)])
+@router.patch("/command", dependencies=[Depends(active_user_is_elevated)])
 async def run_command(cmd: str) -> Response:
     return await asyncio.to_thread(run_command_noasync, cmd)

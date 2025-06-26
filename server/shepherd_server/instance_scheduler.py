@@ -142,7 +142,9 @@ async def run_web_experiment(
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
         try:
             log.info(
-                "NOW starting HERD_RUN() - timeout in %d seconds", int(timeout.total_seconds())
+                "NOW starting HERD_RUN() - runtime %d s, timeout in %d s",
+                int(web_exp.experiment.duration.total_seconds()),
+                int(timeout.total_seconds()),
             )
             replies = await asyncio.wait_for(
                 asyncio.to_thread(

@@ -49,16 +49,14 @@ class ErrorData(BaseModel):
     observers_online: set[str] = set()
     observers_offline: set[str] = set()
 
-    observers_output: dict[str, ReplyData] | None = None
-    observers_had_data: dict[str, bool] | None = None
+    observers_output: dict[str, ReplyData] = {}
+    observers_had_data: dict[str, bool] = {}
 
     scheduler_error: str | None = None
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""
         files = []
-        if self.observers_output is None:
-            return files
         # sort dict by key first
         replies = dict(sorted(self.observers_output.items()))
         for hostname, reply in replies.items():
@@ -79,15 +77,11 @@ class ErrorData(BaseModel):
     @property
     def max_exit_code(self) -> int:
         # note that missing (but requested) observers don't count here
-        if self.observers_output is None:
-            return 0
         obs_exited = {obs: abs(reply.exited) for obs, reply in self.observers_output.items()}
         return max([0] + [obs_exited.get(obs, 0) for obs in self.observers_requested])
 
     @property
     def has_missing_data(self) -> bool:
-        if self.observers_had_data is None:
-            return False
         return not all(self.observers_had_data.get(obs, False) for obs in self.observers_requested)
 
     @property

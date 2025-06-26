@@ -60,7 +60,7 @@ class ErrorData(BaseModel):
         # sort dict by key first
         replies = dict(sorted(self.observers_output.items()))
         for hostname, reply in replies.items():
-            had_error = abs(reply.exited) != 0 and not self.observers_had_data.get(hostname, False)
+            had_error = abs(reply.exited) != 0 or not self.observers_had_data.get(hostname, False)
             if only_faulty and not had_error:
                 continue
             string = ""

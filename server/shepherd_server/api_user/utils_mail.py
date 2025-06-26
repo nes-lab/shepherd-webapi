@@ -114,7 +114,7 @@ class FastMailEngine(MailEngine):
     ) -> None:
         msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) finished.\n"
         if web_exp.had_errors:
-            msg += "\nErrors were encountered during execution.\n"
+            msg += "\nErrors were encountered during execution:\n"
         if web_exp.has_missing_data:
             msg += "- one or more files are missing\n"
         if web_exp.max_exit_code > 0:

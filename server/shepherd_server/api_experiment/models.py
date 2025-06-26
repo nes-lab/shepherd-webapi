@@ -154,7 +154,7 @@ class ErrorData(BaseModel):
                 string += f"\n~~~~~~~~~~~~~~ {hostname} - stderr ~~~~~~~~~~~~~~\n"
                 string += reply.stderr
             string += f"\nExit-code of {hostname} = {reply.exited}\n"
-            files.append(UploadFile(filename="error.log", file=StringIO(string)))
+            files.append(UploadFile(filename=f"{hostname}_error.log", file=StringIO(string)))
         return files
 
     @property

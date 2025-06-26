@@ -1,7 +1,5 @@
 import asyncio
-import functools
 import time
-from concurrent.futures import ProcessPoolExecutor
 from contextlib import ExitStack
 from datetime import datetime
 from datetime import timedelta
@@ -142,21 +140,18 @@ async def run_web_experiment(
     else:
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
         try:
-            log.info("NOW starting RUN() - timeout in %d seconds", int(timeout.total_seconds()))
-            loop = asyncio.get_running_loop()
-            # herd_executor = ThreadPoolExecutor(max_workers=64)
-            with ProcessPoolExecutor() as hexecutor:
-                replies = await asyncio.wait_for(
-                    loop.run_in_executor(
-                        executor=hexecutor,
-                        func=functools.partial(
-                            run_herd_noasync, inventory=inventory, tb_tasks=testbed_tasks
-                        ),
-                    ),
-                    timeout=timeout.total_seconds(),
-                    # TODO: no advantage observed in comparison to .to_thread()
-                )
-            log.info("FINISHED RUN()")
+            log.info(
+                "NOW starting HERD_RUN() - timeout in %d seconds", int(timeout.total_seconds())
+            )
+            replies = await asyncio.wait_for(
+                asyncio.to_thread(
+                    run_herd_noasync,
+                    inventory=inventory,
+                    tb_tasks=testbed_tasks,
+                ),
+                timeout=timeout.total_seconds(),
+            )
+            log.info("FINISHED HERD_RUN()")
             exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
             # TODO: detect when experiment was not run (failed early during prep)
             if exit_code > 0:

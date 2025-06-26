@@ -85,9 +85,10 @@ class UserClient(WebClient):
         if rsp.ok:
             scheduler = rsp.json().get("scheduler")
             if isinstance(scheduler, dict):
-                active = scheduler.get("active")
-                if not active:
+                active = scheduler.get("activated")
+                if active is None:
                     log.warning("Scheduler not active!")
+            # TODO: warn if versions don't match
         else:
             log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
 

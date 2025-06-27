@@ -75,7 +75,6 @@ app.add_middleware(
 
 
 app.include_router(auth_router)
-# app.include_router(testbed_router)
 app.include_router(user_router)
 app.include_router(experiment_router)
 app.include_router(testbed_router)

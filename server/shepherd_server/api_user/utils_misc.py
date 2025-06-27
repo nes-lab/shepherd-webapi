@@ -60,10 +60,14 @@ async def current_active_user(user: Annotated[User, Depends(current_user)]) -> U
 
 
 async def active_user_is_elevated(user: Annotated[User, Depends(current_user)]) -> None:
+    if user.disabled:
+        raise HTTPException(status_code=403, detail="Deactivated user")
     if user.role not in (UserRole.admin, UserRole.elevated):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
 async def active_user_is_admin(user: Annotated[User, Depends(current_user)]) -> None:
+    if user.disabled:
+        raise HTTPException(status_code=403, detail="Deactivated user")
     if user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Forbidden")

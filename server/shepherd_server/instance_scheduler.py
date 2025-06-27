@@ -155,13 +155,12 @@ async def run_web_experiment(
                 timeout=timeout.total_seconds(),
             )
             log.info("FINISHED HERD_RUN()")
-            exit_code = max([0] + [abs(reply.exited) for reply in replies.values()])
+            web_exp.observers_output = replies
             # TODO: detect when experiment was not run (failed early during prep)
-            if exit_code > 0:
+            if web_exp.max_exit_code > 0:
                 log.error("Herd failed on at least one Observer")
             else:
                 log.info("Herd finished task execution successfully")
-            web_exp.observers_output = replies
         except asyncio.TimeoutError:
             log.warning("Timeout waiting for experiment '%s'", web_exp.experiment.name)
             web_exp.scheduler_error = "Timeout waiting for Experiment to finish"

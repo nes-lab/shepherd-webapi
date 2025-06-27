@@ -22,7 +22,7 @@ async def testbed_info() -> Testbed:
 
 
 @router.get("/restrictions")
-async def get_restrictions() -> list[str]:
+async def get_restrictions() -> list[str] | None:
     tb_ = await TestbedDB.get_one()
     return tb_.restrictions
 
@@ -40,8 +40,8 @@ server_cmds = {"start-scheduler", "stop-scheduler"}
 
 
 @router.get("/command", dependencies=[Depends(active_user_is_elevated)])
-async def get_command() -> Response:
-    return Response(status_code=200, content=list(herd_cmds) + list(server_cmds))
+async def get_command() -> list[str]:
+    return list(herd_cmds | server_cmds)
 
 
 def run_command_noasync(cmd: str) -> Response:
@@ -65,7 +65,7 @@ def run_command_noasync(cmd: str) -> Response:
                 return Response(status_code=200, content=str(ret))
             else:
                 return Response(status_code=404, content="Herd-Command not implemented")
-    elif cmd in ["start-scheduler", "stop-scheduler"]:
+    elif cmd in server_cmds:
         ret = subprocess.run(  # noqa: S603,
             [
                 "/usr/bin/sudo",

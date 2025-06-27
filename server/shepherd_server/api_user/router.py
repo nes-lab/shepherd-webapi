@@ -131,7 +131,7 @@ async def reset_password(
 
 
 # ###############################################################
-# Account Creation
+# Account Handling
 # ###############################################################
 
 
@@ -204,3 +204,21 @@ async def verify_email(
     await mail_sys.send_registration_complete_email(user.email)
     await user.save_changes()
     return Response(status_code=200, content="Verification successful")
+
+
+@router.post("/change_state", dependencies=[Depends(active_user_is_admin)])
+async def change_state(
+    email: Annotated[EmailStr, Body(embed=True)],
+    enabled: Annotated[bool, Body(embed=True)],
+) -> Response:
+    """Pre-Approve Email-Address for registration - also functions as validation.
+
+    If Mail-System does not work, the admin can hand token to user manually (returned here).
+    """
+    user = await User.by_email(email)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Incorrect username")
+    user.disabled = not enabled
+    user.save_changes()
+    # TODO: inform user about it?
+    return Response(status_code=200, content="State-Change successful")

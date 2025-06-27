@@ -83,8 +83,7 @@ app.include_router(testbed_router)
 @app.get("/")
 async def root() -> TestbedStatus:
     # TODO: this should probably also go into a router
-    tb_ = await TestbedDB.get_one()
-    return tb_
+    return await TestbedDB.get_one()
 
 
 @app.get("/favicon.ico", include_in_schema=False)

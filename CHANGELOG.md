@@ -1,5 +1,21 @@
 # History of Changes
 
+## v2025.06.4
+
+- client
+  - add support for changed root-router
+  - add support for commands
+  - rename _user()-functions to _account()
+- server
+  - extend status information on root-router
+  - improve handling of observer states and outputs
+  - improve result-mail (with granular reasoning)
+  - improve scheduler (much more robust, less wasting time by polling)
+  - add queue-log-handler for less blocking logging
+  - add routes for restrictions
+  - elevated users can execute commands (restart, resync, ...)
+- python - allow to install packets with .[all]
+
 ## v2025.06.3
 
 - client - add experiment config to downloaded files

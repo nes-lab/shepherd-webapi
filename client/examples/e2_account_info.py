@@ -1,4 +1,4 @@
-"""Minimal Example for querying user info.
+"""Minimal Example for querying user-account info.
 
 With saved credentials the login/authentication is simplified to a one-liner.
 
@@ -15,6 +15,6 @@ from shepherd_client import Client
 
 client = Client()
 
-for key, value in client.get_user_info().items():
+for key, value in client.get_account_info().items():
     print(f"{key}:\t{value}")
 # end example

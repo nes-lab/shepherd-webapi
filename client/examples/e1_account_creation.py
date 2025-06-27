@@ -24,5 +24,5 @@ Once saved, you can omit the credentials, as shown in the next examples.
 from shepherd_client import Client
 
 client = Client("my@mail.com", password="1234", save_credentials=True)
-client.register_user(token="XYZ")
+client.register_account(token="XYZ")
 # end example

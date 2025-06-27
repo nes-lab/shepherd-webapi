@@ -14,10 +14,12 @@ from requests import Response
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
+from shepherd_core.version import version as core_version
 
 from .client_web import WebClient
 from .config import Config
 from .config import PasswordStr
+from .version import version as client_version
 
 
 def msg(rsp: Response) -> str:
@@ -83,12 +85,20 @@ class UserClient(WebClient):
             timeout=3,
         )
         if rsp.ok:
-            scheduler = rsp.json().get("scheduler")
+            state = rsp.json()
+            scheduler = state.get("scheduler")
             if isinstance(scheduler, dict):
                 active = scheduler.get("activated")
                 if active is None:
                     log.warning("Scheduler not active!")
-            # TODO: warn if versions don't match
+            if client_version != state.get("server_version"):
+                log.warning("Your client version does not match with server -> consider upgrading")
+                log.debug("client %s vs %s on server", client_version, state.get("server_version"))
+            if core_version != state.get("core_version"):
+                log.warning(
+                    "Your version of shepherd-core does not match with server -> consider upgrading"
+                )
+                log.debug("client %s vs %s on server", core_version, state.get("core_version"))
         else:
             log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
 
@@ -112,7 +122,7 @@ class UserClient(WebClient):
         else:
             log.warning("Authentication failed with: %s", msg(rsp))
 
-    def register_user(self, token: str) -> None:
+    def register_account(self, token: str) -> None:
         """Create a user account with a valid token."""
         if self._auth is not None:
             log.error("User already registered and authenticated")
@@ -131,7 +141,10 @@ class UserClient(WebClient):
         else:
             log.warning("Registration failed with: %s", msg(rsp))
 
-    def delete_user(self) -> None:
+    def register_user(self, token: str) -> None:
+        return self.register_account(token)  # TODO: deprecate _user()-fn
+
+    def delete_account(self) -> None:
         """Remove account and content from server."""
         rsp = requests.delete(
             url=f"{self._cfg.server}/user",
@@ -142,6 +155,9 @@ class UserClient(WebClient):
             log.info(f"User {self._cfg.user_email} deleted")
         else:
             log.warning("User-Deletion failed with: %s", msg(rsp))
+
+    def delete_user(self) -> None:
+        return self.delete_user()  # TODO: deprecate _user()-fn
 
     def get_user_info(self) -> dict:
         """Query user info stored on the server."""
@@ -157,6 +173,9 @@ class UserClient(WebClient):
             log.warning("Query for User-Info failed with: %s", msg(rsp))
             info = {}
         return info
+
+    def get_account_info(self) -> dict:
+        return self.get_user_info()  # TODO: deprecate _user()-fn
 
     # ####################################################################
     # Experiments

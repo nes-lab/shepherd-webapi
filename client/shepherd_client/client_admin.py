@@ -30,13 +30,18 @@ class AdminClient(UserClient):
             debug=True,
         )
         if self.get_user_info().get("role") != "admin":
-            raise TypeError("You are not an admin")
+            log.warning("You are not an admin - this client won't work")
+        self.commands: list[str] | None = None
 
-    def register_user(self, token: str) -> None:
+    # ####################################################################
+    # Account Handling
+    # ####################################################################
+
+    def register_account(self, token: str) -> None:
         """Registration not possible."""
         raise NotImplementedError
 
-    def approve_user(self, user: EmailStr) -> None:
+    def approve_account(self, user: EmailStr) -> None:
         """Approve Account for registration.
 
         This will also send out an email for account verification.
@@ -52,6 +57,18 @@ class AdminClient(UserClient):
         else:
             log.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
 
+    def change_account_state(self, user: EmailStr, *, enabled: bool) -> None:
+        rsp = requests.post(
+            url=f"{self._cfg.server}/user/change_state",
+            json={"email": user, "enabled": enabled},
+            headers=self._auth,
+            timeout=3,
+        )
+        if not rsp.ok:
+            log.warning("User-State-Change of '%s' failed with: %s", user, msg(rsp))
+        else:
+            log.info("User-State-Change of '%s' succeeded", user)
+
     def extend_quota(
         self,
         user_email: EmailStr,
@@ -59,7 +76,7 @@ class AdminClient(UserClient):
         storage: int | None = None,
         expire_date: datetime | None = None,
     ) -> None:
-        """Extend account limitations of a user.
+        """Extend account limitations of a user-account.
 
         Only non-None fields get set by the API.
         """
@@ -81,3 +98,61 @@ class AdminClient(UserClient):
             log.warning("Extension of Quota failed with: %s", msg(rsp))
         else:
             log.info("Extension of Quota succeeded with: %s", rsp.json())
+
+    # ####################################################################
+    # Testbed-Handling
+    # ####################################################################
+
+    def get_restrictions(self) -> list[str]:
+        rsp = requests.get(
+            url=f"{self._cfg.server}/testbed/restrictions",
+            timeout=3,
+        )
+        if not rsp.ok:
+            log.warning("Query for restrictions failed with: %s", msg(rsp))
+            return []
+        return rsp.json()
+
+    def set_restrictions(self, restrictions: list[str]) -> None:
+        rsp = requests.patch(
+            url=f"{self._cfg.server}/testbed/restrictions",
+            json={
+                "restrictions": restrictions,
+            },
+            headers=self._auth,
+            timeout=3,
+        )
+        if not rsp.ok:
+            log.warning("Updating Restrictions failed with: %s", msg(rsp))
+        else:
+            log.info("Updating Restrictions succeeded with: %s", rsp.json())
+
+    def get_commands(self) -> list[str]:
+        rsp = requests.get(
+            url=f"{self._cfg.server}/testbed/command",
+            headers=self._auth,
+            timeout=3,
+        )
+        if not rsp.ok:
+            log.warning("Query for commands failed with: %s", msg(rsp))
+            return []
+        return rsp.json()
+
+    def send_command(self, cmd: str) -> None:
+        if self.commands is None:
+            self.commands = self.get_commands()
+        if cmd not in self.commands:
+            log.warning("Command is not supported -> won't try")
+            return
+        rsp = requests.patch(
+            url=f"{self._cfg.server}/testbed/restrictions",
+            json={
+                "cmd": cmd,
+            },
+            headers=self._auth,
+            timeout=3,
+        )
+        if not rsp.ok:
+            log.warning("Starting command failed with: %s", msg(rsp))
+        else:
+            log.info("Starting command succeeded with: %s", rsp.json())

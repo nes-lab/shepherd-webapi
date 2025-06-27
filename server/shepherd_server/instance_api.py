@@ -83,13 +83,7 @@ app.include_router(testbed_router)
 @app.get("/")
 async def root() -> TestbedStatus:
     # TODO: this should probably also go into a router
-    # return {"message": "Hello World - from Shepherd Nova WebApi"}
     tb_ = await TestbedDB.get_one()
-    tb_.restrictions = [
-        "NW-Storage of the Beaglebones is currently only ~ 30 MB/s (accumulated) "
-        "and latency is 5 to 10 seconds.",
-        "samplerate < 100k in PowerTracer() is crashing observers (API will reject experiments)",
-    ]  # TODO: remove hardcode - as there is now a getter, setter
     return tb_
 
 

@@ -1,8 +1,10 @@
 import asyncio
 import subprocess
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import APIRouter
+from fastapi import Body
 from fastapi import Depends
 from fastapi import Response
 from shepherd_core.data_models.testbed import Testbed
@@ -28,9 +30,9 @@ async def get_restrictions() -> list[str] | None:
 
 
 @router.patch("/restrictions", dependencies=[Depends(active_user_is_admin)])
-async def set_restrictions(restrictions: list[str]) -> Response:
+async def set_restrictions(value: Annotated[list[str], Body(embed=True)]) -> Response:
     tb_ = await TestbedDB.get_one()
-    tb_.restrictions = restrictions
+    tb_.restrictions = value
     tb_.save_changes()
     return Response(status_code=200, content="Command successful executed")
 
@@ -86,5 +88,5 @@ def run_command_noasync(cmd: str) -> Response:
 
 
 @router.patch("/command", dependencies=[Depends(active_user_is_elevated)])
-async def run_command(cmd: str) -> Response:
-    return await asyncio.to_thread(run_command_noasync, cmd)
+async def run_command(value: Annotated[str, Body(embed=True)]) -> Response:
+    return await asyncio.to_thread(run_command_noasync, value)

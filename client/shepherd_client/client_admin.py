@@ -116,9 +116,7 @@ class AdminClient(UserClient):
     def set_restrictions(self, restrictions: list[str]) -> None:
         rsp = requests.patch(
             url=f"{self._cfg.server}/testbed/restrictions",
-            json={
-                "restrictions": restrictions,
-            },
+            json={"value": restrictions},
             headers=self._auth,
             timeout=3,
         )
@@ -145,12 +143,10 @@ class AdminClient(UserClient):
             log.warning("Command is not supported -> won't try")
             return
         rsp = requests.patch(
-            url=f"{self._cfg.server}/testbed/restrictions",
-            json={
-                "cmd": cmd,
-            },
+            url=f"{self._cfg.server}/testbed/command",
+            json={"value": cmd},
             headers=self._auth,
-            timeout=3,
+            timeout=20,
         )
         if not rsp.ok:
             log.warning("Starting command failed with: %s", msg(rsp))

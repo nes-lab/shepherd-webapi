@@ -123,7 +123,7 @@ class AdminClient(UserClient):
         if not rsp.ok:
             log.warning("Updating Restrictions failed with: %s", msg(rsp))
         else:
-            log.info("Updating Restrictions succeeded with: %s", rsp.json())
+            log.info("Updating Restrictions succeeded with: %s", rsp.reason)
 
     def get_commands(self) -> list[str]:
         rsp = requests.get(

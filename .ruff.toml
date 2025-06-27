@@ -25,7 +25,8 @@ ignore = [
 
 [lint.per-file-ignores]
 "*/tests/**" = ["S101"]  # usage of assert
-"*/examples/**" = ["S106", "T201"]  # hardcoded passwords, print
+"*/examples/**" = ["S106", "T201", "INP001"]  # hardcoded passwords, print, no namespace
+"*/examples_admin/**" = ["S106", "T201", "INP001"]  # hardcoded passwords, print, no namespace
 "playground/**" = ["ALL"]  # no production code
 
 [lint.mccabe]

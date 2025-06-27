@@ -33,7 +33,7 @@ async def get_restrictions() -> list[str] | None:
 async def set_restrictions(value: Annotated[list[str], Body(embed=True)]) -> Response:
     tb_ = await TestbedDB.get_one()
     tb_.restrictions = value
-    tb_.save_changes()
+    await tb_.save_changes()
     return Response(status_code=200, content="Command successful executed")
 
 

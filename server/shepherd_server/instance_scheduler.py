@@ -283,8 +283,12 @@ def run(
 
     try:
         asyncio.run(scheduler(inventory, dry_run=dry_run, only_elevated=only_elevated))
+    except OSError:
+        log.exception("Error while running scheduler - probably Paramiko/SSH Overflow.")
     except SystemExit:
-        asyncio.run(update_status(dry_run=dry_run))
+        log.info("Exit-Signal received, Scheduler is now stopped.")
+
+    asyncio.run(update_status(dry_run=dry_run))
 
 
 if __name__ == "__main__":

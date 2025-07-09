@@ -31,11 +31,15 @@ class ConfigDefault(BaseModel):
         "url": "https://github.com/nes-lab/shepherd",
         "email": "ingmar.splitt@tu-dresden.de",
     }
-    ssl_keyfile: Path = Path("/etc/shepherd/ssl_private_key.pem")
-    ssl_certfile: Path = Path("/etc/shepherd/ssl_certificate.pem")
+    ssl_keyfile: Path = dcoup_cfg(
+        "SSL_KEYFILE", cast=Path, default=Path("/etc/shepherd/ssl_private_key.pem")
+    )
+    ssl_certfile: Path = dcoup_cfg(
+        "SSL_CERTFILE", cast=Path, default=Path("/etc/shepherd/ssl_certificate.pem")
+    )
     # ca_certs seems to be not included when requesting a cert
     # -> visit API in browser - view cert - download `PEM (chain)`
-    ssl_ca_certs: Path = Path("/etc/shepherd/ssl_ca_certs.pem")
+    ssl_ca_certs: Path | None = None  # Path("/etc/shepherd/ssl_ca_certs.pem")
 
     # user auth
     auth_salt: bytes = dcoup_cfg("AUTH_SALT").encode("UTF-8")
@@ -67,12 +71,14 @@ class ConfigDefault(BaseModel):
 
     def ssl_available(self) -> bool:
         _files = (self.ssl_keyfile, self.ssl_certfile)  # out: self.ssl_ca_certs
-        _avail = all(_p.exists() for _p in _files)
+        _avail = all(isinstance(_p, Path) and _p.exists() for _p in _files)
         if _avail:
             log.info("SSL available, as keys & certs were found")
         else:
             log.warning("SSL disabled!")
             for _file in _files:
+                if not isinstance(_file, Path):
+                    log.warning("At least one SSL-Path was not specified")
                 if not _file.exists():
                     log.warning(" -> NOT FOUND: %s", _file.as_posix())
         return _avail

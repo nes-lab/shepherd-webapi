@@ -4,6 +4,7 @@ run with: python3 ./prototype_redirect.py
 """
 
 import asyncio
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
@@ -54,7 +55,7 @@ def run() -> None:
     if ssl_enabled:
         uvi_args["ssl_keyfile"] = config.ssl_keyfile.as_posix()
         uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
-        if config.ssl_ca_certs.exists():
+        if isinstance(config.ssl_ca_certs, Path) and config.ssl_ca_certs.exists():
             uvi_args["ssl_ca_certs"] = config.ssl_ca_certs.as_posix()
     asyncio.run(update_status(active=True))
     try:

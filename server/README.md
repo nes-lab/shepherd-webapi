@@ -57,7 +57,7 @@ shepherd_server init dir_path
 
 - DNS approved for the server: <https://shepherd.cfaed.tu-dresden.de>
 - Port 8000 accepted for firewall passing
-- SSL-Certificate per LetsEncrypt -> alternative is <www.sectigo.com>
+- ~~SSL-Certificate per LetsEncrypt -> alternative is <www.sectigo.com>~~
 
 [API-Website](http://127.0.0.1:8000/)
 [ReDoc](http://127.0.0.1:8000/doc)
@@ -84,6 +84,46 @@ Create an admin account with:
 shepherd-server create-admin mail@dail.de password
 ```
 
+### SSL-Certificates
+
+Certbot can be used to generate and renew certificates for https.
+Certs are free of charge and valid for 90 days (as of 2025).
+Install on server via:
+
+```Shell
+sudo apt install certbot
+# for running services you can enter
+sudo certbot certonly --webroot
+```
+
+The feedback will be:
+
+```
+Please enter the domain name(s) you would like on your certificate (comma and/or
+space separated) (Enter 'c' to cancel): shepherd.cfaed.tu-dresden.de
+Requesting a certificate for shepherd.cfaed.tu-dresden.de
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/privkey.pem
+This certificate expires on 2025-10-07.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+`[cert name]/privkey.pem`  : the private key for your certificate.
+`[cert name]/fullchain.pem`: the certificate file used in most server software.
+`[cert name]/chain.pem`    : used for OCSP stapling in Nginx >=1.3.7.
+`[cert name]/cert.pem`     : will break many server configurations, and should not be used
+                 without reading further documentation (see link below).
+```
+
+Certbot will automatically renew certificates from now on.
+The config for the webservices can point directly to these files.
+
+Further reading:
+- https://eff-certbot.readthedocs.io/en/stable/using.html#id8
+- https://certbot.eff.org/faq/
+
 ### Prepare Config
 
 There is more than one way to alter the server configuration.
@@ -101,6 +141,10 @@ Config `.env`, by either bringing in a backup or starting fresh
 # Secrets
 SECRET_KEY="abc"
 AUTH_SALT='cde'
+
+# Https
+SSL_KEYFILE="/etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/privkey.pem"
+SSL_CERTFILE="/etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/privkey.pem"
 
 # FastMail
 MAIL_ENABLED=true

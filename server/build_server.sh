@@ -6,4 +6,5 @@ uv tool install --with git+https://github.com/nes-lab/shepherd@dev#subdirectory=
 sudo systemctl start shepherd-redirect
 sudo systemctl start shepherd-scheduler
 sudo systemctl start shepherd-api
+uv cache prune
 # uv cache clean

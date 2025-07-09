@@ -35,11 +35,10 @@ class ConfigDefault(BaseModel):
         "SSL_KEYFILE", cast=Path, default=Path("/etc/shepherd/ssl_private_key.pem")
     )
     ssl_certfile: Path = dcoup_cfg(
-        "SSL_CERTFILE", cast=Path, default=Path("/etc/shepherd/ssl_certificate.pem")
+        "SSL_CERTFILE", cast=Path, default=Path("/etc/shepherd/ssl_ca_certs.pem")
     )
-    # ca_certs seems to be not included when requesting a cert
-    # -> visit API in browser - view cert - download `PEM (chain)`
-    ssl_ca_certs: Path | None = None  # Path("/etc/shepherd/ssl_ca_certs.pem")
+    # -> this can and should contain the cert and the full chain
+    #    if missing visit API in browser - view cert - download `PEM (chain)`
 
     # user auth
     auth_salt: bytes = dcoup_cfg("AUTH_SALT").encode("UTF-8")
@@ -70,7 +69,7 @@ class ConfigDefault(BaseModel):
     age_min_experiment: timedelta = timedelta(days=15)
 
     def ssl_available(self) -> bool:
-        _files = (self.ssl_keyfile, self.ssl_certfile)  # out: self.ssl_ca_certs
+        _files = (self.ssl_keyfile, self.ssl_certfile)
         _avail = all(isinstance(_p, Path) and _p.exists() for _p in _files)
         if _avail:
             log.info("SSL available, as keys & certs were found")

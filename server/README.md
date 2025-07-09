@@ -109,12 +109,6 @@ Key is saved at:         /etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/priv
 This certificate expires on 2025-10-07.
 These files will be updated when the certificate renews.
 Certbot has set up a scheduled task to automatically renew this certificate in the background.
-
-`[cert name]/privkey.pem`  : the private key for your certificate.
-`[cert name]/fullchain.pem`: the certificate file used in most server software.
-`[cert name]/chain.pem`    : used for OCSP stapling in Nginx >=1.3.7.
-`[cert name]/cert.pem`     : will break many server configurations, and should not be used
-                 without reading further documentation (see link below).
 ```
 
 Certbot will automatically renew certificates from now on.
@@ -144,7 +138,7 @@ AUTH_SALT='cde'
 
 # Https
 SSL_KEYFILE="/etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/privkey.pem"
-SSL_CERTFILE="/etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/privkey.pem"
+SSL_CERTFILE="/etc/letsencrypt/live/shepherd.cfaed.tu-dresden.de/fullchain.pem"
 
 # FastMail
 MAIL_ENABLED=true

@@ -94,3 +94,8 @@ markers = [
 [tool.coverage.run]
 source = ["shepherd_client"]
 # TODO: add something like "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"
+
+[tool.ty.src]
+exclude = [
+    "tests/**"
+]

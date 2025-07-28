@@ -19,6 +19,14 @@ This repo contains:
 
 ## Development & Release
 
+The project contains a config for dev-environment in the root `pyproject.toml`.
+It can be activated via `uv`:
+
+```Shell
+uv venv
+uv pip install .
+```
+
 ### Testbench & Static Analysis
 
 **Warning**: ☠☠☠ Don't run unittests (`pytest`) on a production system as it will delete the database! ☠☠☠

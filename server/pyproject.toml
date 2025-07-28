@@ -43,9 +43,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pre-commit",
-    "bump2version",
-    "pyright",
     "bcrypt", # for salt-creation
 ]
 test = [

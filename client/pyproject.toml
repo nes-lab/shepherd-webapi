@@ -36,11 +36,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pre-commit",
-    "bump2version",
-    "pyright",
-]
+# dev = []
 test = [
     "pytest",
     "pytest-click",
@@ -49,7 +45,7 @@ test = [
     "coverage",
 ]
 
-all = ["shepherd-client[dev,test]"]
+all = ["shepherd-client[test]"]
 
 [project.urls]
 Documentation = "https://github.com/nes-lab/shepherd-webapi/blob/main/README.md"

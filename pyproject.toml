@@ -1,0 +1,22 @@
+[project]
+# virtual project for a dev-env
+name = "Shepherd-WebAPI"
+version = "2025.06.4"
+description = "Interface between the Testbed Instance and the User "
+readme = "README.md"
+dependencies = [
+    "shepherd-server[dev,test]",
+    "shepherd-client[test]",
+    # dev
+    "pre-commit",
+    "bump2version",
+    "pyright",
+    "ty",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+shepherd-server = { path = "./server"}
+shepherd-client = { path = "./client"}

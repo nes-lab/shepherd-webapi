@@ -127,7 +127,7 @@ async def run_web_experiment(
             ]
 
             log.info(
-                "NOW starting HERD_RUN() - runtime %d s, timeout in %d s, %d / %d observer",
+                "NOW starting HERD_RUN() - runtime %d s, timeout in %d s, %d of %d observer",
                 int(web_exp.experiment.duration.total_seconds()),
                 int(timeout.total_seconds()),
                 len(herd.group_online),

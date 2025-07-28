@@ -124,7 +124,7 @@ async def run_web_experiment(
                 cnx
                 for cnx in herd.group_online
                 if herd.hostnames[cnx.host] in web_exp.observers_requested
-            ] # /var/shepherd/experiments/sheep02/2025-07-28_18-04-43_ing_survey
+            ]
 
             log.info(
                 "NOW starting HERD_RUN() - runtime %d s, timeout in %d s, %d / %d observer",

@@ -53,23 +53,25 @@ def tbt_patch_emu(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
     return TestbedTasks(**tb_ts_emu)
 
 
-def run_herd_noasync(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
-    # Prepare Testbed
+def prepare_herd_noasync(herd: Herd) -> None:
     herd.kill_sheep_process()
     # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
     while herd.service_is_active():
-        time.sleep(20)
+        time.sleep(10)
     herd.service_erase_log()
 
+
+def run_herd_noasync(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
     # Prepare Targets
     tasks_pre = tbt_patch_pre(tb_tasks)
     ret = herd.run_task(tasks_pre, attach=False, quiet=True)
     if ret > 0:
-        raise RuntimeError("Starting preparation of XP failed")
+        raise RuntimeError("Starting preparation of targets failed")
     while herd.service_is_active():
         time.sleep(20)
-    if not herd.service_is_failed():
-        # Start Experiment
+    if herd.service_is_failed():
+        log.warning("Preparation of targets failed - will skip XP")
+    else:  # Start Experiment
         herd.start_delay_s = 40
         time_start, delay_s = herd.find_consensus_time()
         log.info(
@@ -114,10 +116,22 @@ async def run_web_experiment(
     if isinstance(herd, Herd):
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
         try:
+            await asyncio.wait_for(
+                asyncio.to_thread(prepare_herd_noasync, herd=herd),
+                timeout=60,
+            )
+            herd.group_online = [
+                cnx
+                for cnx in herd.group_online
+                if herd.hostnames[cnx.host] in web_exp.observers_requested
+            ] # /var/shepherd/experiments/sheep02/2025-07-28_18-04-43_ing_survey
+
             log.info(
-                "NOW starting HERD_RUN() - runtime %d s, timeout in %d s",
+                "NOW starting HERD_RUN() - runtime %d s, timeout in %d s, %d / %d observer",
                 int(web_exp.experiment.duration.total_seconds()),
                 int(timeout.total_seconds()),
+                len(herd.group_online),
+                len(herd.group_all),
             )
             replies = await asyncio.wait_for(
                 asyncio.to_thread(

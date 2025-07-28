@@ -7,8 +7,7 @@ authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
 readme = {file = "README.md", content-type = "text/markdown"}
-license = {file = "LICENSE"}
-dynamic = ["version"]
+version = "2025.06.4"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -64,9 +63,6 @@ platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
 package-dir = {"shepherd_client" = "./shepherd_client/"}
 zip-safe = true
 include-package-data = true
-
-[tool.setuptools.dynamic]
-version = {attr = "shepherd_client.version.version"}
 
 [tool.pyright]
 root = "./"

@@ -1,5 +1,20 @@
 # History of Changes
 
+## v2025.07.1
+
+- add admin-client, that can
+  - approve accounts
+  - enable / disable accounts
+  - extend quota
+  - get / set restrictions
+  - get / send commands (mostly for observers)
+- server
+  - use 1 static herd (avoids fabric bugs)
+  - herd only uses requested observers (that are also online)
+  - allow deactivating accounts
+  - add admin functionality
+- python - replace pipenv & setuptools by uv
+
 ## v2025.06.4
 
 - client

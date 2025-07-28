@@ -18,7 +18,6 @@ from shepherd_herd.herd import Herd
 
 from .api_experiment.models import ReplyData
 from .api_experiment.models import WebExperiment
-from .api_testbed.models_status import SchedulerStatus
 from .api_testbed.models_status import TestbedDB
 from .api_user.models import User
 from .api_user.utils_mail import mail_engine
@@ -54,44 +53,38 @@ def tbt_patch_emu(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
     return TestbedTasks(**tb_ts_emu)
 
 
-def kill_herd_noasync() -> None:
-    with Herd() as herd:
-        herd.kill_sheep_process()
+def run_herd_noasync(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
+    # Prepare Testbed
+    herd.kill_sheep_process()
+    # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
+    while herd.service_is_active():
+        time.sleep(20)
+    herd.service_erase_log()
 
-
-def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
-    with Herd(inventory=inventory) as herd:
-        # Prepare Testbed
-        herd.kill_sheep_process()
-        # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
-        while herd.service_is_active():
-            time.sleep(20)
-        herd.service_erase_log()
-
-        # Prepare Targets
-        tasks_pre = tbt_patch_pre(tb_tasks)
-        ret = herd.run_task(tasks_pre, attach=False, quiet=True)
+    # Prepare Targets
+    tasks_pre = tbt_patch_pre(tb_tasks)
+    ret = herd.run_task(tasks_pre, attach=False, quiet=True)
+    if ret > 0:
+        raise RuntimeError("Starting preparation of XP failed")
+    while herd.service_is_active():
+        time.sleep(20)
+    if not herd.service_is_failed():
+        # Start Experiment
+        herd.start_delay_s = 40
+        time_start, delay_s = herd.find_consensus_time()
+        log.info(
+            "Start XP in %d seconds: %s (obs-time)",
+            int(delay_s),
+            time_start.isoformat(),
+        )
+        tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
+        ret = herd.run_task(tasks_emu, attach=False, quiet=True)
         if ret > 0:
-            raise RuntimeError("Starting preparation of XP failed")
+            raise RuntimeError("Starting Emulation failed")
         while herd.service_is_active():
             time.sleep(20)
-        if not herd.service_is_failed():
-            # Start Experiment
-            herd.start_delay_s = 40
-            time_start, delay_s = herd.find_consensus_time()
-            log.info(
-                "Start XP in %d seconds: %s (obs-time)",
-                int(delay_s),
-                time_start.isoformat(),
-            )
-            tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
-            ret = herd.run_task(tasks_emu, attach=False, quiet=True)
-            if ret > 0:
-                raise RuntimeError("Starting Emulation failed")
-            while herd.service_is_active():
-                time.sleep(20)
 
-        replies = herd.service_get_logs()
+    replies = herd.service_get_logs()
     return {
         k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr) for k, v in replies.items()
     }
@@ -100,9 +93,7 @@ def run_herd_noasync(inventory: Path | str | None, tb_tasks: TestbedTasks) -> di
 async def run_web_experiment(
     xp_id: UUID4,
     temp_path: Path | None,
-    inventory: Path | str | None = None,
-    *,
-    dry_run: bool = False,
+    herd: Herd | None,
 ) -> None:
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
@@ -120,25 +111,7 @@ async def run_web_experiment(
     await web_exp.update_time_start(web_exp.started_at, force=True)
     await web_exp.save_changes()
 
-    if dry_run:
-        if temp_path is None:
-            raise RuntimeError("Dry-running Scheduler needs a temporary directory")
-        await asyncio.sleep(10)  # mocked length
-        # create mocked files
-        paths_task = testbed_tasks.get_output_paths()
-        paths_result: dict[str, Path] = {}
-        xp_folder = web_exp.experiment.folder_name()
-        for name, path_task in paths_task.items():
-            paths_result[name] = temp_path / xp_folder / path_task.name
-            with CoreWriter(paths_result[name]) as writer:
-                writer.store_hostname(name)
-                writer.append_iv_data_si(
-                    timestamp=local_now().timestamp(),
-                    voltage=np.zeros(10_000),
-                    current=np.zeros(10_000),
-                )
-        await web_exp.update_result(paths_result)
-    else:
+    if isinstance(herd, Herd):
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
         try:
             log.info(
@@ -149,7 +122,7 @@ async def run_web_experiment(
             replies = await asyncio.wait_for(
                 asyncio.to_thread(
                     run_herd_noasync,
-                    inventory=inventory,
+                    herd=herd,
                     tb_tasks=testbed_tasks,
                 ),
                 timeout=timeout.total_seconds(),
@@ -170,7 +143,7 @@ async def run_web_experiment(
             web_exp.scheduler_error = "Caught general Exception during Execution"
 
         if web_exp.scheduler_error is not None:
-            await asyncio.wait_for(asyncio.to_thread(kill_herd_noasync), timeout=30)
+            await asyncio.wait_for(asyncio.to_thread(herd.kill_sheep_process), timeout=30)
             await asyncio.sleep(30)  # finish IO, precaution
         await asyncio.sleep(20)  # finish IO, precaution
         web_exp.finished_at = local_now()
@@ -184,6 +157,24 @@ async def run_web_experiment(
         if web_exp is None:
             log.warning("Dataset of Experiment not found after running it (deleted?)")
             return
+    else:  # dry run
+        if temp_path is None:
+            raise RuntimeError("Dry-running Scheduler needs a temporary directory")
+        await asyncio.sleep(10)  # mocked length
+        # create mocked files
+        paths_task = testbed_tasks.get_output_paths()
+        paths_result: dict[str, Path] = {}
+        xp_folder = web_exp.experiment.folder_name()
+        for name, path_task in paths_task.items():
+            paths_result[name] = temp_path / xp_folder / path_task.name
+            with CoreWriter(paths_result[name]) as writer:
+                writer.store_hostname(name)
+                writer.append_iv_data_si(
+                    timestamp=local_now().timestamp(),
+                    voltage=np.zeros(10_000),
+                    current=np.zeros(10_000),
+                )
+        await web_exp.update_result(paths_result)
 
 
 async def notify_user(xp_id: UUID4) -> None:
@@ -203,30 +194,26 @@ async def notify_user(xp_id: UUID4) -> None:
         )
 
 
-def update_status_noasync(stat: SchedulerStatus) -> SchedulerStatus:
-    with Herd() as herd:  # inventory shouldn't be needed here
-        stat.observer_count = len(herd.group)
-        stat.observers_online = {herd.hostnames[cnx.host] for cnx in herd.group}
-        stat.observers_offline = set(herd.hostnames.values()) - stat.observers_online
-    return stat
-
-
-async def update_status(*, active: bool = False, dry_run: bool = False) -> None:
+async def update_status(herd: Herd | None = None, *, active: bool = False) -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
-    tb_.scheduler.dry_run = dry_run
+    tb_.scheduler.dry_run = not isinstance(herd, Herd)
     tb_.scheduler.busy = await WebExperiment.get_next_scheduling() is not None
     tb_.scheduler.last_update = local_now()
     if not active:
         tb_.scheduler.activated = None
-    if dry_run:
+    if isinstance(herd, Herd):
+        await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
+        tb_.scheduler.observer_count = len(herd.group_online)
+        tb_.scheduler.observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
+        tb_.scheduler.observers_offline = (
+            set(herd.hostnames.values()) - tb_.scheduler.observers_online
+        )
+    else:  # dry run or offline
         tb_.scheduler.observer_count = 0
         tb_.scheduler.observers_online = set()
         tb_.scheduler.observers_offline = set()
-    else:
-        tb_.scheduler = await asyncio.wait_for(
-            asyncio.to_thread(update_status_noasync, tb_.scheduler), timeout=30
-        )
+
     # TODO: include storage, warn via mail if low
     await tb_.save_changes()
 
@@ -251,13 +238,17 @@ async def scheduler(
             temp_path: Path = Path(temp_dir)
             log.debug("Temp path: %s", temp_path.resolve())
             log.warning("Dry run mode - not executing tasks!")
+            herd = None
+        else:
+            herd = Herd(inventory=inventory)
+            stack.enter_context(herd)
 
         # TODO: how to make sure there is only one scheduler? Singleton
         log.info("Checking experiment scheduling FIFO")
         await WebExperiment.reset_stuck_items()
 
         while True:
-            await update_status(active=True, dry_run=dry_run)
+            await update_status(herd=herd, active=True)
             # TODO: status could generate usable inventory, so missing nodes
             next_experiment = await WebExperiment.get_next_scheduling(only_elevated=only_elevated)
             if next_experiment is None:
@@ -268,9 +259,8 @@ async def scheduler(
             log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
             await run_web_experiment(
                 next_experiment.id,
-                inventory=inventory,
                 temp_path=temp_path,
-                dry_run=dry_run,
+                herd=herd,
             )
 
 
@@ -288,7 +278,7 @@ def run(
     except SystemExit:
         log.info("Exit-Signal received, Scheduler is now stopped.")
 
-    asyncio.run(update_status(dry_run=dry_run))
+    asyncio.run(update_status())
 
 
 if __name__ == "__main__":

@@ -53,11 +53,12 @@ def tbt_patch_emu(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
     return TestbedTasks(**tb_ts_emu)
 
 
-def prepare_herd_noasync(herd: Herd) -> None:
+def cleanup_herd_noasync(herd: Herd) -> None:
+    herd.open()
     herd.kill_sheep_process()
     # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
     while herd.service_is_active():
-        time.sleep(10)
+        time.sleep(8)
     herd.service_erase_log()
 
 
@@ -97,10 +98,12 @@ async def run_web_experiment(
     temp_path: Path | None,
     herd: Herd | None,
 ) -> None:
+    # TODO: save timestamp for getting service-log
+    log.info("HERD_RUN(id=%s)", str(xp_id))
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
     if web_exp is None:
-        log.warning("Dataset of Experiment not found before running it (deleted?)")
+        log.warning("XP-dataset not found before running it (deleted?)")
         return
     web_exp.started_at = local_now()
     testbed = Testbed(name=config.testbed_name)
@@ -115,19 +118,22 @@ async def run_web_experiment(
 
     if isinstance(herd, Herd):
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
+        replies = {}
+
         try:
+            log.info("  .. preparation")
             await asyncio.wait_for(
-                asyncio.to_thread(prepare_herd_noasync, herd=herd),
+                asyncio.to_thread(cleanup_herd_noasync, herd=herd),
                 timeout=60,
             )
+            # only utilize nodes that online and requested
             herd.group_online = [
                 cnx
                 for cnx in herd.group_online
                 if herd.hostnames[cnx.host] in web_exp.observers_requested
             ]
-
             log.info(
-                "NOW starting HERD_RUN() - runtime %d s, timeout in %d s, %d of %d observer",
+                "  .. now starting - runtime %d s, timeout in %d s, %d of %d observers",
                 int(web_exp.experiment.duration.total_seconds()),
                 int(timeout.total_seconds()),
                 len(herd.group_online),
@@ -141,36 +147,45 @@ async def run_web_experiment(
                 ),
                 timeout=timeout.total_seconds(),
             )
-            log.info("FINISHED HERD_RUN()")
-            web_exp.observers_output = replies
-            # TODO: detect when experiment was not run (failed early during prep)
-            if web_exp.max_exit_code > 0:
-                log.error("Herd failed on at least one Observer")
-            else:
-                log.info("Herd finished task execution successfully")
+            log.info("  .. cleanup")
+            await asyncio.sleep(30)  # finish IO, precaution
+            await asyncio.wait_for(
+                asyncio.to_thread(cleanup_herd_noasync, herd=herd),
+                timeout=60,
+            )
+            await asyncio.sleep(30)  # stabilize
+
         except asyncio.TimeoutError:
             log.warning("Timeout waiting for experiment '%s'", web_exp.experiment.name)
-            web_exp.scheduler_error = "Timeout waiting for Experiment to finish"
-        except Exception:  # noqa: BLE001
-            # TODO: send info about the exception
+            scheduler_error = "Timeout waiting for Experiment to finish"
+        except Exception as xpt:  # noqa: BLE001
             log.warning("General Exception waiting for experiment '%s'", web_exp.experiment.name)
-            web_exp.scheduler_error = "Caught general Exception during Execution"
+            scheduler_error = f"Caught general Exception during Execution ({xpt})"
+        else:
+            scheduler_error = None
 
-        if web_exp.scheduler_error is not None:
-            await asyncio.wait_for(asyncio.to_thread(herd.kill_sheep_process), timeout=30)
-            await asyncio.sleep(30)  # finish IO, precaution
-        await asyncio.sleep(20)  # finish IO, precaution
+        log.info("  .. finished - now collecting data")
+        # Reload XP to avoid race-condition / working on old data
+        web_exp = await WebExperiment.get_by_id(xp_id)
+        if web_exp is None:
+            log.warning("XP-dataset not found after running it (deleted?)")
+            return
+
         web_exp.finished_at = local_now()
+        web_exp.observers_output = replies
+        web_exp.scheduler_error = scheduler_error
+        if len(web_exp.observers_output) == 0:
+            log.error("Herd collected no logs from node (")
+        if web_exp.max_exit_code > 0:
+            log.error("Herd failed on at least one Observer")
+
         await web_exp.update_time_start()
         await web_exp.update_result()
         await web_exp.save_changes()
         await notify_user(web_exp.id)
+        log.info("  .. users were informed")
+        await asyncio.sleep(60)  # stabilize
 
-        # Reload XP to avoid race-condition / working on old data
-        web_exp = await WebExperiment.get_by_id(xp_id)
-        if web_exp is None:
-            log.warning("Dataset of Experiment not found after running it (deleted?)")
-            return
     else:  # dry run
         if temp_path is None:
             raise RuntimeError("Dry-running Scheduler needs a temporary directory")

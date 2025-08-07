@@ -53,6 +53,7 @@ class ErrorData(BaseModel):
     observers_had_data: dict[str, bool] = {}
 
     scheduler_error: str | None = None
+    scheduler_log: str | None = None  # for admin
 
     def get_terminal_output(self, *, only_faulty: bool = False) -> list[UploadFile]:
         """Log output-results of shell commands."""
@@ -74,6 +75,8 @@ class ErrorData(BaseModel):
                 string += reply.stderr
             string += f"\nExit-code of {hostname} = {reply.exited}\n"
             files.append(UploadFile(filename=f"{hostname}_error.log", file=StringIO(string)))
+        if self.scheduler_log is not None:  # TODO: only admin
+            files.append(UploadFile(filename=f"scheduler.log", file=StringIO(self.scheduler_log)))
         return files
 
     @property

@@ -1,5 +1,6 @@
 # Shepherd-WebAPI
 
+[![PyPIVersion](https://img.shields.io/pypi/v/shepherd_client.svg)](https://pypi.org/project/shepherd_client)
 [![QA-Tests](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml/badge.svg)](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml)
 
 **Testbed-WebAPI**: <https://shepherd.cfaed.tu-dresden.de:8000>
@@ -63,6 +64,6 @@ coverage report
 - rebase dev-branch
 
 ```Shell
-bump2version --allow-dirty --new-version 2025.07.1 patch
+bump2version --allow-dirty --new-version 2025.08.1 patch
 # ⤷ format: year.month.patch_release
 ```

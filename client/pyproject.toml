@@ -7,7 +7,7 @@ authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
 readme = {file = "README.md", content-type = "text/markdown"}
-version = "2025.07.1"
+version = "2025.08.1"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",

@@ -1,1 +1,1 @@
-version: str = "2025.07.1"
+version: str = "2025.08.1"

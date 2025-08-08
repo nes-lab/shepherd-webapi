@@ -1,5 +1,7 @@
 """Mail server config."""
 
+from collections.abc import Mapping
+
 from fastapi_mail import ConnectionConfig
 from fastapi_mail import FastMail
 from fastapi_mail import MessageSchema
@@ -45,6 +47,11 @@ class MailEngine:
     @staticmethod
     async def send_experiment_finished_email(
         email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
+    ) -> None: ...
+
+    @staticmethod
+    async def send_herd_reboot_email(
+        email: EmailStr, herd_composition: Mapping[str, set]
     ) -> None: ...
 
 
@@ -151,6 +158,27 @@ class FastMailEngine(MailEngine):
                 body=msg,
                 subtype=MessageType.plain,
                 attachments=web_exp.get_terminal_output(only_faulty=True),
+            )
+            await mail.send_message(message)
+
+    @staticmethod
+    async def send_herd_reboot_email(email: EmailStr, herd_composition: Mapping[str, set]) -> None:
+        _all = set(herd_composition.get("all", []))
+        _miss_pre = _all - set(herd_composition.get("pre", []))
+        _miss_pst = _all - set(herd_composition.get("post", []))
+        msg = (
+            "Herd was rebooted with:\n"
+            f"- all = {_all} (n={len(_all)})\n"
+            f"- pre-missing  = {_miss_pre} (n={len(_miss_pre)})\n"
+            f"- post-missing = {_miss_pst} (n={len(_miss_pst)})\n"
+        )
+        log.debug("-> EMAIL Herd-reboot")
+        if config.mail_enabled:
+            message = MessageSchema(
+                recipients=[email],
+                subject="[Shepherd] Reboot issued",
+                body=msg,
+                subtype=MessageType.plain,
             )
             await mail.send_message(message)
 

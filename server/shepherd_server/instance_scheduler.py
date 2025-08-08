@@ -224,6 +224,41 @@ async def fetch_scheduler_log(xp_id: UUID4, ts_start: datetime) -> str | None:
     return error_msg
 
 
+def reboot_herd_syn(herd: Herd) -> set:
+    herd.open()
+    _pre = set(herd.group_online)
+
+    herd.reboot()  # TODO: add sysrq-reboot
+    time.sleep(120)
+
+    herd.open()
+    _try = 0
+    while _try < 6 and len(_pre) > len(herd.group_online):
+        time.sleep(10)
+        _try += 1
+        herd.open()
+    log.info("Rebooting brought back %d of %d observers", len(herd.group_online), len(_pre))
+    return _pre
+
+
+async def reboot_herd(herd: Herd) -> None:
+    timeout = 200
+    group_pre = set()
+    try:
+        group_pre = await asyncio.wait_for(
+            asyncio.to_thread(reboot_herd_syn, herd=herd),
+            timeout=timeout,
+        )
+    except asyncio.TimeoutError:
+        log.warning("Timeout waiting for reboot of herd")
+    composition = {
+        "all": {herd.hostnames[cnx.host] for cnx in herd.group_all},
+        "pre": {herd.hostnames[cnx.host] for cnx in group_pre},
+        "post": {herd.hostnames[cnx.host] for cnx in herd.group_online},
+    }
+    await mail_engine().send_herd_reboot_email(config.contact["email"], composition)
+
+
 async def run_web_experiment(
     xp_id: UUID4,
     temp_path: Path | None,
@@ -305,6 +340,9 @@ async def run_web_experiment(
         await fetch_scheduler_log(xp_id=xp_id, ts_start=ts_start)
         await notify_user(web_exp.id)
         log.info("  .. users were informed")
+        if web_exp.had_errors:
+            log.info("  .. herd-reboot due to errors")
+            await reboot_herd(herd)
         await asyncio.sleep(60)  # stabilize
 
     else:  # dry run

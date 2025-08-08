@@ -102,7 +102,7 @@ def get_scheduler_log_noasync(ts_start: datetime) -> str | None:
         "--no-pager",
         "--utc",
         "--all",
-        f"--since='{ts_start.isoformat()[:19].replace('T', ' ')}'",
+        rf"--since='{ts_start.isoformat(sep=' ')[:16]}'",
         "--quiet",  # avoid non-sudo warning
     ]
     ret = subprocess.run(  # noqa: S603
@@ -123,6 +123,7 @@ async def run_web_experiment(
     temp_path: Path | None,
     herd: Herd | None,
 ) -> None:
+    ts_start = datetime.now()  # noqa: DTZ005
     log.info("HERD_RUN(id=%s)", str(xp_id))
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
@@ -205,7 +206,7 @@ async def run_web_experiment(
             log.error("Herd failed on at least one Observer")
 
         web_exp.scheduler_log = await asyncio.to_thread(
-            get_scheduler_log_noasync, ts_start=web_exp.started_at
+            get_scheduler_log_noasync, ts_start=ts_start
         )
         await web_exp.update_time_start()
         await web_exp.update_result()

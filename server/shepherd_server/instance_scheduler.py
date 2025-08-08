@@ -102,7 +102,7 @@ def get_scheduler_log_noasync(ts_start: datetime) -> str | None:
         "--no-pager",
         "--utc",
         "--all",
-        rf"--since='{ts_start.isoformat(sep=' ')[:16]}'",
+        "--since", ts_start.isoformat(sep=' ')[:16],
         "--quiet",  # avoid non-sudo warning
     ]
     ret = subprocess.run(  # noqa: S603

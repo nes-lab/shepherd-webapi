@@ -366,3 +366,13 @@ class WebExperiment(Document, ResultData, ErrorData):
         xp["time_start"] = time_start
         self.experiment = Experiment(**xp)
         await self.save_changes()
+
+    @property
+    def summary(self) -> str:
+        return f"""
+        - id: {self.id}
+        - runtime: {self.experiment.duration.seconds} s
+        - started: {self.started_at.isoformat(sep=" ")[:19]}
+        - finished: {self.finished_at.isoformat(sep=" ")[:19]}
+
+        """

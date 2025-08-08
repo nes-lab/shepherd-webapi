@@ -46,7 +46,7 @@ async def get_command() -> list[str]:
     return list(herd_cmds | server_cmds)
 
 
-def run_command_noasync(cmd: str) -> Response:
+def run_command_syn(cmd: str) -> Response:
     # TODO: add forced sysrqd-reboot
     # TODO: get deeper stats (space, ram, cpu)
     #       /usr/bin/df --type=ext4 --local --output=avail
@@ -89,4 +89,4 @@ def run_command_noasync(cmd: str) -> Response:
 
 @router.patch("/command", dependencies=[Depends(active_user_is_elevated)])
 async def run_command(value: Annotated[str, Body(embed=True)]) -> Response:
-    return await asyncio.to_thread(run_command_noasync, value)
+    return await asyncio.to_thread(run_command_syn, value)

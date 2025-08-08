@@ -54,7 +54,7 @@ def tbt_patch_emu(tb_ts: TestbedTasks, time_start: datetime) -> TestbedTasks:
     return TestbedTasks(**tb_ts_emu)
 
 
-def cleanup_herd_noasync(herd: Herd) -> None:
+def cleanup_herd_syn(herd: Herd) -> None:
     herd.open()
     herd.kill_sheep_process()
     # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
@@ -63,7 +63,24 @@ def cleanup_herd_noasync(herd: Herd) -> None:
     herd.service_erase_log()
 
 
-def run_herd_noasync(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
+async def cleanup_herd(herd: Herd) -> str | None:
+    timeout = 60
+    try:
+        await asyncio.wait_for(
+            asyncio.to_thread(cleanup_herd_syn, herd=herd),
+            timeout=timeout,
+        )
+    except asyncio.TimeoutError:
+        error_msg = f"Timeout ({timeout} s) waiting for cleanup"
+    except Exception as xpt:  # noqa: BLE001
+        error_msg = f"Caught general Exception during cleanup ({xpt})"
+    else:
+        error_msg = None
+    await asyncio.sleep(10)  # stabilize
+    return error_msg
+
+
+def run_herd_experiment_syn(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
     # Prepare Targets
     tasks_pre = tbt_patch_pre(tb_tasks)
     ret = herd.run_task(tasks_pre, attach=False, quiet=True)
@@ -88,25 +105,83 @@ def run_herd_noasync(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]
         while herd.service_is_active():
             time.sleep(20)
 
+
+async def run_herd_experiment(
+    herd: Herd, tb_tasks: TestbedTasks, duration: timedelta
+) -> str | None:
+    timeout = duration + timedelta(minutes=10)
+    try:
+        await asyncio.wait_for(
+            asyncio.to_thread(
+                run_herd_experiment_syn,
+                herd=herd,
+                tb_tasks=tb_tasks,
+            ),
+            timeout=timeout.total_seconds(),
+        )
+    except asyncio.TimeoutError:
+        error_msg = f"Timeout ({timeout} s) waiting for experiment to finish"
+    except RuntimeError as xpt:
+        error_msg = f"Caught runtime error ({xpt}) during experiment"
+    except Exception as xpt:  # noqa: BLE001
+        error_msg = f"Caught general exception during experiment ({xpt})"
+    else:
+        error_msg = None
+    await asyncio.sleep(10)  # stabilize
+    return error_msg
+
+
+def fetch_herd_logs_syn(herd: Herd) -> dict[str, ReplyData]:
     replies = herd.service_get_logs()
     return {
         k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr) for k, v in replies.items()
     }
 
 
-def get_scheduler_log_noasync(ts_start: datetime) -> str | None:
+async def fetch_herd_logs(herd: Herd, xp_id: UUID4) -> str | None:
+    timeout = 30
+    replies = {}
+    try:
+        replies = await asyncio.wait_for(
+            asyncio.to_thread(
+                fetch_herd_logs_syn,
+                herd=herd,
+            ),
+            timeout=timeout,
+        )
+    except asyncio.TimeoutError:
+        error_msg = f"Timeout ({timeout} s) waiting for herd-logs"
+    except RuntimeError as xpt:
+        error_msg = f"Caught runtime error ({xpt}) getting herd-logs"
+    except Exception as xpt:  # noqa: BLE001
+        error_msg = f"Caught general exception getting herd-logs ({xpt})"
+    else:
+        error_msg = None
+
+    web_exp = await WebExperiment.get_by_id(xp_id)
+    if web_exp is None:
+        log.warning("XP-dataset not found after running it (deleted?)")
+    else:
+        web_exp.observers_output = replies
+        await web_exp.save_changes()
+    await asyncio.sleep(10)  # stabilize
+    return error_msg
+
+
+def fetch_scheduler_log_syn(ts_start: datetime) -> str | None:
     command = [
         "/usr/bin/journalctl",
         "--unit=shepherd-scheduler",
         "--output=short-iso-precise",
         "--no-pager",
         "--utc",
-        "--all",
+        # "--all",  #
         "--quiet",  # avoid non-sudo warning
-        "--since", ts_start.isoformat(sep=' ')[:16],
-        "--priority", "emerg..info",
-
+        "--since",
+        ts_start.isoformat(sep=" ")[:16],
+        # "--priority", "emerg..info",  # does NOT reduce tqdm output
     ]
+    # TODO: use queue for logger
     ret = subprocess.run(  # noqa: S603
         command,
         timeout=10,
@@ -117,6 +192,35 @@ def get_scheduler_log_noasync(ts_start: datetime) -> str | None:
     if ret.returncode != 0:
         log.warning("Trouble getting scheduler log: %s", ret.stderr)
     return ret.stdout
+
+
+async def fetch_scheduler_log(xp_id: UUID4, ts_start: datetime) -> str | None:
+    timeout = 20
+    reply = None
+    try:
+        reply = await asyncio.wait_for(
+            asyncio.to_thread(
+                fetch_scheduler_log_syn,
+                ts_start=ts_start,
+            ),
+            timeout=timeout,
+        )
+    except asyncio.TimeoutError:
+        error_msg = f"Timeout ({timeout} s) waiting for scheduler-log"
+    except RuntimeError as xpt:
+        error_msg = f"Caught runtime error ({xpt}) getting scheduler-log"
+    except Exception as xpt:  # noqa: BLE001
+        error_msg = f"Caught general exception getting scheduler-log ({xpt})"
+    else:
+        error_msg = None
+
+    web_exp = await WebExperiment.get_by_id(xp_id)
+    if web_exp is None:
+        log.warning("XP-dataset not found after running it (deleted?)")
+    else:
+        web_exp.scheduler_log = reply
+        await web_exp.save_changes()
+    return error_msg
 
 
 async def run_web_experiment(
@@ -144,14 +248,11 @@ async def run_web_experiment(
 
     if isinstance(herd, Herd):
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
-        replies = {}
 
-        try:
-            log.info("  .. preparation")
-            await asyncio.wait_for(
-                asyncio.to_thread(cleanup_herd_noasync, herd=herd),
-                timeout=60,
-            )
+        log.info("  .. preparation")
+        _err1 = await cleanup_herd(herd)
+
+        if _err1 is None:
             # only utilize nodes that online and requested
             herd.group_online = [
                 cnx
@@ -165,30 +266,22 @@ async def run_web_experiment(
                 len(herd.group_online),
                 len(herd.group_all),
             )
-            replies = await asyncio.wait_for(
-                asyncio.to_thread(
-                    run_herd_noasync,
-                    herd=herd,
-                    tb_tasks=testbed_tasks,
-                ),
-                timeout=timeout.total_seconds(),
-            )
-            log.info("  .. cleanup")
-            await asyncio.sleep(30)  # finish IO, precaution
-            await asyncio.wait_for(
-                asyncio.to_thread(cleanup_herd_noasync, herd=herd),
-                timeout=60,
-            )
-            await asyncio.sleep(30)  # stabilize
+            _err1 = await run_herd_experiment(herd, testbed_tasks, web_exp.experiment.duration)
 
-        except asyncio.TimeoutError:
-            log.warning("Timeout waiting for experiment '%s'", web_exp.experiment.name)
-            scheduler_error = "Timeout waiting for Experiment to finish"
-        except Exception as xpt:  # noqa: BLE001
-            log.warning("General Exception waiting for experiment '%s'", web_exp.experiment.name)
-            scheduler_error = f"Caught general Exception during Execution ({xpt})"
-        else:
-            scheduler_error = None
+        if _err1 is not None:
+            log.warning(_err1)
+
+        log.info("  .. retrieve logs")
+        await asyncio.sleep(30)  # finish IO, precaution
+        _err2 = await fetch_herd_logs(herd, xp_id)
+        if _err2 is not None:
+            log.warning(_err2)
+
+        log.info("  .. finalizing")
+        _err3 = await cleanup_herd(herd)
+        if _err3 is not None:
+            log.warning(_err3)
+        await asyncio.sleep(30)  # stabilize
 
         log.info("  .. finished - now collecting data")
         # Reload XP to avoid race-condition / working on old data
@@ -198,8 +291,7 @@ async def run_web_experiment(
             return
 
         web_exp.finished_at = local_now()
-        web_exp.observers_output = replies
-        web_exp.scheduler_error = scheduler_error
+        web_exp.scheduler_error = _err1 or _err2 or _err3
 
         if len(web_exp.observers_output) == 0:
             log.error("Herd collected no logs from node (")
@@ -208,10 +300,8 @@ async def run_web_experiment(
 
         await web_exp.update_time_start()
         await web_exp.update_result()
-        web_exp.scheduler_log = await asyncio.to_thread(
-            get_scheduler_log_noasync, ts_start=ts_start
-        )
         await web_exp.save_changes()
+        await fetch_scheduler_log(xp_id=xp_id, ts_start=ts_start)
         await notify_user(web_exp.id)
         log.info("  .. users were informed")
         await asyncio.sleep(60)  # stabilize

@@ -63,17 +63,18 @@ def cleanup_herd_syn(herd: Herd) -> None:
     herd.service_erase_log()
 
 
-async def cleanup_herd(herd: Herd) -> str | None:
+async def cleanup_herd(herd: Herd, *, pre: bool = False) -> str | None:
     timeout = 60
+    reason = "preparation" if pre else "finalization"
     try:
         await asyncio.wait_for(
             asyncio.to_thread(cleanup_herd_syn, herd=herd),
             timeout=timeout,
         )
     except asyncio.TimeoutError:
-        error_msg = f"Timeout ({timeout} s) waiting for cleanup"
+        error_msg = f"Timeout ({timeout} s) waiting for {reason}-cleanup"
     except Exception as xpt:  # noqa: BLE001
-        error_msg = f"Caught general Exception during cleanup ({xpt})"
+        error_msg = f"Caught general Exception during {reason}-cleanup ({xpt})"
     else:
         error_msg = None
     await asyncio.sleep(10)  # stabilize
@@ -175,7 +176,7 @@ def fetch_scheduler_log_syn(ts_start: datetime) -> str | None:
         "--output=short-iso-precise",
         "--no-pager",
         "--utc",
-        # "--all",  #
+        "--all",  # includes unprintable chars and message-chunks?
         "--quiet",  # avoid non-sudo warning
         "--since",
         ts_start.isoformat(sep=" ")[:16],
@@ -250,7 +251,7 @@ async def run_web_experiment(
         timeout = web_exp.experiment.duration + timedelta(minutes=10)
 
         log.info("  .. preparation")
-        _err1 = await cleanup_herd(herd)
+        _err1 = await cleanup_herd(herd, pre=True)
 
         if _err1 is None:
             # only utilize nodes that online and requested
@@ -278,7 +279,7 @@ async def run_web_experiment(
             log.warning(_err2)
 
         log.info("  .. finalizing")
-        _err3 = await cleanup_herd(herd)
+        _err3 = await cleanup_herd(herd, pre=False)
         if _err3 is not None:
             log.warning(_err3)
         await asyncio.sleep(30)  # stabilize

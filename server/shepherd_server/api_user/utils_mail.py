@@ -112,7 +112,8 @@ class FastMailEngine(MailEngine):
     async def send_experiment_finished_email(
         email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
     ) -> None:
-        msg = f"Experiment {web_exp.experiment.name} ({web_exp.id}) finished.\n"
+        msg = f"Experiment '{web_exp.experiment.name}' finished.\n"
+        msg += web_exp.summary
         if web_exp.had_errors:
             msg += "\nErrors were encountered during execution:\n"
         if web_exp.has_missing_data:

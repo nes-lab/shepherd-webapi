@@ -369,10 +369,10 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     @property
     def summary(self) -> str:
-        return f"""
-        - id: {self.id}
-        - runtime: {self.experiment.duration.seconds} s
-        - started: {self.started_at.isoformat(sep=" ")[:19]}
-        - finished: {self.finished_at.isoformat(sep=" ")[:19]}
-
-        """
+        return (
+            "\nSummary:\n"
+            f"- id = {self.id}\n"
+            f"- runtime = {self.experiment.duration.seconds} s\n"
+            f"- started {self.started_at.isoformat(sep=' ')[:19]}\n"
+            f"- finished {self.finished_at.isoformat(sep=' ')[:19]}\n"
+        )

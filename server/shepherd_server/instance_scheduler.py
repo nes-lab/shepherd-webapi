@@ -114,7 +114,6 @@ def get_scheduler_log_noasync(ts_start: datetime) -> str | None:
     )
     if ret.returncode != 0:
         log.warning("Trouble getting scheduler log: %s", ret.stderr)
-        return None
     return ret.stdout
 
 

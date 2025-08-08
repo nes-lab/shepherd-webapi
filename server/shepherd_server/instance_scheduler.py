@@ -1,4 +1,5 @@
 import asyncio
+import subprocess
 import time
 from contextlib import ExitStack
 from datetime import datetime
@@ -93,12 +94,35 @@ def run_herd_noasync(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]
     }
 
 
+def get_scheduler_log_noasync(ts_start: datetime) -> str | None:
+    command = [
+        "/usr/bin/journalctl",
+        "--unit=shepherd-scheduler",
+        "--output=short-iso-precise",
+        "--no-pager",
+        "--utc",
+        "--all",
+        f"--since='{ts_start.isoformat()[:19].replace('T', ' ')}'",
+        "--quiet",  # avoid non-sudo warning
+    ]
+    ret = subprocess.run(  # noqa: S603
+        command,
+        timeout=10,
+        stdout=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if ret.returncode != 0:
+        log.warning("Trouble getting scheduler log: %s", ret.stderr)
+        return None
+    return ret.stdout
+
+
 async def run_web_experiment(
     xp_id: UUID4,
     temp_path: Path | None,
     herd: Herd | None,
 ) -> None:
-    # TODO: save timestamp for getting service-log
     log.info("HERD_RUN(id=%s)", str(xp_id))
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
@@ -174,11 +198,15 @@ async def run_web_experiment(
         web_exp.finished_at = local_now()
         web_exp.observers_output = replies
         web_exp.scheduler_error = scheduler_error
+
         if len(web_exp.observers_output) == 0:
             log.error("Herd collected no logs from node (")
         if web_exp.max_exit_code > 0:
             log.error("Herd failed on at least one Observer")
 
+        web_exp.scheduler_log = await asyncio.to_thread(
+            get_scheduler_log_noasync, ts_start=web_exp.started_at
+        )
         await web_exp.update_time_start()
         await web_exp.update_result()
         await web_exp.save_changes()

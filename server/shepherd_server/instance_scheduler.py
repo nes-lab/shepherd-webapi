@@ -160,7 +160,7 @@ async def fetch_herd_logs(herd: Herd, xp_id: UUID4) -> str | None:
 
     web_exp = await WebExperiment.get_by_id(xp_id)
     if web_exp is None:
-        log.warning("XP-dataset not found after running it (deleted?)")
+        log.warning("XP-dataset not found (deleted?) for fetching herd-log")
     else:
         web_exp.observers_output = replies
         await web_exp.save_changes()
@@ -216,7 +216,7 @@ async def fetch_scheduler_log(xp_id: UUID4, ts_start: datetime) -> str | None:
 
     web_exp = await WebExperiment.get_by_id(xp_id)
     if web_exp is None:
-        log.warning("XP-dataset not found after running it (deleted?)")
+        log.warning("XP-dataset not found (deleted?) for fetching scheduler log")
     else:
         web_exp.scheduler_log = reply
         await web_exp.save_changes()
@@ -233,7 +233,7 @@ async def run_web_experiment(
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
     if web_exp is None:
-        log.warning("XP-dataset not found before running it (deleted?)")
+        log.warning("XP-dataset not found (deleted?) before running it")
         return
     web_exp.started_at = local_now()
     testbed = Testbed(name=config.testbed_name)
@@ -287,7 +287,7 @@ async def run_web_experiment(
         # Reload XP to avoid race-condition / working on old data
         web_exp = await WebExperiment.get_by_id(xp_id)
         if web_exp is None:
-            log.warning("XP-dataset not found after running it (deleted?)")
+            log.warning("XP-dataset not found (deleted?) after running it (deleted?)")
             return
 
         web_exp.finished_at = local_now()
@@ -329,7 +329,7 @@ async def run_web_experiment(
 async def notify_user(xp_id: UUID4) -> None:
     web_exp = await WebExperiment.get_by_id(xp_id)
     if web_exp is None:
-        log.warning("Dataset of Experiment not found before running it (deleted?)")
+        log.warning("XP-dataset not found (deleted?) for email-notification")
         return
 
     # send out Mail if user wants it

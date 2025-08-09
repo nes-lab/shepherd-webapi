@@ -375,11 +375,13 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     @property
     def summary(self) -> str:
+        def as_iso(ts: datetime | None) -> str:
+            return ts.isoformat(sep=' ')[:19] if ts is not None else "-"
         return (
             "\nSummary:\n"
             f"- id = {self.id}\n"
             f"- runtime = {self.experiment.duration} hms\n"
-            f"- started  @ {self.started_at.isoformat(sep=' ')[:19]} (UTC)\n"
-            f"- executed @ {self.executed_at.isoformat(sep=' ')[:19]} (UTC)\n"
-            f"- finished @ {self.finished_at.isoformat(sep=' ')[:19]} (UTC)\n"
+            f"- started  @ {as_iso(self.started_at)} (UTC)\n"
+            f"- executed @ {as_iso(self.executed_at)} (UTC)\n"
+            f"- finished @ {as_iso(self.finished_at)} (UTC)\n"
         )

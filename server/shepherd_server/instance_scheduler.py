@@ -129,7 +129,7 @@ def execute_herd_xp_syn(herd: Herd, tb_tasks: TestbedTasks) -> None:
 async def execute_herd_xp(herd: Herd, tb_tasks: TestbedTasks, timeout: timedelta) -> str | None:
     try:
         await asyncio.wait_for(
-            asyncio.to_thread(prepare_herd_xp_syn, herd=herd, tb_tasks=tb_tasks),
+            asyncio.to_thread(execute_herd_xp_syn, herd=herd, tb_tasks=tb_tasks),
             timeout=timeout.total_seconds(),
         )
     except asyncio.TimeoutError:
@@ -465,6 +465,7 @@ async def scheduler(
         else:
             herd = Herd(inventory=inventory)
             stack.enter_context(herd)
+            herd.disable_progress_bar()
 
         # TODO: how to make sure there is only one scheduler? Singleton
         log.info("Checking experiment scheduling FIFO")

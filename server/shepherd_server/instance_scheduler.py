@@ -116,7 +116,7 @@ def execute_herd_xp_syn(herd: Herd, tb_tasks: TestbedTasks) -> None:
     log.info(
         "  .. waiting %d seconds: %s (obs-time)",
         int(delay_s),
-        time_start.isoformat(),
+        time_start.isoformat(sep=" ")[:19],
     )
     tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
     ret = herd.run_task(tasks_emu, attach=False, quiet=True)
@@ -144,19 +144,31 @@ async def execute_herd_xp(herd: Herd, tb_tasks: TestbedTasks, timeout: timedelta
     return error_msg
 
 
-def fetch_herd_logs_syn(herd: Herd) -> dict[str, ReplyData]:
-    replies = herd.service_get_logs()
+async def fetch_herd_timestamp(herd: Herd) -> datetime | None:
+    timeout = 30
+    try:
+        timestamps = await asyncio.wait_for(
+            asyncio.to_thread(herd.get_local_timestamps),
+            timeout=timeout,
+        )
+        return min(timestamps) - timedelta(minutes=2)
+    except Exception as xpt:  # noqa: BLE001
+        log.warning("Caught general exception getting herd-logs (%s)", xpt)
+
+
+def fetch_herd_logs_syn(herd: Herd, since: datetime) -> dict[str, ReplyData]:
+    replies = herd.service_get_logs(since=since)
     return {
         k: ReplyData(exited=v.exited, stdout=v.stdout, stderr=v.stderr) for k, v in replies.items()
     }
 
 
-async def fetch_herd_logs(herd: Herd, xp_id: UUID4) -> str | None:
+async def fetch_herd_logs(herd: Herd, xp_id: UUID4, since: datetime) -> str | None:
     timeout = 30
     replies = {}
     try:
         replies = await asyncio.wait_for(
-            asyncio.to_thread(fetch_herd_logs_syn, herd=herd),
+            asyncio.to_thread(fetch_herd_logs_syn, herd=herd, since=since),
             timeout=timeout,
         )
     except asyncio.TimeoutError:
@@ -243,18 +255,23 @@ def reboot_herd_syn(herd: Herd) -> set:
         time.sleep(10)
         _try += 1
         herd.open()
-    log.info("Rebooting brought back %d of %d observers", len(herd.group_online), len(_pre))
+
     return _pre
 
 
 async def reboot_herd(herd: Herd) -> None:
-    timeout = 200
     group_pre = set()
     try:
+        log.info("Rebooting herd NOW!")
         group_pre = await asyncio.wait_for(
             asyncio.to_thread(reboot_herd_syn, herd=herd),
-            timeout=timeout,
+            timeout=200,
         )
+        delay = 5 * 60
+        log.info("  .. give PTP %d s to stabilize", delay)
+        await asyncio.sleep(delay)  # stabilize PTP
+        await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
+        log.info("  .. brought back %d of %d observers", len(herd.group_online), len(group_pre))
     except asyncio.TimeoutError:
         log.warning("Timeout waiting for reboot of herd")
     composition = {
@@ -292,6 +309,7 @@ async def run_web_experiment(
         log.info("  .. pre-cleanup")
         _err1 = await cleanup_herd(herd, pre=True)
 
+        ts_herd = None
         if _err1 is None:
             # only utilize nodes that online and requested
             herd.group_online = [
@@ -300,6 +318,7 @@ async def run_web_experiment(
                 if herd.hostnames[cnx.host] in web_exp.observers_requested
             ]
             log.info("  .. preparation")
+            ts_herd = await fetch_herd_timestamp(herd)
             _err1 = await prepare_herd_xp(herd, testbed_tasks)
 
         ts_exe = None
@@ -322,7 +341,7 @@ async def run_web_experiment(
 
         log.info("  .. retrieve logs")
         await asyncio.sleep(30)  # finish IO, precaution
-        _err2 = await fetch_herd_logs(herd, xp_id)
+        _err2 = await fetch_herd_logs(herd, xp_id, since=ts_herd)
         if _err2 is not None:
             log.warning(_err2)
 
@@ -348,7 +367,9 @@ async def run_web_experiment(
         if web_exp.max_exit_code > 0:
             log.error("Herd failed on at least one Observer")
 
-        await web_exp.update_time_start()
+        await web_exp.update_time_start(web_exp.executed_at, force=True)
+        # await web_exp.update_time_start()
+        # take from files if possible, BUT has time of observer
         await web_exp.update_result()
         await web_exp.save_changes()
         await fetch_scheduler_log(xp_id=xp_id, ts_start=ts_start)

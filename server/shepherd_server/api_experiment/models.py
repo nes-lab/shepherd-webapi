@@ -378,7 +378,8 @@ class WebExperiment(Document, ResultData, ErrorData):
         return (
             "\nSummary:\n"
             f"- id = {self.id}\n"
-            f"- runtime = {self.experiment.duration.seconds} s\n"
-            f"- started @ {self.started_at.isoformat(sep=' ')[:19]} (UTC)\n"
+            f"- runtime = {self.experiment.duration} hms\n"
+            f"- started  @ {self.started_at.isoformat(sep=' ')[:19]} (UTC)\n"
+            f"- executed @ {self.executed_at.isoformat(sep=' ')[:19]} (UTC)\n"
             f"- finished @ {self.finished_at.isoformat(sep=' ')[:19]} (UTC)\n"
         )

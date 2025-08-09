@@ -133,7 +133,7 @@ class FastMailEngine(MailEngine):
         if len(web_exp.missing_observers) > 0:
             msg += (
                 f"- {len(web_exp.missing_observers)} requested observer(s) "
-                f"was/were unavailable: {', '.join(web_exp.missing_observers)}\n"
+                f"was/were unavailable: {', '.join(sorted(web_exp.missing_observers))}\n"
             )
 
         xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
@@ -166,9 +166,9 @@ class FastMailEngine(MailEngine):
         _miss_pst = _all - set(herd_composition.get("post", []))
         msg = (
             "Herd was rebooted with:\n"
-            f"- all = {_all} (n={len(_all)})\n"
-            f"- pre-missing  = {_miss_pre} (n={len(_miss_pre)})\n"
-            f"- post-missing = {_miss_pst} (n={len(_miss_pst)})\n"
+            f"- all = {', '.join(sorted(_all))} (n={len(_all)})\n"
+            f"- pre-missing  = {', '.join(sorted(_miss_pre))} (n={len(_miss_pre)})\n"
+            f"- post-missing = {', '.join(sorted(_miss_pst))} (n={len(_miss_pst)})\n"
         )
         log.debug("-> EMAIL Herd-reboot")
         if config.mail_enabled:

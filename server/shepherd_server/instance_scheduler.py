@@ -81,47 +81,59 @@ async def cleanup_herd(herd: Herd, *, pre: bool = False) -> str | None:
     return error_msg
 
 
-def run_herd_experiment_syn(herd: Herd, tb_tasks: TestbedTasks) -> dict[str, ReplyData]:
-    # Prepare Targets
-    tasks_pre = tbt_patch_pre(tb_tasks)
-    ret = herd.run_task(tasks_pre, attach=False, quiet=True)
+def prepare_herd_xp_syn(herd: Herd, tb_tasks: TestbedTasks) -> None:
+    pre_tasks = tbt_patch_pre(tb_tasks)
+    ret = herd.run_task(pre_tasks, attach=False, quiet=True)
     if ret > 0:
         raise RuntimeError("Starting preparation of targets failed")
     while herd.service_is_active():
         time.sleep(20)
     if herd.service_is_failed():
-        log.warning("Preparation of targets failed - will skip XP")
-    else:  # Start Experiment
-        herd.start_delay_s = 40
-        time_start, delay_s = herd.find_consensus_time()
-        log.info(
-            "Start XP in %d seconds: %s (obs-time)",
-            int(delay_s),
-            time_start.isoformat(),
-        )
-        tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
-        ret = herd.run_task(tasks_emu, attach=False, quiet=True)
-        if ret > 0:
-            raise RuntimeError("Starting Emulation failed")
-        while herd.service_is_active():
-            time.sleep(20)
+        raise RuntimeError("Preparation of targets failed - will skip XP")
 
 
-async def run_herd_experiment(
-    herd: Herd, tb_tasks: TestbedTasks, duration: timedelta
-) -> str | None:
-    timeout = duration + timedelta(minutes=10)
+async def prepare_herd_xp(herd: Herd, tb_tasks: TestbedTasks) -> str | None:
+    timeout = 5 * 60
     try:
         await asyncio.wait_for(
-            asyncio.to_thread(
-                run_herd_experiment_syn,
-                herd=herd,
-                tb_tasks=tb_tasks,
-            ),
+            asyncio.to_thread(prepare_herd_xp_syn, herd=herd, tb_tasks=tb_tasks),
+            timeout=timeout,
+        )
+    except asyncio.TimeoutError:
+        error_msg = f"Timeout ({timeout} s) waiting for preparing experiment"
+    except RuntimeError as xpt:
+        error_msg = f"Caught runtime error ({xpt}) preparing experiment"
+    except Exception as xpt:  # noqa: BLE001
+        error_msg = f"Caught general exception preparing experiment ({xpt})"
+    else:
+        error_msg = None
+    await asyncio.sleep(10)  # stabilize
+    return error_msg
+
+
+def execute_herd_xp_syn(herd: Herd, tb_tasks: TestbedTasks) -> None:
+    time_start, delay_s = herd.find_consensus_time()
+    log.info(
+        "  .. waiting %d seconds: %s (obs-time)",
+        int(delay_s),
+        time_start.isoformat(),
+    )
+    tasks_emu = tbt_patch_emu(tb_tasks, time_start=time_start)
+    ret = herd.run_task(tasks_emu, attach=False, quiet=True)
+    if ret > 0:
+        raise RuntimeError("Starting Emulation failed")
+    while herd.service_is_active():
+        time.sleep(20)
+
+
+async def execute_herd_xp(herd: Herd, tb_tasks: TestbedTasks, timeout: timedelta) -> str | None:
+    try:
+        await asyncio.wait_for(
+            asyncio.to_thread(prepare_herd_xp_syn, herd=herd, tb_tasks=tb_tasks),
             timeout=timeout.total_seconds(),
         )
     except asyncio.TimeoutError:
-        error_msg = f"Timeout ({timeout} s) waiting for experiment to finish"
+        error_msg = f"Timeout ({timeout} hms) waiting for experiment to finish"
     except RuntimeError as xpt:
         error_msg = f"Caught runtime error ({xpt}) during experiment"
     except Exception as xpt:  # noqa: BLE001
@@ -144,10 +156,7 @@ async def fetch_herd_logs(herd: Herd, xp_id: UUID4) -> str | None:
     replies = {}
     try:
         replies = await asyncio.wait_for(
-            asyncio.to_thread(
-                fetch_herd_logs_syn,
-                herd=herd,
-            ),
+            asyncio.to_thread(fetch_herd_logs_syn, herd=herd),
             timeout=timeout,
         )
     except asyncio.TimeoutError:
@@ -200,10 +209,7 @@ async def fetch_scheduler_log(xp_id: UUID4, ts_start: datetime) -> str | None:
     reply = None
     try:
         reply = await asyncio.wait_for(
-            asyncio.to_thread(
-                fetch_scheduler_log_syn,
-                ts_start=ts_start,
-            ),
+            asyncio.to_thread(fetch_scheduler_log_syn, ts_start=ts_start),
             timeout=timeout,
         )
     except asyncio.TimeoutError:
@@ -256,7 +262,7 @@ async def reboot_herd(herd: Herd) -> None:
         "pre": {herd.hostnames[cnx.host] for cnx in group_pre},
         "post": {herd.hostnames[cnx.host] for cnx in herd.group_online},
     }
-    await mail_engine().send_herd_reboot_email(config.contact["email"], composition)
+    await mail_engine().send_herd_reboot_email(composition)
 
 
 async def run_web_experiment(
@@ -283,9 +289,7 @@ async def run_web_experiment(
     await web_exp.save_changes()
 
     if isinstance(herd, Herd):
-        timeout = web_exp.experiment.duration + timedelta(minutes=10)
-
-        log.info("  .. preparation")
+        log.info("  .. pre-cleanup")
         _err1 = await cleanup_herd(herd, pre=True)
 
         if _err1 is None:
@@ -295,14 +299,23 @@ async def run_web_experiment(
                 for cnx in herd.group_online
                 if herd.hostnames[cnx.host] in web_exp.observers_requested
             ]
+            log.info("  .. preparation")
+            _err1 = await prepare_herd_xp(herd, testbed_tasks)
+
+        ts_exe = None
+        if _err1 is None:
+            timeout = web_exp.experiment.duration + timedelta(minutes=10)
+            delay_exe = timedelta(seconds=60)  # to better synchronize start
+            herd.start_delay_s = delay_exe.total_seconds()
             log.info(
-                "  .. now starting - runtime %d s, timeout in %d s, %d of %d observers",
+                "  .. now executing - runtime %d s, timeout in %d s, %d of %d observers",
                 int(web_exp.experiment.duration.total_seconds()),
                 int(timeout.total_seconds()),
                 len(herd.group_online),
                 len(herd.group_all),
             )
-            _err1 = await run_herd_experiment(herd, testbed_tasks, web_exp.experiment.duration)
+            ts_exe = local_now() + delay_exe
+            _err1 = await execute_herd_xp(herd, testbed_tasks, timeout)
 
         if _err1 is not None:
             log.warning(_err1)
@@ -313,7 +326,7 @@ async def run_web_experiment(
         if _err2 is not None:
             log.warning(_err2)
 
-        log.info("  .. finalizing")
+        log.info("  .. post-cleanup")
         _err3 = await cleanup_herd(herd, pre=False)
         if _err3 is not None:
             log.warning(_err3)
@@ -326,6 +339,7 @@ async def run_web_experiment(
             log.warning("XP-dataset not found (deleted?) after running it (deleted?)")
             return
 
+        web_exp.executed_at = ts_exe
         web_exp.finished_at = local_now()
         web_exp.scheduler_error = _err1 or _err2 or _err3
 

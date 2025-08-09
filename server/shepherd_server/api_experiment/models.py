@@ -208,9 +208,15 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     started_at: datetime | None = None
     """
-    None, when the experiment is not yet executing on the testbed.
-    Set to current wall-clock time when the web runner picks to experiment and
-    starts execution on the testbed.
+    None, when the experiment is not yet prepared on the testbed.
+    Set to current wall-clock time when the web runner picks experiment and
+    starts preparation on the testbed.
+    """
+
+    executed_at: datetime | None = None
+    """
+    None, when the experiment is not yet executed.
+    Set to current wall-clock time when the actual experiment starts.
     """
 
     finished_at: datetime | None = None
@@ -373,6 +379,6 @@ class WebExperiment(Document, ResultData, ErrorData):
             "\nSummary:\n"
             f"- id = {self.id}\n"
             f"- runtime = {self.experiment.duration.seconds} s\n"
-            f"- started @ {self.started_at.isoformat(sep=' ')[:19]} (UTC)\n "
+            f"- started @ {self.started_at.isoformat(sep=' ')[:19]} (UTC)\n"
             f"- finished @ {self.finished_at.isoformat(sep=' ')[:19]} (UTC)\n"
         )

@@ -50,9 +50,7 @@ class MailEngine:
     ) -> None: ...
 
     @staticmethod
-    async def send_herd_reboot_email(
-        email: EmailStr, herd_composition: Mapping[str, set]
-    ) -> None: ...
+    async def send_herd_reboot_email(herd_composition: Mapping[str, set]) -> None: ...
 
 
 class FastMailEngine(MailEngine):
@@ -162,7 +160,7 @@ class FastMailEngine(MailEngine):
             await mail.send_message(message)
 
     @staticmethod
-    async def send_herd_reboot_email(email: EmailStr, herd_composition: Mapping[str, set]) -> None:
+    async def send_herd_reboot_email(herd_composition: Mapping[str, set]) -> None:
         _all = set(herd_composition.get("all", []))
         _miss_pre = _all - set(herd_composition.get("pre", []))
         _miss_pst = _all - set(herd_composition.get("post", []))
@@ -175,7 +173,7 @@ class FastMailEngine(MailEngine):
         log.debug("-> EMAIL Herd-reboot")
         if config.mail_enabled:
             message = MessageSchema(
-                recipients=[email],
+                recipients=[config.contact["email"]],  # only admin
                 subject="[Shepherd] Reboot issued",
                 body=msg,
                 subtype=MessageType.plain,

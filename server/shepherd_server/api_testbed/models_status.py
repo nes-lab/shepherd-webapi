@@ -11,8 +11,8 @@ class SchedulerStatus(BaseModel):
     dry_run: bool = False
     last_update: datetime | None = None
     observer_count: int = 0
-    observers_online: set[str] = set()
-    observers_offline: set[str] = set()
+    observers_online: list[str] = []
+    observers_offline: list[str] = []
 
 
 class RedirectStatus(BaseModel):

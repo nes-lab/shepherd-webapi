@@ -45,9 +45,9 @@ class ReplyData(BaseModel):
 
 class ErrorData(BaseModel):
     # status & error - log
-    observers_requested: set[str] = set()
-    observers_online: set[str] = set()
-    observers_offline: set[str] = set()
+    observers_requested: list[str] = []
+    observers_online: list[str] = []
+    observers_offline: list[str] = []
 
     observers_output: dict[str, ReplyData] = {}
     observers_had_data: dict[str, bool] = {}
@@ -90,8 +90,8 @@ class ErrorData(BaseModel):
         return not all(self.observers_had_data.get(obs, False) for obs in self.observers_requested)
 
     @property
-    def missing_observers(self) -> set[str]:
-        return self.observers_requested - self.observers_online
+    def missing_observers(self) -> list[str]:
+        return sorted(set(self.observers_requested) - set(self.observers_online))
 
     @property
     def had_errors(self) -> bool:

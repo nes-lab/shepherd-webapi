@@ -133,7 +133,7 @@ class FastMailEngine(MailEngine):
         if len(web_exp.missing_observers) > 0:
             msg += (
                 f"- {len(web_exp.missing_observers)} requested observer(s) "
-                f"was/were unavailable: {', '.join(sorted(web_exp.missing_observers))}\n"
+                f"was/were unavailable: {', '.join(web_exp.missing_observers)}\n"
             )
 
         xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0

@@ -318,9 +318,9 @@ async def run_web_experiment(
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     web_exp.observer_paths = testbed_tasks.get_output_paths()
     tb_status = await TestbedDB.get_one()
-    web_exp.observers_requested = testbed_tasks.get_observers()
-    web_exp.observers_online = tb_status.scheduler.observers_online
-    web_exp.observers_offline = tb_status.scheduler.observers_offline
+    web_exp.observers_requested = sorted(testbed_tasks.get_observers())
+    web_exp.observers_online = sorted(tb_status.scheduler.observers_online)
+    web_exp.observers_offline = sorted(tb_status.scheduler.observers_offline)
     await web_exp.update_time_start(web_exp.started_at, force=True)
     await web_exp.save_changes()
 
@@ -446,14 +446,16 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
     if isinstance(herd, Herd):
         await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
         tb_.scheduler.observer_count = len(herd.group_online)
-        tb_.scheduler.observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
-        tb_.scheduler.observers_offline = (
-            set(herd.hostnames.values()) - tb_.scheduler.observers_online
+        tb_.scheduler.observers_online = sorted(
+            herd.hostnames[cnx.host] for cnx in herd.group_online
+        )
+        tb_.scheduler.observers_offline = sorted(
+            set(herd.hostnames.values()) - set(tb_.scheduler.observers_online)
         )
     else:  # dry run or offline
         tb_.scheduler.observer_count = 0
-        tb_.scheduler.observers_online = set()
-        tb_.scheduler.observers_offline = set()
+        tb_.scheduler.observers_online = []
+        tb_.scheduler.observers_offline = []
 
     # TODO: include storage, warn via mail if low
     await tb_.save_changes()

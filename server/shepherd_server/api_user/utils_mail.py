@@ -166,7 +166,7 @@ class FastMailEngine(MailEngine):
         _miss_pst = _all - set(herd_composition.get("post", []))
         msg = (
             "Herd was rebooted with:\n"
-            f"- all = {', '.join(sorted(_all))} (n={len(_all)})\n"
+            f"- {', '.join(sorted(_all))} (n={len(_all)})\n"
             f"- pre-missing  = {', '.join(sorted(_miss_pre))} (n={len(_miss_pre)})\n"
             f"- post-missing = {', '.join(sorted(_miss_pst))} (n={len(_miss_pst)})\n"
         )

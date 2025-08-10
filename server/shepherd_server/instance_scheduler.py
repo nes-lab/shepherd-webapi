@@ -286,14 +286,15 @@ async def run_web_experiment(
     xp_id: UUID4,
     temp_path: Path | None,
     herd: Herd | None,
-) -> None:
+) -> bool:
+    had_error = False
     ts_start = datetime.now()  # noqa: DTZ005
     log.info("HERD_RUN(id=%s)", str(xp_id))
     # mark as started
     web_exp = await WebExperiment.get_by_id(xp_id)
     if web_exp is None:
         log.warning("XP-dataset not found (deleted?) before running it")
-        return
+        return had_error
     web_exp.started_at = local_now()
     testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
@@ -356,7 +357,7 @@ async def run_web_experiment(
         web_exp = await WebExperiment.get_by_id(xp_id)
         if web_exp is None:
             log.warning("XP-dataset not found (deleted?) after running it (deleted?)")
-            return
+            return (_err1 or _err2 or _err3) is not None
 
         web_exp.executed_at = ts_exe
         web_exp.finished_at = local_now()
@@ -375,9 +376,7 @@ async def run_web_experiment(
         await fetch_scheduler_log(xp_id=xp_id, ts_start=ts_start)
         await notify_user(web_exp.id)
         log.info("  .. users were informed")
-        if web_exp.had_errors:
-            log.info("  .. herd-reboot due to errors")
-            await reboot_herd(herd)
+        had_error = web_exp.had_errors
         await asyncio.sleep(60)  # stabilize
 
     else:  # dry run
@@ -398,6 +397,7 @@ async def run_web_experiment(
                     current=np.zeros(10_000),
                 )
         await web_exp.update_result(paths_result)
+    return had_error
 
 
 async def notify_user(xp_id: UUID4) -> None:
@@ -464,7 +464,7 @@ async def scheduler(
             herd = None
         else:
             herd = Herd(inventory=inventory)
-            stack.enter_context(herd)
+            stack.enter_context(herd)  # TODO: this is not async
             herd.disable_progress_bar()
 
         # TODO: how to make sure there is only one scheduler? Singleton
@@ -481,11 +481,15 @@ async def scheduler(
                 continue
 
             log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
-            await run_web_experiment(
+            had_error = await run_web_experiment(
                 next_experiment.id,
                 temp_path=temp_path,
                 herd=herd,
             )
+            if had_error:
+                log.info("  .. herd-reboot due to errors (scheduler will restart after)")
+                await reboot_herd(herd)
+                return
 
 
 def run(

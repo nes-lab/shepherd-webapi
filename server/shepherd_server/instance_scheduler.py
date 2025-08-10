@@ -122,24 +122,42 @@ def execute_herd_xp_syn(herd: Herd, tb_tasks: TestbedTasks) -> None:
     ret = herd.run_task(tasks_emu, attach=False, quiet=True)
     if ret > 0:
         raise RuntimeError("Starting Emulation failed")
-    while herd.service_is_active():
-        time.sleep(20)
+    wait_here = False
+    if wait_here:
+        while herd.service_is_active():
+            time.sleep(20)
 
 
 async def execute_herd_xp(herd: Herd, tb_tasks: TestbedTasks, timeout: timedelta) -> str | None:
+    ts_timeout = local_now() + timeout
     try:
         await asyncio.wait_for(
             asyncio.to_thread(execute_herd_xp_syn, herd=herd, tb_tasks=tb_tasks),
-            timeout=timeout.total_seconds(),
+            timeout=30,
         )
     except asyncio.TimeoutError:
-        error_msg = f"Timeout ({timeout} hms) waiting for experiment to finish"
+        error_msg = "Timeout waiting for experiment to start"
     except RuntimeError as xpt:
         error_msg = f"Caught runtime error ({xpt}) during experiment"
     except Exception as xpt:  # noqa: BLE001
         error_msg = f"Caught general exception during experiment ({xpt})"
     else:
         error_msg = None
+
+    if error_msg is None:
+        # this more complex design is a test-balloon
+        # .wait_for() with > 60 min seem to fail / timeout
+        try:
+            while await asyncio.wait_for(asyncio.to_thread(herd.service_is_active), timeout=30):
+                if local_now() > ts_timeout:
+                    error_msg = (
+                        f"Timeout ({timeout} hms) waiting for experiment-status during execution"
+                    )
+                    break
+                await asyncio.sleep(20)
+        except asyncio.TimeoutError:
+            error_msg = "Timeout waiting for experiment-status during execution"
+
     await asyncio.sleep(10)  # stabilize
     return error_msg
 

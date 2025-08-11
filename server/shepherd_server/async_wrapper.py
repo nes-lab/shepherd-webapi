@@ -14,18 +14,22 @@ asyncio.run(runner())
 """
 
 import asyncio
-from collections.abc import Awaitable
 from collections.abc import Callable
+from collections.abc import Coroutine
 from functools import wraps
 from typing import Any
+from typing import ParamSpec
 from typing import TypeVar
 
 from .logger import log
 
-F = TypeVar("F", bound=Callable[..., Any])
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
-def async_wrap(timeout: float | None = None) -> Callable[[F], Callable[..., Awaitable[Any]]]:
+def async_wrap(
+    timeout: float | None = None,
+) -> Callable[[Callable[P, T]], Callable[P, Coroutine[Any, Any, tuple[T, str]]]]:
     """
     Decorator that wraps a blocking function to make it async with optional timeout.
     It runs it in a separate thread with asyncio.to_thread(),
@@ -42,9 +46,9 @@ def async_wrap(timeout: float | None = None) -> Callable[[F], Callable[..., Awai
         asyncio.TimeoutError: If the function takes longer than timeout seconds
     """
 
-    def decorator(func: F) -> Callable[..., Awaitable[Any]]:
+    def decorator(func: Callable[P, T]) -> Callable[P, Coroutine[Any, Any, tuple[T, str]]]:
         @wraps(func)  # Preserves name, docstring, etc.
-        async def wrapper(*args, **kwargs) -> Any:  # noqa: ANN002, ANN003
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> tuple[T, str]:
             # Run the blocking function in a separate thread
             thread_task = asyncio.to_thread(func, *args, **kwargs)
             result = None

@@ -223,7 +223,7 @@ async def run_web_experiment(
         log.info("  .. preparation")
         ts_herd, _err1 = await herd_fetch_timestamp(herd)
         if _err1 is None:
-            _err1 = await herd_prepare_experiment(herd, testbed_tasks)
+            _, _err1 = await herd_prepare_experiment(herd, testbed_tasks)
             await asyncio.sleep(30)  # stabilize
 
         exe_timestamp = None
@@ -239,10 +239,10 @@ async def run_web_experiment(
                 len(herd.group_all),
             )
             exe_timestamp = local_now() + exe_delay
-            _err1 = await herd_schedule_experiment(herd, testbed_tasks)
+            _, _err1 = await herd_schedule_experiment(herd, testbed_tasks)
 
         if _err1 is None:
-            _err1 = await herd_wait_completion(herd, exe_timeout)
+            _, _err1 = await herd_wait_completion(herd, exe_timeout)
         else:
             log.warning(_err1)
 
@@ -253,7 +253,7 @@ async def run_web_experiment(
             log.warning(_err2)
 
         log.info("  .. cleanup")
-        _err3 = await herd_cleanup(herd)  # will also re-add all online observers
+        t, _err3 = await herd_cleanup(herd)  # will also re-add all online observers
         if _err3 is not None:
             log.warning(_err3)
 

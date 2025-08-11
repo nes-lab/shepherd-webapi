@@ -20,7 +20,7 @@ from functools import wraps
 from typing import Any
 from typing import TypeVar
 
-from server.shepherd_server.logger import log
+from .logger import log
 
 F = TypeVar("F", bound=Callable[..., Any])
 

@@ -228,6 +228,7 @@ class WebExperiment(Document, ResultData, ErrorData):
     class Settings:  # allows using .save_changes()
         use_state_management = True
         state_management_save_previous = True
+        validate_on_save = True
 
     @classmethod
     async def get_by_id(cls, experiment_id: UUID) -> "None | WebExperiment":

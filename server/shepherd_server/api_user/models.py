@@ -114,6 +114,7 @@ class User(Document, UserOut):
     class Settings:  # allows using .save_changes()
         use_state_management = True
         state_management_save_previous = True
+        validate_on_save = True
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

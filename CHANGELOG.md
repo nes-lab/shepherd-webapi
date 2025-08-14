@@ -8,11 +8,20 @@
   - extend quota
   - get / set restrictions
   - get / send commands (mostly for observers)
-- server
+- scheduler
+  - optimize delays of scheduler (from > 5min per experiment, to < 3 min)
+  - add reboot of observers when an experiment fails (~ 10 min delay, admin is notified)
+  - refactor code after kinks of ssh, observers & file-server were figured out
   - use 1 static herd (avoids fabric bugs)
   - herd only uses requested observers (that are also online)
+  - improve status mails
+  - disable tqdm progress bar for herd and sheep to get cleaner logs
+  - get specific logs of scheduler and observers by querying journalctl with `--since`
+- server
   - allow deactivating accounts
   - add admin functionality
+  - database models are validated before being saved (avoids broken DB)
+  - add async-wrapper for blocking functions that removes lots of boilerplate code
 - python - replace pipenv & setuptools by uv
 
 ## v2025.06.4

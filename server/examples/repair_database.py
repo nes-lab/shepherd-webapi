@@ -1,8 +1,8 @@
 import asyncio
 
-from server.shepherd_server.instance_db import db_available, db_client
-from server.shepherd_server.logger import log
-from server import WebExperiment
+from shepherd_server.instance_db import db_available, db_client
+from shepherd_server.logger import log
+from shepherd_server import WebExperiment
 
 async def db_delete_old_experiments() -> None:
     _client = await db_client()

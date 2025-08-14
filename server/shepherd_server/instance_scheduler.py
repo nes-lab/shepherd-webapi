@@ -242,6 +242,7 @@ async def run_web_experiment(
             _, _err1 = await herd_schedule_experiment(herd, testbed_tasks)
 
         if _err1 is None:
+            log.info("  .. waiting for completion")
             _err1 = await herd_wait_completion(herd, exe_timeout)
         else:
             log.warning(_err1)

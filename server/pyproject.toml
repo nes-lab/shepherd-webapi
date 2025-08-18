@@ -32,7 +32,7 @@ dependencies = [
     "typer",
     "uvicorn[standard]",
     "pydantic[email]>=2.11.0",
-    "beanie>=1.29.0",
+    "beanie>=1.29.0,<2.0", # TODO: v2 replaces motor
     "passlib[bcrypt]",
     "python-jose[cryptography]",
     "shepherd_core>=2025.6.4",
@@ -85,7 +85,7 @@ reportMissingParameterType = true
 test = "pytest"
 
 [tool.pytest.ini_options]
-addopts = ["-vvv"]
+addopts = ["-vvv"]  # "--stepwise"
 asyncio_mode = "auto"
 testpaths = ["tests", ]
 norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv', '.venv']

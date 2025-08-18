@@ -244,7 +244,7 @@ class WebExperiment(Document, ResultData, ErrorData):
                 cls.owner.email == user.email,
                 fetch_links=True,
             )
-            .sort((WebExperiment.created_at, pymongo.ASCENDING))
+            .sort((cls.created_at, pymongo.ASCENDING))
             .to_list()
         )
 
@@ -267,7 +267,7 @@ class WebExperiment(Document, ResultData, ErrorData):
                 In(cls.owner.role, roles_allow),
                 fetch_links=True,
             )
-            .sort((WebExperiment.requested_execution_at, pymongo.ASCENDING))
+            .sort((cls.requested_execution_at, pymongo.ASCENDING))
             .limit(1)
             .to_list()
         )

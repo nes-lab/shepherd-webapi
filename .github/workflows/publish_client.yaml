@@ -14,8 +14,8 @@ permissions:
 
 jobs:
 
-  publish-core:
-    if: github.ref == 'refs/heads/main'
+  publish-client:
+    # if: github.ref == 'refs/heads/main' # TODO: does NOT work - is 'refs/tags/v2025.xx.x'
     runs-on: ubuntu-latest
     environment:
       name: pypi

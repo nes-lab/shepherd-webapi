@@ -6,10 +6,10 @@ from beanie import init_beanie
 from fastapi import FastAPI
 from pydantic import EmailStr
 from pydantic import validate_call
+from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 from shepherd_core import local_now
 from shepherd_core.config import config as core_cfg
-from pymongo import AsyncMongoClient
 
 from .api_experiment.models import WebExperiment
 from .api_testbed.models_status import TestbedDB

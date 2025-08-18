@@ -9,14 +9,17 @@ on:
 jobs:
   static-analysis:
     uses: ./.github/workflows/static_analysis.yaml
-  test-python:
-    uses: ./.github/workflows/py_tests.yaml
+  test-client:
+    uses: ./.github/workflows/test_py_client.yaml
+  test-server:
+    uses: ./.github/workflows/test_py_server.yaml
 
   quality-assurance:
     runs-on: ubuntu-latest
     needs:
       - static-analysis
-      - test-python
+      - test-client
+      - test-server
     steps:
       - name: Finished
         run: echo "finished"

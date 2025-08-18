@@ -5,10 +5,15 @@ on:
 
 jobs:
   utests:
-    runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        python-version: ["3.12", "3.11", "3.10"]
+        python-version: ["3.13", "3.12", "3.11", "3.10"] # 4 version / years
+
+    runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}
       cancel-in-progress: true
@@ -20,15 +25,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install pip-dependencies 🔧
-        run: pip install build
-
-      - name: Test-Build Package 🧱
-        run: python -m build
-        working-directory: "./"
 
       - name: Install Package 🧱
-        run: pip install .[test,dev]
-        working-directory: "./"
+        run: uv tool install .[all]
+        working-directory: "./server"
 
-      # TODO: pytest
+      # TODO: pytest (needs database)

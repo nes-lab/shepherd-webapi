@@ -1,0 +1,47 @@
+name: Build, install & [pytest]
+
+on:
+  workflow_call:
+
+jobs:
+  utests:
+
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.13", "3.12", "3.11", "3.10"] # 4 version / years
+
+    runs-on: ${{ matrix.os }}
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.python-version }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }} 🐍
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip-dependencies 🔧
+        run: pip install build
+
+      - name: Test-Build Package 🧱
+        run: python -m build
+        working-directory: "./client"
+
+      - name: Install Package 🧱
+        run: pip install .[test,dev]
+        working-directory: "./client"
+
+      - name: Install uv 🔧
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install package via uv 🧱
+        run: uv tool install .[all]
+        working-directory: "./client"
+
+      # TODO: pytest

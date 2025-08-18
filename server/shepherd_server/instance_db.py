@@ -4,12 +4,12 @@ from contextlib import asynccontextmanager
 
 from beanie import init_beanie
 from fastapi import FastAPI
-from motor.core import AgnosticDatabase
-from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import EmailStr
 from pydantic import validate_call
+from pymongo.asynchronous.database import AsyncDatabase
 from shepherd_core import local_now
 from shepherd_core.config import config as core_cfg
+from pymongo import AsyncMongoClient
 
 from .api_experiment.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
@@ -24,9 +24,9 @@ from .logger import log
 core_cfg.TESTBED = config.testbed_name
 
 
-async def db_client() -> AgnosticDatabase:
+async def db_client() -> AsyncDatabase:
     """Call this from within your event loop to get beanie setup."""
-    client = AsyncIOMotorClient("mongodb://localhost:27017")
+    client = AsyncMongoClient("mongodb://localhost:27017")
     # Note: if ".shp" does not exist, it will be created
     await init_beanie(database=client.shp, document_models=[User, WebExperiment, TestbedDB])
     return client.shp

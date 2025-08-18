@@ -152,7 +152,7 @@ def backup(
     asyncio.run(backup_db(WebExperiment, path))
     if False:
         asyncio.run(backup_db(User, path))
-    # TODO: dump to file, restore from it - can beanie or motor do it?
+    # TODO: dump to file, restore from it - can beanie do it?
 
 
 if __name__ == "__main__":

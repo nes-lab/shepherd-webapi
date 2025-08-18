@@ -32,13 +32,12 @@ dependencies = [
     "typer",
     "uvicorn[standard]",
     "pydantic[email]>=2.11.0",
-    "beanie>=1.29.0,<2.0", # TODO: v2 replaces motor
+    "beanie>=2.0",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd_core>=2025.6.4",
+    "shepherd_core>=2025.8.1",
     "python-decouple",
     "shepherd_herd>=0.9.3",
-    "motor",
     # TODO: python-multipart
 ]
 

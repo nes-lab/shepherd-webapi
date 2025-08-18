@@ -39,9 +39,14 @@ jobs:
 
       - name: Install uv 🔧
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
       - name: Install package via uv 🧱
         run: uv tool install .[all]
         working-directory: "./client"
 
       # TODO: pytest
+
+      - name: Minimize uv cache 🔧
+        run: uv cache prune --ci

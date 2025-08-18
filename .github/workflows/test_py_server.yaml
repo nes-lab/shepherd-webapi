@@ -26,8 +26,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install uv 🔧
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
       - name: Install Package 🧱
         run: uv tool install .[all]
         working-directory: "./server"
 
       # TODO: pytest (needs database)
+
+      - name: Minimize uv cache 🔧
+        run: uv cache prune --ci

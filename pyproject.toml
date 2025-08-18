@@ -1,7 +1,7 @@
 [project]
 # virtual project for a dev-env
 name = "Shepherd-WebAPI"
-version = "2025.08.1"
+version = "2025.08.2"
 description = "Interface between the Testbed Instance and the User "
 readme = "README.md"
 dependencies = [

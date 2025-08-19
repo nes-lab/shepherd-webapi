@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Package 🧱
         run: uv tool install .[all]
-        working-directory: "./server"
+        working-directory: "./shepherd_server"
 
       # TODO: pytest (needs database)
 

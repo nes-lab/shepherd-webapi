@@ -10,6 +10,7 @@
 
 # start example
 import shepherd_core.data_models as sdm
+
 from shepherd_client import Client
 
 client = Client()

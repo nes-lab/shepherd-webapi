@@ -38,9 +38,9 @@ jobs:
 
       - name: Build core-package 🧱
         run: python -m build
-        working-directory: "./client"
+        working-directory: "./shepherd_client"
 
       - name: Publish core-package 🥳
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: client/dist/
+          packages-dir: shepherd_client/dist/

@@ -31,11 +31,11 @@ jobs:
 
       - name: Test-Build Package 🧱
         run: python -m build
-        working-directory: "./client"
+        working-directory: "./shepherd_client"
 
       - name: Install Package 🧱
         run: pip install .[test,dev]
-        working-directory: "./client"
+        working-directory: "./shepherd_client"
 
       - name: Install uv 🔧
         uses: astral-sh/setup-uv@v6
@@ -44,7 +44,7 @@ jobs:
 
       - name: Install package via uv 🧱
         run: uv tool install .[all]
-        working-directory: "./client"
+        working-directory: "./shepherd_client"
 
       # TODO: pytest
 

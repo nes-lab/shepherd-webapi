@@ -71,7 +71,7 @@ Installation uses uv to install program for everyone.
 # install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 # make herd and server usable as CLI-tool
-uv tool install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server
+uv tool install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=shepherd_server
 uv tool install shepherd-herd
 # OR - source newest commits from git
 uv tool install git+https://github.com/nes-lab/shepherd@main#subdirectory=software/shepherd-herd
@@ -128,7 +128,7 @@ Config `.env`, by either bringing in a backup or starting fresh
 
 - email-server needs credentials
 - backup: repopulate database by using ´shepherd_server init file´
-- fresh start: generate [fresh salt](https://github.com/nes-lab/shepherd-webapi/blob/main/scripts/salt_generator.py) and initialize database with `shepherd_server init`
+- fresh start: generate [fresh salt](https://github.com/nes-lab/shepherd-webapi/blob/main/shepherd_server/scripts/salt_generator.py) and initialize database with `shepherd_server init`
 
 ```ini
 # Secrets
@@ -172,15 +172,15 @@ sudo systemctl status mongod
 Services are currently hard-linked to the above tooling in the account `service`.
 
 ```Shell
-sudo cp /opt/shepherd_webservice/playground/prototype_fastapi/shepherd-api.service /etc/systemd/system/
+sudo cp /opt/shepherd_webservice/shepherd_server/shepherd-api.service /etc/systemd/system/
 sudo systemctl start shepherd-api
 sudo systemctl enable shepherd-api
 
-sudo cp /opt/shepherd_webservice/playground/prototype_fastapi/shepherd-redirect.service /etc/systemd/system/
+sudo cp /opt/shepherd_webservice/shepherd_server/shepherd-redirect.service /etc/systemd/system/
 sudo systemctl start shepherd-redirect
 sudo systemctl enable shepherd-redirect
 
-sudo cp /opt/shepherd_webservice/playground/prototype_fastapi/shepherd-scheduler.service /etc/systemd/system/
+sudo cp /opt/shepherd_webservice/shepherd_server/shepherd-scheduler.service /etc/systemd/system/
 sudo systemctl start shepherd-scheduler
 sudo systemctl enable shepherd-scheduler
 

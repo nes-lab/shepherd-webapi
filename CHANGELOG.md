@@ -2,7 +2,8 @@
 
 ## v2025.08.3
 
--
+- upgrade server to py313 (automatic DL via uv)
+- rename package-directories to `shepherd_client` & `shepherd_server`
 
 ## v2025.08.2
 

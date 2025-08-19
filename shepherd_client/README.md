@@ -49,7 +49,7 @@ uv pip install shepherd-client -U
 Newest features can be obtained by directly installing from GitHub:
 
 ```shell
-uv pip install git+https://github.com/nes-lab/shepherd-webapi.git@main
+uv pip install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=shepherd_client
 ```
 
 ### Usage

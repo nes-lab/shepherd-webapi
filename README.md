@@ -15,8 +15,8 @@
 
 This repo contains:
 
-- `shepherd-client`-sources in `/client`
-- `shepherd-server`-sources in `/server`
+- `shepherd-client`-sources in `/shepherd_client`
+- `shepherd-server`-sources in `/shepherd_server`
 
 ## Development & Release
 

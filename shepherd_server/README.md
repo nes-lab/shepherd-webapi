@@ -71,11 +71,10 @@ Installation uses uv to install program for everyone.
 # install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 # make herd and server usable as CLI-tool
-uv tool install shepherd-herd
 uv tool install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server
+uv tool install shepherd-herd
 # OR - source newest commits from git
 uv tool install git+https://github.com/nes-lab/shepherd@main#subdirectory=software/shepherd-herd
-uv tool install --with git+https://github.com/nes-lab/shepherd@dev#subdirectory=software/shepherd-herd git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=server --force
 ```
 
 Create an admin account with:

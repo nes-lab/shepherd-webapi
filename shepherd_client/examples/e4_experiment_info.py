@@ -22,4 +22,5 @@ if len(experiments) > 0:
     print("UUID: ", xp_id)
     print("name: ", xp.name)
     print("state: ", client.get_experiment_state(xp_id))
+    print("content: ", xp)
 # end example

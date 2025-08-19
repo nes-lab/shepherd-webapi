@@ -1,11 +1,11 @@
 from pathlib import Path
+from typing import Self
 from typing import TypedDict
+from typing import Unpack
 
 from pydantic import validate_call
 from shepherd_core.data_models.base.shepherd import ShpModel
 from shepherd_core.data_models.base.wrapper import Wrapper
-from typing_extensions import Self
-from typing_extensions import Unpack
 
 from shepherd_server.api_user.models import User
 

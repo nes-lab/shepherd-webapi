@@ -59,7 +59,7 @@ def async_wrap(
                     if timeout is None
                     else await asyncio.wait_for(thread_task, timeout=timeout)
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 error_msg = f"Timeout ({timeout} s) running {fn_name}"
             except RuntimeError as xpt:
                 error_msg = f"Caught runtime error ({xpt}) running {fn_name}"

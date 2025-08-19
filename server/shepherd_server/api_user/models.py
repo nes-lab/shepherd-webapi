@@ -1,8 +1,8 @@
 """User models."""
 
+from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from datetime import timezone
 from enum import Enum
 from typing import Annotated
 from typing import Any
@@ -69,9 +69,7 @@ class UserQuota(BaseModel):
         if self.custom_quota_expire_date is None:
             return False
         if self.custom_quota_expire_date.tzinfo is None:
-            return self.custom_quota_expire_date.replace(tzinfo=timezone.utc) >= datetime.now(
-                tz=local_tz()
-            )
+            return self.custom_quota_expire_date.replace(tzinfo=UTC) >= datetime.now(tz=local_tz())
         return self.custom_quota_expire_date >= datetime.now(tz=local_tz())
 
     @computed_field

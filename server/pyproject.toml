@@ -15,16 +15,13 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Natural Language :: English"
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
     "pyaml",
     "fastapi[standard]",
@@ -76,7 +73,7 @@ source-include = ["shepherd_server/favicon/**"]
 [tool.pyright]
 root = "./"
 include = []
-pythonVersion = "3.10"
+pythonVersion = "3.13"
 pythonPlatform = "All"
 reportMissingParameterType = true
 

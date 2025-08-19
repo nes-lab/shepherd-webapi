@@ -93,7 +93,7 @@ def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
         raise RuntimeError("Starting Emulation failed")
 
 
-async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:
+async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:  # noqa: ASYNC109
     # this fn can not be wrapped, because it has no fixed timeout
     # TODO: add to main code?
     ts_timeout = local_now() + timeout
@@ -104,7 +104,7 @@ async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:
                 error_msg = f"Timeout ({timeout} hms) waiting for experiment to complete"
                 break
             await asyncio.sleep(21)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         error_msg = "Timeout waiting for experiment-status during execution"
     return error_msg
 
@@ -179,7 +179,7 @@ async def herd_reboot(herd: Herd) -> None:
         await asyncio.sleep(delay)  # stabilize PTP
         await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
         log.info("  .. brought back %d of %d observers", len(herd.group_online), len(group_pre))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         log.warning("Timeout waiting for reboot of herd")
     composition = {
         "all": {herd.hostnames[cnx.host] for cnx in herd.group_all},

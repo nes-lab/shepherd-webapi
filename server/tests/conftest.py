@@ -131,7 +131,7 @@ class UserTestClient(TestClient):
     """
 
     @contextmanager
-    def authenticate_admin(self) -> Generator[TestClient, None, None]:
+    def authenticate_admin(self) -> Generator[TestClient]:
         response = self.post(
             "/auth/token",
             data={
@@ -146,7 +146,7 @@ class UserTestClient(TestClient):
         self.headers["Authorization"] = ""
 
     @contextmanager
-    def authenticate_user(self) -> Generator[TestClient, None, None]:
+    def authenticate_user(self) -> Generator[TestClient]:
         response = self.post(
             "/auth/token",
             data={
@@ -161,13 +161,13 @@ class UserTestClient(TestClient):
         self.headers["Authorization"] = ""
 
     @contextmanager
-    def regular_joe(self) -> Generator[TestClient, None, None]:
+    def regular_joe(self) -> Generator[TestClient]:
         self.headers["Authorization"] = ""
         yield self
 
 
 @pytest.fixture
-def client(*, database_for_tests: bool) -> Generator[TestClient, None, None]:
+def client(*, database_for_tests: bool) -> Generator[TestClient]:
     assert database_for_tests
     with UserTestClient(app) as client:
         yield client

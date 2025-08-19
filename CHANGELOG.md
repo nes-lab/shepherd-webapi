@@ -1,5 +1,13 @@
 # History of Changes
 
+## v2025.08.3
+
+-
+
+## v2025.08.2
+
+- migrate server to beanie v2
+
 ## v2025.08.1
 
 - add admin-client, that can

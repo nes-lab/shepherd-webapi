@@ -9,6 +9,7 @@ dependencies = [
     "shepherd-client[test]",
     # dev
     "pre-commit",
+    "pre-commit-uv", # check with `pre-commit --version`
     "bump2version",
     "pyright",
     "ty",

@@ -14,7 +14,7 @@ permissions:
 
 jobs:
 
-  publish-client:
+  publish:
     # if: github.ref == 'refs/heads/main' # TODO: does NOT work - is 'refs/tags/v2025.xx.x'
     runs-on: ubuntu-latest
     environment:
@@ -36,11 +36,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install build
 
-      - name: Build core-package 🧱
+      - name: Build package 🧱
         run: python -m build
         working-directory: "./shepherd_client"
 
-      - name: Publish core-package 🥳
+      - name: Publish package 🥳
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: shepherd_client/dist/

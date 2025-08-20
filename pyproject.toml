@@ -2,7 +2,7 @@
 # virtual project for a dev-env
 name = "Shepherd-WebAPI"
 version = "2025.08.2"
-description = "Interface between the Testbed Instance and the User "
+description = "Interface between the Testbed Instance and the User"
 readme = "README.md"
 dependencies = [
     "shepherd-server[dev,test]",
@@ -20,5 +20,11 @@ requires-python = ">=3.10"
 package = false
 
 [tool.uv.sources]
-shepherd-server = { path = "./shepherd_server"}
-shepherd-client = { path = "./shepherd_client"}
+shepherd-server = { path = "./shepherd_server", editable = true}
+shepherd-client = { path = "./shepherd_client", editable = true}
+
+[tool.setuptools]
+packages = ["shepherd_server", "shepherd_client"]
+
+[tool.ty.terminal]
+output-format = "concise"

@@ -62,7 +62,7 @@ Source = "https://github.com/nes-lab/shepherd-webapi"
 shepherd-server = "shepherd_server.cli:cli"
 
 [build-system]
-requires = ["uv_build>=0.8.3,<0.9.0"]
+requires = ["uv_build>=0.8.12,<0.9.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]

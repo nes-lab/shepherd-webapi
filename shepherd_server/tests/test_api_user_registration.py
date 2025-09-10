@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.api_user.utils_misc import calculate_hash
 

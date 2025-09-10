@@ -1,9 +1,10 @@
 import asyncio
 
-from shepherd_server import WebExperiment
 from shepherd_server.instance_db import db_available
 from shepherd_server.instance_db import db_client
 from shepherd_server.logger import log
+
+from shepherd_server import WebExperiment
 
 
 async def db_delete_old_experiments() -> None:

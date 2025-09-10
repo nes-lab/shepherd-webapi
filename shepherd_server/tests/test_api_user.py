@@ -4,7 +4,6 @@ from datetime import timedelta
 import pytest
 from fastapi.testclient import TestClient
 from shepherd_core import local_tz
-
 from shepherd_server.api_user.models import UserOut
 from shepherd_server.api_user.models import UserQuota
 from shepherd_server.api_user.utils_mail import MailEngine

@@ -1,5 +1,7 @@
+# virtual project for a dev-environment, usable via:
+# uv venv
+# uv pip install .
 [project]
-# virtual project for a dev-env
 name = "Shepherd-WebAPI"
 version = "2025.08.2"
 description = "Interface between the Testbed Instance and the User"

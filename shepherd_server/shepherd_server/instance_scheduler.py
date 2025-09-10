@@ -254,7 +254,7 @@ async def run_web_experiment(
             log.warning(_err2)
 
         log.info("  .. cleanup")
-        t, _err3 = await herd_cleanup(herd)  # will also re-add all online observers
+        _, _err3 = await herd_cleanup(herd)  # will also re-add all online observers
         if _err3 is not None:
             log.warning(_err3)
 

@@ -1,9 +1,11 @@
 # History of Changes
 
-## v2025.08.3
+## v2025.10.1
 
 - upgrade server to py313 (automatic DL via uv)
 - rename package-directories to `shepherd_client` & `shepherd_server`
+- pin shepherd-core version
+- update tooling
 
 ## v2025.08.2
 

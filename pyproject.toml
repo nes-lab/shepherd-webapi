@@ -3,7 +3,7 @@
 # uv pip install .
 [project]
 name = "Shepherd-WebAPI"
-version = "2025.08.2"
+version = "2025.10.1"
 description = "Interface between the Testbed Instance and the User"
 readme = "README.md"
 dependencies = [

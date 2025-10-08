@@ -8,7 +8,7 @@ maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
 readme = {file = "README.md", content-type = "text/markdown"}
 license = {file = "../LICENSE"}
-version = "2025.08.2"
+version = "2025.10.1"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -32,7 +32,7 @@ dependencies = [
     "beanie>=2.0",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd_core>=2025.8.1",
+    "shepherd_core==2025.8.2",
     "python-decouple",
     "shepherd_herd>=2025.8.1",
     # TODO: python-multipart
@@ -94,7 +94,7 @@ source = ["shepherd_server"]
 # TODO: add something like "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"
 
 [tool.uv.sources]
-shepherd-core = { git = "https://github.com/nes-lab/shepherd-tools/", branch = "dev", subdirectory = "shepherd_core"}
+#shepherd-core = { git = "https://github.com/nes-lab/shepherd-tools/", branch = "dev", subdirectory = "shepherd_core"}
 shepherd-herd = { git = "https://github.com/nes-lab/shepherd/", branch = "dev", subdirectory = "software/shepherd-herd"}
 # temporary dev-versions of sub-packets
 

@@ -1,5 +1,7 @@
 [Unit]
 Description=API for controlling the Testbed
+After=mongod.service
+Wants=mongod.service
 
 [Service]
 Type=simple

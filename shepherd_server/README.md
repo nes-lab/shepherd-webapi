@@ -167,12 +167,16 @@ To test for success a simple cmd is enough:
 sudo systemctl status mongod
 ```
 
+Service is installed in `/lib/systemd/system/mongod.service`
+
 ### Install Services
 
 Services are currently hard-linked to the above tooling in the account `service`.
 
 ```Shell
 sudo cp /opt/shepherd_webservice/shepherd_server/shepherd-api.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
 sudo systemctl start shepherd-api
 sudo systemctl enable shepherd-api
 

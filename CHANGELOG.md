@@ -5,6 +5,7 @@
 - upgrade server to py313 (automatic DL via uv)
 - rename package-directories to `shepherd_client` & `shepherd_server`
 - pin shepherd-core version
+- extend services to autostart / depend on mongo-DB
 - update tooling
 
 ## v2025.08.2

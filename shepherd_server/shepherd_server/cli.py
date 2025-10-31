@@ -5,9 +5,6 @@ from pathlib import Path
 from types import FrameType
 from typing import Annotated
 
-import pydantic
-import shepherd_core
-import shepherd_herd
 import typer
 
 from .api_experiment.models import WebExperiment
@@ -57,17 +54,20 @@ def cli_callback(*, verbose: bool = verbose_opt_t) -> None:
 @cli.command()
 def version() -> None:
     """Prints version-infos (combinable with -v)"""
-    import click
+    from importlib import metadata
 
-    from .version import version as server_version
-
-    log.info("shepherd-server v%s", server_version)
-    log.debug("shepherd-core v%s", shepherd_core.__version__)
-    log.debug("shepherd-herd v%s", shepherd_herd.__version__)
+    log.info("shepherd-server v%s", metadata.version("shepherd-server"))
     log.debug("Python v%s", sys.version)
-    log.debug("typer v%s", typer.__version__)
-    log.debug("click v%s", click.__version__)
-    log.debug("pydantic v%s", pydantic.__version__)
+    for package in [
+        "shepherd-core",
+        "shepherd-herd",
+        "typer",
+        "click",
+        "pydantic",
+        "beanie",
+        "fastapi",
+    ]:
+        log.debug("%s v%s", package, metadata.version(package))
 
 
 # #######################################################################

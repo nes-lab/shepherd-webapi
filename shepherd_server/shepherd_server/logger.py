@@ -20,8 +20,10 @@ listener.start()
 def set_verbosity(*, debug: bool = True) -> None:
     if debug:
         log.setLevel(logging.DEBUG)
+        queue_handler.setLevel(logging.DEBUG)
     else:
         log.setLevel(logging.INFO)
+        queue_handler.setLevel(logging.INFO)
 
 
 def get_verbosity() -> bool:

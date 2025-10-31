@@ -1,8 +1,8 @@
 import signal
 import sys
+from importlib import metadata
 from types import FrameType
 
-import shepherd_core
 import typer
 from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
@@ -38,15 +38,12 @@ def cli_callback(*, verbose: bool = verbose_opt_t) -> None:
 @cli.command()
 def version() -> None:
     """Prints version-infos (combinable with -v)"""
-    import click
 
-    from .version import version as client_version
-
-    log.info("shepherd-client v%s", client_version)
-    log.debug("shepherd-core v%s", shepherd_core.__version__)
+    log.info("shepherd-client v%s", metadata.version("shepherd-client"))
     log.debug("Python v%s", sys.version)
-    log.debug("typer v%s", typer.__version__)
-    log.debug("click v%s", click.__version__)
+
+    for package in ["shepherd-core", "typer", "click", "pydantic"]:
+        log.debug("%s v%s", package, metadata.version(package))
 
 
 # #######################################################################

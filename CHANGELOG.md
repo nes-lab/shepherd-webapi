@@ -6,6 +6,8 @@
 - rename package-directories to `shepherd_client` & `shepherd_server`
 - pin shepherd-core version
 - extend services to autostart / depend on mongo-DB
+- handle deprecation-warnings of sub-packages
+- fix bug not enabling verbose mode on CLI
 - update tooling
 
 ## v2025.08.2

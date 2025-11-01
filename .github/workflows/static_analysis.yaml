@@ -20,8 +20,5 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: install pre-commit-uv 🔧
-        run: pip install pre-commit-uv
-
       - name: Run Pre-Commit Tests 🧪
         uses: pre-commit/action@v3.0.1

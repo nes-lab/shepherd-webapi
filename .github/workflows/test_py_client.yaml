@@ -39,6 +39,3 @@ jobs:
         working-directory: "./shepherd_client"
 
       # TODO: pytest
-
-      - name: Minimize uv cache 🔧
-        run: uv cache prune --ci

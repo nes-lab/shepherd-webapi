@@ -46,6 +46,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: shepherd_client/dist/
-
-      - name: Minimize uv cache 🔧
-        run: uv cache prune --ci

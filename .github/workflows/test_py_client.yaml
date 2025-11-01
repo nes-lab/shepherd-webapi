@@ -1,4 +1,4 @@
-name: Build, install & [pytest]
+name: Client - Build, install & [pytest]
 
 on:
   workflow_call:
@@ -16,34 +16,26 @@ jobs:
       UV_PYTHON: ${{ matrix.python-version }}
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.python-version }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.python-version }}-client
       cancel-in-progress: true
 
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v5
-      - name: Set up Python ${{ matrix.python-version }} 🐍
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install pip-dependencies 🔧
-        run: pip install build
 
-      - name: Test-Build Package 🧱
-        run: python -m build
-        working-directory: "./shepherd_client"
-
-      - name: Install Package 🧱
-        run: pip install .[test,dev]
-        working-directory: "./shepherd_client"
-
-      - name: Install uv 🔧
+      - name: Install uv 🔧 & set up Python 🐍
         uses: astral-sh/setup-uv@v6
         with:
+          python-version: ${{ matrix.python-version }}
           enable-cache: true
+          activate-environment: true
+
+      - name: Test-Build Package 🧱
+        run: uv build --clear
+        working-directory: "./shepherd_client"
 
       - name: Install package via uv 🧱
-        run: uv tool install .[all]
+        run: uv pip install .[all]
         working-directory: "./shepherd_client"
 
       # TODO: pytest

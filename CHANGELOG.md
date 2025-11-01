@@ -1,5 +1,12 @@
 # History of Changes
 
+## v2025.11.1
+
+- packages now support py314
+- update deprecated metadata in pyproject.toml
+- workflows use py314 as default
+- workflows use uv fully
+
 ## v2025.10.1
 
 - upgrade server to py313 (automatic DL via uv)

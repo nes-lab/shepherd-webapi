@@ -6,8 +6,12 @@ keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "
 authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
-readme = {file = "README.md", content-type = "text/markdown"}
 version = "2025.10.1"
+
+readme = {file = "README.md", content-type = "text/markdown"}
+
+license = "MIT"
+license-files = ["LICENSE"]
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -19,7 +23,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Natural Language :: English"
 ]

@@ -1,5 +1,5 @@
 [project]
-name = "shepherd_server"
+name = "shepherd-server"
 description = "Web-Server & -API for the Shepherd-Testbed"
 keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "solar"]
 
@@ -35,9 +35,9 @@ dependencies = [
     "beanie>=2.0",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd_core==2025.8.1",
+    "shepherd-core==2025.8.1",
     "python-decouple",
-    "shepherd_herd>=2025.8.1",
+    "shepherd-herd>=2025.8.1",
     # TODO: python-multipart
 ]
 

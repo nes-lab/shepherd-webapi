@@ -1,5 +1,5 @@
 [project]
-name = "shepherd_client"
+name = "shepherd-client"
 description = "Web-Client for the Shepherd-Testbed"
 keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "solar"]
 
@@ -29,7 +29,7 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-    "shepherd_core==2025.8.1",
+    "shepherd-core==2025.8.1",
     "requests",
     "pydantic[email]>=2.11.5",
     "exrex",  # for automatic password creation

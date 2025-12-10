@@ -1,7 +1,13 @@
 # History of Changes
 
-## v2025.11.1
+## v2025.12.1
 
+- api
+  - add endpoints in /testbed for hardware: /testbed/observer, /cape, /target
+  - add endpoints in /content for EnergyEnvironment, VirtualHarvesterConfig, VirtualSourceConfig
+  - these endpoints are currently driven by the fixtures from core-lib
+- client
+  - fix output of .list_experiments() to only output lists of IDs
 - packages now support py314
 - update deprecated metadata in pyproject.toml
 - workflows use py314 as default

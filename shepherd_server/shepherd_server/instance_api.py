@@ -22,6 +22,7 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.responses import FileResponse
 
 from .api_auth.router import router as auth_router
+from .api_content.router import router as content_router
 from .api_experiment.router import router as experiment_router
 from .api_testbed.models_status import TestbedDB
 from .api_testbed.models_status import TestbedStatus
@@ -78,6 +79,9 @@ app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(experiment_router)
 app.include_router(testbed_router)
+app.include_router(content_router)
+
+# TODO: add health-endpoint that accumulates internal states
 
 
 @app.get("/")

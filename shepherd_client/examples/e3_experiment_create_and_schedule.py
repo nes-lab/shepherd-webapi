@@ -6,6 +6,7 @@
     - scheduling will fail if your quota is exceeded
 - the state of the experiment progresses from:
         created -> scheduled -> running -> finished
+                                        -> failed (alternatively on error)
 """
 
 # start example

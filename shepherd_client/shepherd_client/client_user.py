@@ -1,6 +1,7 @@
 """Client-Class to access a testbed instance over the web."""
 
 import shutil
+from importlib import metadata
 from pathlib import Path
 from uuid import UUID
 
@@ -14,12 +15,10 @@ from requests import Response
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
-from shepherd_core.version import version as core_version
 
 from .client_web import WebClient
 from .config import Config
 from .config import PasswordStr
-from .version import version as client_version
 
 
 def msg(rsp: Response) -> str:
@@ -91,14 +90,22 @@ class UserClient(WebClient):
                 active = scheduler.get("activated")
                 if active is None:
                     log.warning("Scheduler not active!")
-            if client_version != state.get("server_version"):
+            if metadata.version("shepherd-client") != state.get("server_version"):
                 log.warning("Your client version does not match with server -> consider upgrading")
-                log.debug("client %s vs %s on server", client_version, state.get("server_version"))
-            if core_version != state.get("core_version"):
+                log.info(
+                    "client v%s vs server v%s",
+                    metadata.version("shepherd-client"),
+                    state.get("server_version"),
+                )
+            if metadata.version("shepherd-core") != state.get("core_version"):
                 log.warning(
                     "Your version of shepherd-core does not match with server -> consider upgrading"
                 )
-                log.debug("client %s vs %s on server", core_version, state.get("core_version"))
+                log.info(
+                    "shepherd-core on client %s vs %s on server",
+                    metadata.version("shepherd-core"),
+                    state.get("core_version"),
+                )
         else:
             log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
 
@@ -181,18 +188,18 @@ class UserClient(WebClient):
     # Experiments
     # ####################################################################
 
-    def list_experiments(self, *, only_finished: bool = False) -> dict[UUID, str]:
-        """Query users experiments and their state (chronological order)."""
+    def list_experiments(self, *, only_finished: bool = False) -> list[UUID]:
+        """Query users experiment-IDs (chronological order)."""
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment",
             headers=self._auth,
             timeout=3,
         )
         if not rsp.ok:
-            return {}
+            return []
         if only_finished:
-            return {key: value for key, value in rsp.json().items() if value == "finished"}
-        return rsp.json()
+            return [key for key, value in rsp.json().items() if value == "finished"]
+        return list(rsp.json().keys())
 
     def create_experiment(self, xp: Experiment) -> UUID | None:
         """Upload a local experiment to the testbed.
@@ -235,10 +242,7 @@ class UserClient(WebClient):
         return rsp.ok
 
     def get_experiment_state(self, xp_id: UUID) -> str | None:
-        """Get state of a specific experiment.
-
-        Redundant to list_experiments().
-        """
+        """Get state of a specific experiment."""
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment/{xp_id}/state",
             headers=self._auth,

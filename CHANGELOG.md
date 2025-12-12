@@ -12,6 +12,7 @@
 - update deprecated metadata in pyproject.toml
 - workflows use py314 as default
 - workflows use uv fully
+- add section in server-readme to fix permissions for reading systemd-journal
 
 ## v2025.10.1
 

@@ -169,6 +169,30 @@ sudo systemctl status mongod
 
 Service is installed in `/lib/systemd/system/mongod.service`
 
+### Permissions
+
+The Api-Service needs to send out error-logs to the admin.
+It runs under the local account `service`.
+As journal-entries are protected, the user has to be granted access.
+Checking via
+
+```bash
+journalctl -n 20 -u shepherd-* --follow --all
+```
+
+shows that members in group `systemd-journal` have access.
+
+```bash
+# first check if group exists via
+grep systemd-journal /etc/group
+# add user to group
+sudo usermod -a -G systemd-journal service
+# check for success
+id service
+```
+
+In addition to that, enabling sudo without a password can also be beneficial, but it is not required.
+
 ### Install Services
 
 Services are currently hard-linked to the above tooling in the account `service`.
@@ -189,8 +213,8 @@ sudo systemctl start shepherd-scheduler
 sudo systemctl enable shepherd-scheduler
 
 # check with
-sudo systemctl status shepherd-api
-sudo systemctl status shepherd-redirect
-sudo systemctl status shepherd-scheduler
-sudo journalctl -n 20 -u shepherd-* --follow --all
+systemctl status shepherd-api
+systemctl status shepherd-redirect
+systemctl status shepherd-scheduler
+journalctl -n 20 -u shepherd-* --follow --all
 ```

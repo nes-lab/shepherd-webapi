@@ -27,6 +27,8 @@ async def list_content_by_type(content: str) -> dict[int, str]:
     return dict(sorted(data.items()))
     # TODO: replace fixture-endpoints by database-endpoints
     # TODO: include user/group-data
+    # TODO: add setters
+    # TODO: add modifiers
 
 
 @router.get("/{content}/{name}")

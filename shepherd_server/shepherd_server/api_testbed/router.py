@@ -104,6 +104,8 @@ async def run_command(value: Annotated[str, Body(embed=True)]) -> Response:
 
 
 # TODO: replace fixture-endpoints by database-endpoints
+# TODO: add setters
+# TODO: add modifiers
 
 
 @router.get("/observer")

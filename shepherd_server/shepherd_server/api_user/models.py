@@ -3,7 +3,7 @@
 from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated
 from typing import Any
 from typing import Optional
@@ -25,7 +25,7 @@ PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pat
 # ⤷ Regex = All Printable ASCII-Characters with Space
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     """Options for roles."""
 
     user = "user"

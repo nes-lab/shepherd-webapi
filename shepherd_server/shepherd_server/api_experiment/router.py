@@ -90,8 +90,6 @@ async def get_experiment(
         raise HTTPException(404, "Not Found")
     if web_experiment.owner.email == user.email:
         return web_experiment.experiment
-    if user.role == UserRole.admin:
-        return web_experiment.experiment
     # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
     raise HTTPException(403, "Forbidden")
 

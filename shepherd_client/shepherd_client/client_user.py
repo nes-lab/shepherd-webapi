@@ -256,6 +256,21 @@ class UserClient(WebClient):
         log.info("Experiment state: %s", state)
         return state
 
+    def get_experiment_statistics(self, xp_id: UUID) -> dict | None:
+        """Get metadata of a specific experiment (relevant for statistics).
+
+        This contains currently: ID, state, execution-time, duration, size, owner
+        """
+        rsp = requests.get(
+            url=f"{self._cfg.server}/experiment/{xp_id}/statistics",
+            headers=self._auth,
+            timeout=3,
+        )
+        if not rsp.ok:
+            log.warning("Getting experiment statistics failed with: %s", msg(rsp))
+            return None
+        return rsp.json()
+
     def schedule_experiment(self, xp_id: UUID) -> bool:
         """Enter the experiment into the queue.
 

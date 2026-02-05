@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Annotated
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -174,6 +175,31 @@ async def download(
         raise HTTPException(409, "Experiment not yet finished")
 
     return list(web_experiment.result_paths.keys())
+
+
+@router.get("/{experiment_id}/statistics")
+async def statistics(
+    experiment_id: UUID,
+    user: Annotated[User, Depends(current_active_user)],
+) -> dict[str, Any]:
+    web_experiment = await WebExperiment.get_by_id(experiment_id)
+    if web_experiment is None:
+        raise HTTPException(404, "Not Found")
+
+    data = {
+        "id": web_experiment.id,
+        "state": web_experiment.state,
+        "executed_at": web_experiment.executed_at,
+        "duration": web_experiment.experiment.duration,
+        "size": web_experiment.result_size,
+        "owner": web_experiment.owner.email,
+    }
+    # TODO: route privacy should be modeled canonically
+    if user.role == UserRole.admin:
+        return data
+    if web_experiment.owner.email == user.email:
+        return data
+    raise HTTPException(403, "Forbidden")
 
 
 @router.get("/{experiment_id}/download/{observer}")

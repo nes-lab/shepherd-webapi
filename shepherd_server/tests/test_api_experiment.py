@@ -286,13 +286,14 @@ def test_get_experiment_is_private_to_user(
         )
         response = client.get("/experiment")
         experiment_id = next(iter(response.json().keys()))
+        response = client.get(f"/experiment/{experiment_id}")
+        assert response.status_code == 200
 
     with client.authenticate_user_2():
         response = client.get(f"/experiment/{experiment_id}")
         assert response.status_code >= 400
 
     with client.authenticate_admin():
-        # Admins are allowed
         response = client.get(f"/experiment/{experiment_id}")
         assert response.status_code >= 400
 
@@ -389,6 +390,8 @@ def test_experiment_state_is_private_to_owner(
         )
         response = client.get("/experiment")
         experiment_id = next(iter(response.json().keys()))
+        response = client.get(f"/experiment/{experiment_id}/state")
+        assert response.status_code == 200
 
     with client.authenticate_user_2():
         response = client.get(f"/experiment/{experiment_id}/state")
@@ -396,6 +399,29 @@ def test_experiment_state_is_private_to_owner(
 
     with client.authenticate_admin():
         response = client.get(f"/experiment/{experiment_id}/state")
+        assert response.status_code == 200
+
+
+def test_experiment_statistics_is_private_to_owner(
+    client: UserTestClient,
+    sample_experiment: sdm.Experiment,
+) -> None:
+    with client.authenticate_user_1():
+        client.post(
+            "/experiment",
+            data=sample_experiment.model_dump_json(),
+        )
+        response = client.get("/experiment")
+        experiment_id = next(iter(response.json().keys()))
+        response = client.get(f"/experiment/{experiment_id}/statistics")
+        assert response.status_code == 200
+
+    with client.authenticate_user_2():
+        response = client.get(f"/experiment/{experiment_id}/statistics")
+        assert response.status_code >= 400
+
+    with client.authenticate_admin():
+        response = client.get(f"/experiment/{experiment_id}/statistics")
         assert response.status_code == 200
 
 

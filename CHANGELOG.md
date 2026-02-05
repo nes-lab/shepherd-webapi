@@ -1,6 +1,6 @@
 # History of Changes
 
-## v2025.12.1
+## v2026.02.1
 
 ### API
 
@@ -15,6 +15,8 @@
   - `/content/VirtualHarvesterConfig`,
   - `/content/VirtualSourceConfig`,
   - these endpoints are currently driven by the fixtures from core-lib
+- add `experiments/id/statistics`-endpoint to get metadata useful for statistics
+  - this currently contains ID, state, execution-time, duration, size, owner
 - fix build-script
 
 ### Client

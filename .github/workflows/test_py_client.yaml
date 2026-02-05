@@ -38,4 +38,4 @@ jobs:
         run: uv pip install .[all]
         working-directory: "./shepherd_client"
 
-      # TODO: pytest
+      # TODO: pytest, needs server

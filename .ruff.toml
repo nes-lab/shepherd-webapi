@@ -3,6 +3,7 @@ target-version = "py313" # client is still 310
 output-format = "concise"
 
 [lint]
+#preview = true
 select = ["ALL"]
 ignore = [
     "N802", "N803", "N806", "N815", "N816", # naming (si-units should stay)

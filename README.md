@@ -33,7 +33,7 @@ uv pip install .
 **Warning**: ☠☠☠ Don't run unittests (`pytest`) on a production system as it will delete the database! ☠☠☠
 
 ```Shell
-pre-commit run -a
+prek run -a
 
 pytest
 # or
@@ -56,7 +56,7 @@ coverage report
 - update changelog in ``CHANGELOG.md``
 - run unittests locally
   - additionally every push gets automatically tested by GitHub workflows
-- install and run ``pre-commit`` for QA-Checks, see steps above
+- install and run ``prek`` for QA-Checks, see steps above
 - move code from dev-branch to main by PR
 - add tag to commit - reflecting current version number - i.e. ``v25.5.1``
   - GitHub automatically creates a release

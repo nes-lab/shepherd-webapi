@@ -80,7 +80,7 @@ async def get_experiment(
     if user.role == UserRole.admin:
         return web_experiment.experiment
     # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
-    return web_experiment.experiment
+    raise HTTPException(403, "Forbidden")
 
 
 @router.delete("/{experiment_id}")

@@ -6,7 +6,7 @@ keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "
 authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
-version = "2026.02.1"
+version = "2026.02.2"
 
 readme = {file = "README.md", content-type = "text/markdown"}
 
@@ -29,7 +29,7 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-    "shepherd-core==2025.8.1",
+    "shepherd-core>=2026.2.3",
     "requests",
     "pydantic[email]>=2.11.5",
     "exrex",  # for automatic password creation

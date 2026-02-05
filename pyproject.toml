@@ -3,12 +3,12 @@
 # uv pip install .
 [project]
 name = "Shepherd-WebAPI"
-version = "2026.02.1"
+version = "2026.02.2"
 description = "Interface between the Testbed Instance and the User"
 readme = "README.md"
 dependencies = [
     "shepherd-server[dev,test]",
-    "shepherd-client[test]",
+    "shepherd-client[dev,test]",
     # dev
     "prek",  # pre-commit plugin-replacement
     "bump2version",

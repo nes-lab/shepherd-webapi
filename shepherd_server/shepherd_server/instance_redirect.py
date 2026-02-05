@@ -4,6 +4,7 @@ run with: python3 ./prototype_redirect.py
 """
 
 import asyncio
+from importlib import metadata
 
 import uvicorn
 from fastapi import FastAPI
@@ -15,11 +16,10 @@ from .api_testbed.models_status import TestbedDB
 from .config import config
 from .instance_db import db_client
 from .logger import log
-from .version import version
 
 app = FastAPI(
     title="shepherd-web-redirect",
-    version=str(version),
+    version=metadata.version("shepherd-server"),
     redoc_url=None,
     docs_url=None,
 )

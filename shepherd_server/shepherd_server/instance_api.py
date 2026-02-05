@@ -12,6 +12,7 @@ small excurse into what HTTP-Verb to use:
 """
 
 import asyncio
+from importlib import metadata
 from pathlib import Path
 
 import uvicorn
@@ -33,7 +34,6 @@ from .instance_db import db_available
 from .instance_db import db_client
 from .instance_db import db_context
 from .logger import log
-from .version import version
 
 # run with: uvicorn shepherd_server.webapi:app --reload
 # -> open interface http://127.0.0.1:8000
@@ -56,7 +56,7 @@ tag_metadata = [
 
 app = FastAPI(
     title="shepherd-webapi",
-    version=str(version),
+    version=metadata.version("shepherd-server"),
     description="The WebAPI for the shepherd-testbed for energy harvesting CPS",
     redoc_url="/doc",
     # contact="https://github.com/nes-lab/shepherd",
@@ -101,17 +101,12 @@ async def favicon2() -> FileResponse:
 
 
 async def update_status() -> None:
-    from shepherd_core.version import version as core_version
-    from shepherd_herd import __version__ as herd_version
-
-    from .version import version as server_version
-
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.webapi.activated = local_now()
-    tb_.server_version = server_version
-    tb_.core_version = core_version
-    tb_.herd_version = herd_version
+    tb_.server_version = metadata.version("shepherd-server")
+    tb_.core_version = metadata.version("shepherd-core")
+    tb_.herd_version = metadata.version("shepherd-herd")
     await tb_.save_changes()
 
 

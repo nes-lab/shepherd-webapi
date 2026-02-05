@@ -1,11 +1,12 @@
 from datetime import datetime
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
+import shepherd_core.data_models as sdm
 from fastapi.testclient import TestClient
 from shepherd_core import local_tz
-from shepherd_core.data_models import TargetConfig
-from shepherd_core.data_models.experiment import Experiment
+from shepherd_core.data_models.testbed import MCU
 from shepherd_server.api_user.models import UserQuota
 from shepherd_server.config import config
 
@@ -20,7 +21,7 @@ def test_create_experiment_is_authenticated(client: TestClient) -> None:
 @pytest.mark.dependency
 def test_create_experiment_succeeds(
     client: UserTestClient,
-    sample_experiment: Experiment,
+    sample_experiment: sdm.Experiment,
 ) -> None:
     with client.authenticate_user_1():
         response = client.post(
@@ -33,7 +34,7 @@ def test_create_experiment_succeeds(
 @pytest.mark.dependency
 def test_create_experiment_as_admin_succeeds(
     client: UserTestClient,
-    sample_experiment: Experiment,
+    sample_experiment: sdm.Experiment,
 ) -> None:
     with client.authenticate_admin():
         response = client.get("/experiment")
@@ -53,9 +54,9 @@ def test_create_experiment_as_admin_succeeds(
 
 def test_create_experiment_needs_duration(
     client: UserTestClient,
-    sample_target_config: TargetConfig,
+    sample_target_config: sdm.TargetConfig,
 ) -> None:
-    _xp = Experiment(
+    _xp = sdm.Experiment(
         name="test-experiment",
         target_configs=[sample_target_config],
     )
@@ -69,9 +70,9 @@ def test_create_experiment_needs_duration(
 
 def test_create_experiment_duration_has_quota(
     client: UserTestClient,
-    sample_target_config: TargetConfig,
+    sample_target_config: sdm.TargetConfig,
 ) -> None:
-    _xp = Experiment(
+    _xp = sdm.Experiment(
         name="test-experiment",
         duration=config.quota_default_duration + timedelta(seconds=5),
         target_configs=[sample_target_config],
@@ -86,7 +87,7 @@ def test_create_experiment_duration_has_quota(
 
 def test_create_experiment_duration_with_expired_quota(
     client: UserTestClient,
-    sample_target_config: TargetConfig,
+    sample_target_config: sdm.TargetConfig,
 ) -> None:
     with client.authenticate_admin():
         json_dict = {
@@ -100,7 +101,7 @@ def test_create_experiment_duration_with_expired_quota(
         assert response.status_code == 200
 
     with client.authenticate_user_1():
-        _xp = Experiment(
+        _xp = sdm.Experiment(
             name="test-experiment",
             duration=config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
@@ -114,7 +115,7 @@ def test_create_experiment_duration_with_expired_quota(
 
 def test_create_experiment_duration_with_valid_quota(
     client: UserTestClient,
-    sample_target_config: TargetConfig,
+    sample_target_config: sdm.TargetConfig,
 ) -> None:
     with client.authenticate_admin():
         json_dict = {
@@ -128,7 +129,7 @@ def test_create_experiment_duration_with_valid_quota(
         assert response.status_code == 200
 
     with client.authenticate_user_1():
-        xp = Experiment(
+        xp = sdm.Experiment(
             name="test-experiment",
             duration=config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
@@ -142,9 +143,9 @@ def test_create_experiment_duration_with_valid_quota(
 
 def test_create_experiment_only_fifo_scheduler(
     client: UserTestClient,
-    sample_target_config: TargetConfig,
+    sample_target_config: sdm.TargetConfig,
 ) -> None:
-    xp = Experiment(
+    xp = sdm.Experiment(
         name="test-experiment",
         time_start=datetime.now(tz=local_tz()) + timedelta(minutes=1),
         duration=30,
@@ -156,6 +157,39 @@ def test_create_experiment_only_fifo_scheduler(
             data=xp.model_dump_json(),
         )
         assert response.status_code >= 400
+
+
+def test_create_experiment_with_unconstrained_path(
+    client: UserTestClient,
+) -> None:
+    target_config = sdm.TargetConfig(
+        target_IDs=[42],
+        energy_env=sdm.EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
+        firmware1=sdm.Firmware(
+            name="FW_TestXYZ",
+            data=Path("/etc/shepherd/private_data.elf"),
+            data_type=sdm.FirmwareDType.path_elf,
+            data_local=True,
+            mcu=MCU(name="nRF52"),
+        ),
+        power_tracing=None,
+        uart_logging=sdm.UartLogging(baudrate=115_200),
+        gpio_tracing=sdm.GpioTracing(),
+    )
+    xp = sdm.Experiment(
+        name="breaching-experiment",
+        duration=30,
+        target_configs=[target_config],
+    )
+    with client.authenticate_user_1():
+        response = client.post(
+            "/experiment",
+            data=xp.model_dump_json(),
+        )
+        print(response.status_code)
+        print(response.json())
+        # TODO: old .is_contained is faulty, so this won't trigger for now
+        assert response.status_code >= 4000  # expect 403
 
 
 def test_list_experiments_is_authenticated(client: TestClient) -> None:
@@ -178,7 +212,7 @@ def test_list_experiments(
 
 def test_experiments_are_private_to_user(
     client: UserTestClient,
-    sample_experiment: Experiment,
+    sample_experiment: sdm.Experiment,
 ) -> None:
     with client.authenticate_user_1():
         response = client.get("/experiment")
@@ -205,7 +239,7 @@ def test_experiments_are_private_to_user(
 @pytest.fixture
 def created_experiment_id(
     client: UserTestClient,
-    sample_experiment: Experiment,
+    sample_experiment: sdm.Experiment,
 ) -> str:
     with client.authenticate_user_1():
         response = client.post(
@@ -243,7 +277,7 @@ def test_get_experiment_is_authenticated(client: UserTestClient) -> None:
 @pytest.mark.dependency(depends=["test_create_experiment_succeeds", "test_list_experiments"])
 def test_get_experiment_is_private_to_user(
     client: UserTestClient,
-    sample_experiment: Experiment,
+    sample_experiment: sdm.Experiment,
 ) -> None:
     with client.authenticate_user_1():
         client.post(
@@ -261,6 +295,53 @@ def test_get_experiment_is_private_to_user(
         # Admins are allowed
         response = client.get(f"/experiment/{experiment_id}")
         assert response.status_code == 200
+
+
+@pytest.mark.dependency(depends=["test_create_experiment_succeeds"])
+def test_get_all_experiments_is_admin_only(
+    client: UserTestClient,
+) -> None:
+    with client.authenticate_user_1():
+        response = client.get("/experiment/all")
+        assert response.status_code == 403
+
+    with client.authenticate_admin():
+        # Admins are allowed
+        response = client.get("/experiment/all")
+        assert response.status_code == 200
+
+
+@pytest.mark.dependency(depends=["test_create_experiment_succeeds", "test_list_experiments"])
+def test_get_all_experiments_shows_all(
+    client: UserTestClient,
+    sample_experiment: sdm.Experiment,
+) -> None:
+    with client.authenticate_user_1():
+        client.post(
+            "/experiment",
+            data=sample_experiment.model_dump_json(),
+        )
+
+    with client.authenticate_user_1():
+        response = client.get("/experiment")
+        len_u1 = len(response.json().keys())
+
+    with client.authenticate_user_2():
+        response = client.get("/experiment")
+        len_u2 = len(response.json().keys())
+
+    with client.authenticate_admin():
+        response = client.get("/experiment")
+        len_a1 = len(response.json().keys())
+        response = client.get("/experiment/all")
+        len_a2 = len(response.json().keys())
+
+    print(f"user1={len_u1}, user2={len_u2}, admin={len_a1}, all={len_a2}")
+
+    assert len_u1 > len_u2
+    assert len_u1 > len_a1
+    assert len_a2 > len_a1
+    assert len_a2 >= len_u1
 
 
 # TODO: schedule idempotency
@@ -299,9 +380,8 @@ def test_experiment_state_requires_authentication(client: UserTestClient) -> Non
 
 def test_experiment_state_is_private_to_owner(
     client: UserTestClient,
-    sample_experiment: Experiment,
+    sample_experiment: sdm.Experiment,
 ) -> None:
-    experiment_id = None
     with client.authenticate_user_1():
         client.post(
             "/experiment",

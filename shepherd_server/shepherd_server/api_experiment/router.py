@@ -8,12 +8,15 @@ from fastapi import HTTPException
 from fastapi import Response
 from shepherd_core import local_tz
 from shepherd_core.data_models import Experiment
+from shepherd_core.data_models.task import TestbedTasks
+from shepherd_core.data_models.testbed import Testbed
 from starlette.responses import FileResponse
 
 from shepherd_server.api_user.models import User
 from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_misc import active_user_is_admin
 from shepherd_server.api_user.utils_misc import current_active_user
+from shepherd_server.config import config
 
 from .models import WebExperiment
 
@@ -35,6 +38,16 @@ async def create_experiment(
         raise HTTPException(
             403, f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)"
         )
+
+    tb = Testbed(name=config.testbed_name)
+    tb_tasks = TestbedTasks.from_xp(experiment, tb)
+    try:
+        contained = tb_tasks.is_contained()
+    except AttributeError:
+        contained = True
+    if not contained:
+        raise HTTPException(403, "Experiment was assessed as potentially hazardous.")
+
     for tgt_cfg in experiment.target_configs:
         # TODO: only temporary until numpy is updated
         if tgt_cfg.power_tracing is not None and tgt_cfg.power_tracing.samplerate != 100_000:

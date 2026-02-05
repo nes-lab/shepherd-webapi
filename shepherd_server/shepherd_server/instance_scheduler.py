@@ -205,6 +205,9 @@ async def run_web_experiment(
     web_exp.started_at = local_now()
     testbed = Testbed(name=config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
+    if not testbed_tasks.is_contained():
+        log.error("Tasks used Paths outside of allowed directory-set")
+        # TODO: this should fail or skip experiment
     web_exp.observer_paths = testbed_tasks.get_output_paths()
     tb_status = await TestbedDB.get_one()
     web_exp.observers_requested = sorted(testbed_tasks.get_observers())
@@ -272,7 +275,7 @@ async def run_web_experiment(
         web_exp.scheduler_error = _err1 or _err2 or _err3
 
         if len(web_exp.observers_output) == 0:
-            log.error("Herd collected no logs from node (")
+            log.error("Herd collected no logs from nodes")
         if web_exp.max_exit_code > 0:
             log.error("Herd failed on at least one Observer")
 

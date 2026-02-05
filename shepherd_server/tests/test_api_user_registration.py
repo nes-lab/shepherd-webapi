@@ -6,7 +6,7 @@ from .conftest import UserTestClient
 
 
 def test_user_approves_registration_rejected(client: UserTestClient) -> None:
-    with client.authenticate_user():
+    with client.authenticate_user_1():
         rsp = client.post(
             url="/user/approve",
             json={"email": "some_new_user@test.com"},

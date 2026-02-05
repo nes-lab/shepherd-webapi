@@ -62,6 +62,10 @@ async def database_for_tests(
     working_user = user.model_copy(deep=True)
     await User.insert_one(working_user)
 
+    second_user = user.model_copy(deep=True)
+    second_user.email = "user2@test.com"
+    await User.insert_one(second_user)
+
     admin_user = user.model_copy(deep=True)
     admin_user.email = "admin@test.com"
     admin_user.role = UserRole.admin
@@ -146,11 +150,26 @@ class UserTestClient(TestClient):
         self.headers["Authorization"] = ""
 
     @contextmanager
-    def authenticate_user(self) -> Generator[TestClient]:
+    def authenticate_user_1(self) -> Generator[TestClient]:
         response = self.post(
             "/auth/token",
             data={
                 "username": "user@test.com",
+                "password": "safe-password",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert response.status_code == 200
+        self.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
+        yield self
+        self.headers["Authorization"] = ""
+
+    @contextmanager
+    def authenticate_user_2(self) -> Generator[TestClient]:
+        response = self.post(
+            "/auth/token",
+            data={
+                "username": "user2@test.com",
                 "password": "safe-password",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},

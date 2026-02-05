@@ -135,13 +135,16 @@ class FastMailEngine(MailEngine):
                 f"- {len(web_exp.missing_observers)} requested observer(s) "
                 f"was/were unavailable: {', '.join(web_exp.missing_observers)}\n"
             )
+        if web_exp.had_errors:
+            msg += "- the testbed is now being rebooted as a precaution\n"
+            # TODO: should the user know about that?
 
         xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
         if xp_files_n > 0:
             xp_size_MiB = round(web_exp.result_size / 2**20)
             msg += f"\nResults can now be downloaded ({xp_files_n} files, {xp_size_MiB} MiB).\n"
         else:
-            msg += "\nIt seems that no files were generated.\n"
+            msg += "\nIt seems that no result-files were generated.\n"
         if all_done:
             msg += "\nThere are no further experiments scheduled for you.\n"
 
@@ -164,12 +167,11 @@ class FastMailEngine(MailEngine):
         _all = set(herd_composition.get("all", []))
         _miss_pre = _all - set(herd_composition.get("pre", []))
         _miss_pst = _all - set(herd_composition.get("post", []))
-        msg = (
-            "Herd was rebooted with:\n"
-            f"- {', '.join(sorted(_all))} (n={len(_all)})\n"
-            f"- pre-missing  = {', '.join(sorted(_miss_pre))} (n={len(_miss_pre)})\n"
-            f"- post-missing = {', '.join(sorted(_miss_pst))} (n={len(_miss_pst)})\n"
-        )
+        msg = f"Herd was rebooted with:\n- {', '.join(sorted(_all))} (n={len(_all)})\n"
+        if len(_miss_pre) > 0:
+            msg += f"- pre-missing  = {', '.join(sorted(_miss_pre))} (n={len(_miss_pre)})\n"
+        if len(_miss_pst) > 0:
+            msg += f"- post-missing = {', '.join(sorted(_miss_pst))} (n={len(_miss_pst)})\n"
         log.debug("-> EMAIL Herd-reboot")
         if config.mail_enabled:
             message = MessageSchema(

@@ -39,7 +39,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# dev = []
+dev = ["pandas"]
 test = [
     "pytest",
     "pytest-click",
@@ -48,7 +48,7 @@ test = [
     "coverage",
 ]
 
-all = ["shepherd-client[test]"]
+all = ["shepherd-client[test,dev]"]
 
 [project.urls]
 Documentation = "https://github.com/nes-lab/shepherd-webapi/blob/main/README.md"

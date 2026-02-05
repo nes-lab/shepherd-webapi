@@ -11,6 +11,8 @@ from shepherd_core.data_models import Experiment
 from starlette.responses import FileResponse
 
 from shepherd_server.api_user.models import User
+from shepherd_server.api_user.models import UserRole
+from shepherd_server.api_user.utils_misc import active_user_is_admin
 from shepherd_server.api_user.utils_misc import current_active_user
 
 from .models import WebExperiment
@@ -43,7 +45,8 @@ async def create_experiment(
     )
     # TODO: is there a reason why not to automatically schedule?
     # TODO: internal paths need to be checked - to not leak data (should be done in core-lib)
-    #       use tasks.is_contained()
+    #       use tasks.is_contained() here directly
+    #       an prelim internal error/warning is already emitted in scheduler
     await web_experiment.save()
     return web_experiment.id
 
@@ -57,6 +60,13 @@ async def list_experiments(
     return xp_states
 
 
+@router.get("/all", dependencies=[Depends(active_user_is_admin)])
+async def list_all_experiments() -> dict[UUID, str]:
+    web_experiments = await WebExperiment.get_all()
+    xp_states: dict[UUID, str] = {wex.id: wex.state for wex in web_experiments}
+    return xp_states
+
+
 @router.get("/{experiment_id}")
 async def get_experiment(
     experiment_id: UUID,
@@ -65,9 +75,11 @@ async def get_experiment(
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
-    if web_experiment.owner.email != user.email:
-        raise HTTPException(403, "Forbidden")
-        # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
+    if web_experiment.owner.email == user.email:
+        return web_experiment.experiment
+    if user.role == UserRole.admin:
+        return web_experiment.experiment
+    # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
     return web_experiment.experiment
 
 

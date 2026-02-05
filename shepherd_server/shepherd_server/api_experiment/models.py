@@ -249,6 +249,10 @@ class WebExperiment(Document, ResultData, ErrorData):
         )
 
     @classmethod
+    async def get_all(cls) -> list["WebExperiment"]:
+        return await cls.all().sort((cls.created_at, pymongo.ASCENDING)).to_list()
+
+    @classmethod
     async def get_storage(cls, user: User) -> int:
         _xps = await cls.get_by_user(user)
         return sum(_xp.result_size for _xp in _xps)

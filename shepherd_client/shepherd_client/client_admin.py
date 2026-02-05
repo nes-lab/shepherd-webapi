@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
+from uuid import UUID
 
 import requests
 from pydantic import EmailStr
@@ -152,3 +153,20 @@ class AdminClient(UserClient):
             log.warning("Starting command failed with: %s", msg(rsp))
         else:
             log.info("Starting command succeeded with: %s", rsp.json())
+
+    # ####################################################################
+    # Experiments
+    # ####################################################################
+
+    def list_all_experiments(self, *, only_finished: bool = False) -> list[UUID]:
+        """Query experiment-IDs (all, chronological order)."""
+        rsp = requests.get(
+            url=f"{self._cfg.server}/experiment/all",
+            headers=self._auth,
+            timeout=3,
+        )
+        if not rsp.ok:
+            return []
+        if only_finished:
+            return [key for key, value in rsp.json().items() if value == "finished"]
+        return list(rsp.json().keys())

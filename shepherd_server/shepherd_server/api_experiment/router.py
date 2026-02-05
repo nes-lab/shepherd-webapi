@@ -152,10 +152,11 @@ async def get_experiment_state(
         raise HTTPException(404, "Not Found")
 
     # TODO: route privacy should be modeled canonically
-    if web_experiment.owner.email != user.email:
-        raise HTTPException(403, "Forbidden")
-
-    return web_experiment.state
+    if user.role == UserRole.admin:
+        return web_experiment.state
+    if web_experiment.owner.email == user.email:
+        return web_experiment.state
+    raise HTTPException(403, "Forbidden")
 
 
 @router.get("/{experiment_id}/download")

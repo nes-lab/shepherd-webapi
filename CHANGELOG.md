@@ -2,17 +2,36 @@
 
 ## v2025.12.1
 
-- api
-  - add endpoints in /testbed for hardware: /testbed/observer, /cape, /target
-  - add endpoints in /content for EnergyEnvironment, VirtualHarvesterConfig, VirtualSourceConfig
+### API
+
+- scheduling an experiment is now only possible if paths are contained within a restricted set
+- improvements for mails
+- add endpoints in `/testbed` for hardware:
+  - `/testbed/observer`,
+  - `/testbed/cape`,
+  - `/testbed/target`,
+- add endpoints in `/content` for EEnvs, VSrc, VHrv
+  - `/content/EnergyEnvironment`,
+  - `/content/VirtualHarvesterConfig`,
+  - `/content/VirtualSourceConfig`,
   - these endpoints are currently driven by the fixtures from core-lib
-- client
-  - fix output of .list_experiments() to only output lists of IDs
+- fix build-script
+
+### Client
+
+- fix output of .list_experiments() to only output lists of IDs
+- admins are now able to read IDs and basic stats of all experiments (runtime, state, start-time, user)
+
+### General
+
+- improve documentation
 - packages now support py314
 - update deprecated metadata in pyproject.toml
 - workflows use py314 as default
 - workflows use uv fully
 - add section in server-readme to fix permissions for reading systemd-journal
+- switch from pre-commit to prek
+- move version-handling completely to pyproject.toml
 
 ## v2025.10.1
 

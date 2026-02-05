@@ -390,9 +390,13 @@ def test_experiment_state_is_private_to_owner(
         response = client.get("/experiment")
         experiment_id = next(iter(response.json().keys()))
 
-    with client.authenticate_admin():
+    with client.authenticate_user_2():
         response = client.get(f"/experiment/{experiment_id}/state")
         assert response.status_code == 403
+
+    with client.authenticate_admin():
+        response = client.get(f"/experiment/{experiment_id}/state")
+        assert response.status_code == 200
 
 
 def test_experiment_state_scheduled(client: UserTestClient, scheduled_experiment_id: str) -> None:

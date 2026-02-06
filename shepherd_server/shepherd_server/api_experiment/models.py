@@ -303,6 +303,7 @@ class WebExperiment(Document, ResultData, ErrorData):
             cls.finished_at == None,  # noqa: E711 beanie cannot handle 'is not None'
             cls.started_at != None,  # noqa: E711
             cls.scheduler_error == None,  # noqa: E711
+            fetch_links=True,
         ).to_list()
         for _xp in stuck_xps:
             log.info("Resetting experiment: %s", _xp.id)

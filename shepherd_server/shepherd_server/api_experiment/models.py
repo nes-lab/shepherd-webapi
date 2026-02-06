@@ -238,6 +238,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         return await cls.find_one(
             cls.id == experiment_id,
             fetch_links=True,
+            lazy_parse=True,
         )
 
     @classmethod
@@ -246,6 +247,7 @@ class WebExperiment(Document, ResultData, ErrorData):
             cls.find(
                 cls.owner.email == user.email,
                 fetch_links=True,
+                lazy_parse=True,
             )
             .sort((cls.created_at, pymongo.ASCENDING))
             .to_list()
@@ -253,7 +255,8 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     @classmethod
     async def get_all(cls) -> list[Self]:
-        return await cls.all().sort((cls.created_at, pymongo.ASCENDING)).to_list()
+        # TODO: this can probably blow up fast, as we only need 2 fields
+        return await cls.all(lazy_parse=True).sort((cls.created_at, pymongo.ASCENDING)).to_list()
 
     @classmethod
     async def get_storage(cls, user: User) -> int:
@@ -290,6 +293,7 @@ class WebExperiment(Document, ResultData, ErrorData):
                 cls.started_at == None,  # noqa: E711
                 cls.owner.email == user.email,
                 fetch_links=True,
+                lazy_parse=True,
             )
             .limit(1)
             .to_list()
@@ -304,6 +308,7 @@ class WebExperiment(Document, ResultData, ErrorData):
             cls.started_at != None,  # noqa: E711
             cls.scheduler_error == None,  # noqa: E711
             fetch_links=True,
+            lazy_parse=True,
         ).to_list()
         for _xp in stuck_xps:
             log.info("Resetting experiment: %s", _xp.id)
@@ -321,7 +326,7 @@ class WebExperiment(Document, ResultData, ErrorData):
                 xps_2_prune += await cls.get_by_user(user)
 
         # get oldest XP of users over quota
-        users_all = await User.find_all().to_list()
+        users_all = await User.find_all(lazy_parse=True).to_list()
         xp_date_limit = local_now() - config.age_min_experiment
         for user in users_all:
             xps_user = await cls.get_by_user(user)  # already sorted by age
@@ -417,6 +422,7 @@ class ExperimentStats(Document):
     result_size: int = 0
 
     # TODO: if these statistics stay, consider adding
+    #      - deleted-state (if webXP is not longer present)
     #      - used eenvs &
     #      - targets
     #      - to get a feeling what is desired
@@ -450,7 +456,6 @@ class ExperimentStats(Document):
 
         data: Self = await cls.find_one(
             cls.id == xp.id,
-            fetch_links=True,
         )
         if data is None:
             return await cls.derive_from(xp)
@@ -470,7 +475,6 @@ class ExperimentStats(Document):
     async def get_by_id(cls, experiment_id: UUID) -> "None | ExperimentStats":
         return await cls.find_one(
             cls.id == experiment_id,
-            fetch_links=True,
         )
 
     @classmethod

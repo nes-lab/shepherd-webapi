@@ -9,6 +9,8 @@
                                         -> failed (alternatively on error)
 """
 
+import sys
+
 # start example
 import shepherd_core.data_models as sdm
 
@@ -17,12 +19,12 @@ from shepherd_client import Client
 client = Client()
 
 xp = sdm.Experiment(
-    name="my_own_survey",
-    duration=3 * 60,
+    name="rf_survey_10min",
+    duration=10 * 60,
     target_configs=[
         sdm.TargetConfig(
-            target_IDs=range(1, 11),
-            energy_env=sdm.EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
+            target_IDs=range(1, 12),
+            energy_env=sdm.EnergyEnvironment(name="synthetic_static_3000mV_50mA"),
             firmware1=sdm.Firmware(name="nrf52_rf_survey"),
             uart_logging=sdm.UartLogging(),  # default is 115200 baud
         ),
@@ -32,6 +34,8 @@ xp = sdm.Experiment(
 xp_id = client.create_experiment(xp)
 client.schedule_experiment(xp_id)
 # end example
+
+sys.exit()
 
 # ########### EXTRA ##################
 

@@ -213,7 +213,7 @@ def sample_target_config() -> TargetConfig:
     firmware_path = Path(__file__).parent / "data/test-firmware-nrf52.elf"
     return TargetConfig(
         target_IDs=[42],
-        energy_env=EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
+        energy_env=EnergyEnvironment(name="synthetic_static_3000mV_50mA"),
         firmware1=Firmware(
             name="FW_TestXYZ",
             data=fw_tools.file_to_base64(firmware_path),

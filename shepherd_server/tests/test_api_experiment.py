@@ -164,7 +164,7 @@ def test_create_experiment_with_unconstrained_path(
 ) -> None:
     target_config = sdm.TargetConfig(
         target_IDs=[42],
-        energy_env=sdm.EnergyEnvironment(name="eenv_static_3000mV_50mA_3600s"),
+        energy_env=sdm.EnergyEnvironment(name="synthetic_static_3000mV_50mA"),
         firmware1=sdm.Firmware(
             name="FW_TestXYZ",
             data=Path("/etc/shepherd/private_data.elf"),

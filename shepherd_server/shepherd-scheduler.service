@@ -9,7 +9,7 @@ Restart=always
 RestartSec=3
 User=service
 EnvironmentFile=/home/service/.env
-ExecStart=/home/service/.local/bin/shepherd-server -v run-scheduler --dry-run
+ExecStart=/home/service/.local/bin/shepherd-server -v run-scheduler
 
 [Install]
 WantedBy=multi-user.target

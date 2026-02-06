@@ -1,6 +1,7 @@
 uv.lock
 Pipfile.lock
 *.yaml
+*.csv
 
 # project-specific
 *.pem

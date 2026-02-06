@@ -8,6 +8,7 @@ from shepherd_client import Client
 client = Client()
 
 durations = [1, 2, 3, 15, 16, 25, 35, 55, 56, 57, 14, 8, 7, 6, 4]
+print(f"Overall duration = {sum(durations)} min")
 
 for duration in durations:
     xp = sdm.Experiment(

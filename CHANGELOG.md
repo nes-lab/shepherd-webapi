@@ -7,6 +7,8 @@
 - users can now use the new energyEnvironment-model
 - pinpoint python-version for server
 - scheduler - fix service running in dry-mode per default
+- fix and improve statistics
+- several small bugfixes & improvements of examples
 
 ## v2026.02.1
 

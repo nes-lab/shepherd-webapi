@@ -5,6 +5,8 @@
 - switch to newest core-lib -> **breaking changes**!
 - users can now use the new battery-model for the virtual source
 - users can now use the new energyEnvironment-model
+- pinpoint python-version for server
+- scheduler - fix service running in dry-mode per default
 
 ## v2026.02.1
 

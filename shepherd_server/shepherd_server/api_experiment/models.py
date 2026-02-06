@@ -2,17 +2,22 @@ import copy
 import shutil
 import subprocess
 from datetime import datetime
+from datetime import timedelta
 from io import StringIO
 from pathlib import Path
+from typing import Annotated
+from typing import Self
 from uuid import UUID
 from uuid import uuid4
 
 import pymongo
 from beanie import Document
+from beanie import Indexed
 from beanie import Link
 from beanie.operators import In
 from fastapi import UploadFile
 from pydantic import BaseModel
+from pydantic import EmailStr
 from pydantic import Field
 from shepherd_core import Reader as CoreReader
 from shepherd_core import local_now
@@ -249,7 +254,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         )
 
     @classmethod
-    async def get_all(cls) -> list["WebExperiment"]:
+    async def get_all(cls) -> list[Self]:
         return await cls.all().sort((cls.created_at, pymongo.ASCENDING)).to_list()
 
     @classmethod
@@ -344,6 +349,8 @@ class WebExperiment(Document, ResultData, ErrorData):
         else:
             for xp in xps_2_prune:
                 log.debug(" -> deleting experiment %s", xp.name)
+                await ExperimentStats.update_with(xp)
+                # ⤷ precaution - should have been done with every xp.save_changes()
                 await xp.delete_content()
                 await xp.delete()
             log.info("Pruning old experiments freed: %d MiB", size_total / (2**20))
@@ -361,6 +368,10 @@ class WebExperiment(Document, ResultData, ErrorData):
         if self.requested_execution_at is not None:
             return "scheduled"
         return "created"
+
+    async def save_changes(self) -> Self | None:
+        await ExperimentStats.update_with(self)
+        return await super().save_changes()
 
     async def update_time_start(
         self, time_start: datetime | None = None, *, force: bool = False
@@ -391,3 +402,79 @@ class WebExperiment(Document, ResultData, ErrorData):
             f"- executed  @ {as_iso(self.executed_at)} (UTC)\n"
             f"- finished  @ {as_iso(self.finished_at)} (UTC)\n"
         )
+
+
+class ExperimentStats(Document):
+    id: Annotated[UUID, Indexed(unique=True)]
+
+    owner: EmailStr | None = None
+
+    created_at: datetime | None = None
+    started_at: datetime | None = None
+    executed_at: datetime | None = None
+    finished_at: datetime | None = None
+
+    state: str | None = None
+    duration: timedelta | None = None
+    result_size: int = 0
+
+    # TODO: if these statistics stay, consider adding
+    #      - used eenvs &
+    #      - targets
+    #      - to get a feeling what is desired
+
+    class Settings:  # allows using .save_changes()
+        use_state_management = True
+        state_management_save_previous = True
+        validate_on_save = True
+
+    @classmethod
+    async def derive_from(cls, xp: WebExperiment) -> Self:
+        data = cls(
+            id=xp.id,
+            owner=xp.owner.email,
+            created_at=xp.created_at,
+            started_at=xp.started_at,
+            executed_at=xp.executed_at,
+            finished_at=xp.finished_at,
+            state=xp.state,
+            duration=xp.experiment.duration,
+            result_size=xp.result_size,
+        )
+        await data.save()
+        return data
+
+    @classmethod
+    async def update_with(
+        cls,
+        xp: WebExperiment,
+    ) -> Self:
+        data: Self = await cls.find_one(
+            cls.id == xp.id,
+            fetch_links=True,
+        )
+        if data is None:
+            await cls.derive_from(xp)
+            return None
+        data.id = xp.id
+        data.owner = xp.owner.email
+        data.created_at = xp.created_at
+        data.started_at = xp.started_at
+        data.executed_at = xp.executed_at
+        data.finished_at = xp.finished_at
+        data.state = xp.state
+        data.duration = xp.experiment.duration
+        data.result_size = xp.result_size
+        data.save_changes()
+        return data
+
+    @classmethod
+    async def get_by_id(cls, experiment_id: UUID) -> "None | ExperimentStats":
+        return await cls.find_one(
+            cls.id == experiment_id,
+            fetch_links=True,
+        )
+
+    @classmethod
+    async def get_all(cls) -> list["ExperimentStats"]:
+        return await cls.all().sort((cls.created_at, pymongo.ASCENDING)).to_list()

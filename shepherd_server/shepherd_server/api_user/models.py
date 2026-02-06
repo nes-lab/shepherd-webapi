@@ -156,3 +156,4 @@ class User(Document, UserOut):
         """Update email logging and replace."""
         # Add any pre-checks here
         self.email = new_email
+        self.save_changes()

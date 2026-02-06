@@ -452,8 +452,7 @@ class ExperimentStats(Document):
             fetch_links=True,
         )
         if data is None:
-            await cls.derive_from(xp)
-            return None
+            return await cls.derive_from(xp)
         data.id = xp.id
         data.owner = xp.owner.email
         data.created_at = xp.created_at
@@ -463,7 +462,7 @@ class ExperimentStats(Document):
         data.state = xp.state
         data.duration = xp.experiment.duration
         data.result_size = xp.result_size
-        data.save_changes()
+        await data.save_changes()
         return data
 
     @classmethod

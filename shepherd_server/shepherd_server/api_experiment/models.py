@@ -5,14 +5,12 @@ from datetime import datetime
 from datetime import timedelta
 from io import StringIO
 from pathlib import Path
-from typing import Annotated
 from typing import Self
 from uuid import UUID
 from uuid import uuid4
 
 import pymongo
 from beanie import Document
-from beanie import Indexed
 from beanie import Link
 from beanie.operators import In
 from fastapi import UploadFile
@@ -405,7 +403,7 @@ class WebExperiment(Document, ResultData, ErrorData):
 
 
 class ExperimentStats(Document):
-    id: Annotated[UUID, Indexed(unique=True)]
+    id: UUID
 
     owner: EmailStr | None = None
 

@@ -2,17 +2,17 @@
 
 # start example
 import shepherd_core.data_models as sdm
+
 from shepherd_client import Client
 
 client = Client()
 
-durs = [1, 2, 3, 15, 16, 25, 35, 55, 56, 57, 14, 8, 7, 6, 4]
+durations = [1, 2, 3, 15, 16, 25, 35, 55, 56, 57, 14, 8, 7, 6, 4]
 
-for dur in durs:
-
+for duration in durations:
     xp = sdm.Experiment(
-        name=f"stresstest_{dur}min",
-        duration=dur * 60,
+        name=f"stresstest_{duration}min",
+        duration=duration * 60,
         target_configs=[
             sdm.TargetConfig(
                 target_IDs=range(1, 11),

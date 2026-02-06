@@ -1,3 +1,9 @@
+"""Usage is discouraged!
+
+This is mostly a how-to and 'shepherd-server init' might yield
+better results, as it resets testbed-data & experiments.
+"""
+
 import asyncio
 
 from shepherd_server.instance_db import db_available

@@ -24,7 +24,7 @@ classifiers = [
     "Natural Language :: English"
 ]
 
-requires-python = ">=3.13"
+requires-python = "3.13"
 dependencies = [
     "pyaml",
     "fastapi[standard]",

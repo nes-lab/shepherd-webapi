@@ -64,7 +64,7 @@ async def delete_user(
 
     experiments = await WebExperiment.get_by_user(user)
     for xp in experiments:
-        await ExperimentStats.update_with(xp)
+        await ExperimentStats.update_with(xp, to_be_deleted=True)
         await xp.delete_content()
         await xp.delete()
     await user.delete()

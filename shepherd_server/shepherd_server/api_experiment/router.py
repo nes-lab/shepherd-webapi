@@ -110,7 +110,7 @@ async def delete_experiment(
     if web_experiment.started_at is not None and web_experiment.finished_at is None:
         # TODO: possible race-condition
         raise HTTPException(409, "Experiment is running - cannot delete")
-    await ExperimentStats.update_with(web_experiment)
+    await ExperimentStats.update_with(web_experiment, to_be_deleted=True)
     await web_experiment.delete_content()
     await web_experiment.delete()
     return Response(status_code=204)

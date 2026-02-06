@@ -19,6 +19,7 @@ from pydantic import EmailStr
 from pydantic import Field
 from shepherd_core import Reader as CoreReader
 from shepherd_core import local_now
+from shepherd_core import local_tz
 from shepherd_core.data_models import Experiment
 
 from shepherd_server.api_user.models import User
@@ -353,7 +354,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         else:
             for xp in xps_2_prune:
                 log.debug(" -> deleting experiment %s", xp.name)
-                await ExperimentStats.update_with(xp)
+                await ExperimentStats.update_with(xp, to_be_deleted=True)
                 await xp.delete_content()
                 await xp.delete()
             log.info("Pruning old experiments freed: %d MiB", size_total / (2**20))
@@ -417,14 +418,16 @@ class ExperimentStats(Document):
     executed_at: datetime | None = None
     finished_at: datetime | None = None
 
+    deleted_at: datetime | None = None
+
     state: str | None = None
     duration: timedelta | None = None
     result_size: int = 0
 
     # TODO: if these statistics stay, consider adding
-    #      - deleted-state (if webXP is not longer present)
     #      - used eenvs &
-    #      - targets
+    #      - targets / node-count / used MCUs?
+    #      - which tracers are used?
     #      - to get a feeling what is desired
 
     class Settings:  # allows using .save_changes()
@@ -452,6 +455,8 @@ class ExperimentStats(Document):
     async def update_with(
         cls,
         xp: WebExperiment,
+        *,
+        to_be_deleted: bool = False,
     ) -> Self:
 
         data: Self = await cls.find_one(
@@ -468,6 +473,8 @@ class ExperimentStats(Document):
         data.state = xp.state
         data.duration = xp.experiment.duration
         data.result_size = xp.result_size
+        if to_be_deleted:
+            data.deleted_at = datetime.now(tz=local_tz())
         await data.save_changes()
         return data
 

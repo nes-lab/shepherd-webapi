@@ -348,7 +348,6 @@ class WebExperiment(Document, ResultData, ErrorData):
             for xp in xps_2_prune:
                 log.debug(" -> deleting experiment %s", xp.name)
                 await ExperimentStats.update_with(xp)
-                # ⤷ precaution - should have been done with every xp.save_changes()
                 await xp.delete_content()
                 await xp.delete()
             log.info("Pruning old experiments freed: %d MiB", size_total / (2**20))
@@ -366,10 +365,6 @@ class WebExperiment(Document, ResultData, ErrorData):
         if self.requested_execution_at is not None:
             return "scheduled"
         return "created"
-
-    async def save_changes(self) -> Self | None:
-        await ExperimentStats.update_with(self)
-        return await super().save_changes()
 
     async def update_time_start(
         self, time_start: datetime | None = None, *, force: bool = False
@@ -403,6 +398,10 @@ class WebExperiment(Document, ResultData, ErrorData):
 
 
 class ExperimentStats(Document):
+    """This will get updated sporadically throughout the life-time of WebExperiment.
+    This will at least get created before WebExp gets deleted.
+    """
+
     id: UUID
 
     owner: EmailStr | None = None
@@ -447,6 +446,7 @@ class ExperimentStats(Document):
         cls,
         xp: WebExperiment,
     ) -> Self:
+
         data: Self = await cls.find_one(
             cls.id == xp.id,
             fetch_links=True,

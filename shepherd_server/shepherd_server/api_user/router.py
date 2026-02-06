@@ -7,7 +7,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from pydantic import EmailStr
 from shepherd_core import local_now
-from shepherd_core.data_models import Experiment
 
 from shepherd_server.api_experiment.models import ExperimentStats
 from shepherd_server.api_experiment.models import WebExperiment
@@ -63,10 +62,9 @@ async def delete_user(
 ) -> Response:
     """Delete current user and its experiments & content."""
 
-    experiments = await Experiment.get_by_user(user)
+    experiments = await WebExperiment.get_by_user(user)
     for xp in experiments:
         await ExperimentStats.update_with(xp)
-        # ⤷ precaution - should have been done with every xp.save_changes()
         await xp.delete_content()
         await xp.delete()
     await user.delete()

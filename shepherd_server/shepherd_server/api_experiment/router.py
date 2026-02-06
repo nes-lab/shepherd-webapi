@@ -111,7 +111,6 @@ async def delete_experiment(
         # TODO: possible race-condition
         raise HTTPException(409, "Experiment is running - cannot delete")
     await ExperimentStats.update_with(web_experiment)
-    # ⤷ precaution - should have been done with every xp.save_changes()
     await web_experiment.delete_content()
     await web_experiment.delete()
     return Response(status_code=204)
@@ -186,12 +185,12 @@ async def statistics(
     experiment_id: UUID,
     user: Annotated[User, Depends(current_active_user)],
 ) -> ExperimentStats:
-    xp = await ExperimentStats.get_by_id(experiment_id)
-    if xp is None:
-        wxp = await WebExperiment.get_by_id(experiment_id)
-        if isinstance(xp, WebExperiment):
-            xp = await ExperimentStats.update_with(wxp)
-
+    """Trigger and fetch stat-update for all existing WebExperiments."""
+    xp = await WebExperiment.get_by_id(experiment_id)
+    if isinstance(xp, WebExperiment):
+        xp = await ExperimentStats.update_with(xp)
+    else:
+        xp = await ExperimentStats.get_by_id(experiment_id)
     if xp is None:
         raise HTTPException(404, "Not Found")
 

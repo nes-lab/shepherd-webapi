@@ -3,8 +3,8 @@
 ## v2026.02.2
 
 **Breaking change:** Switch to newest core-lib!
-- users can now use the new battery-model for the virtual source
-- users can now use the new energyEnvironment-model
+- users must now use the new battery-model for the virtual source
+- users must now use the new energyEnvironment-model
 
 ### Server
 

@@ -43,8 +43,8 @@ dev = ["pandas"]
 test = [
     "pytest",
     "pytest-click",
-    "pytest-dependency",
-    "pytest-timeout",
+    #"pytest-dependency",
+    #"pytest-timeout",
     "coverage",
 ]
 

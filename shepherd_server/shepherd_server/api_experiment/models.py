@@ -239,7 +239,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         return await cls.find_one(
             cls.id == experiment_id,
             fetch_links=True,
-            lazy_parse=True,
+            # lazy_parse only recommended when not changing & saving
         )
 
     @classmethod
@@ -248,7 +248,7 @@ class WebExperiment(Document, ResultData, ErrorData):
             cls.find(
                 cls.owner.email == user.email,
                 fetch_links=True,
-                lazy_parse=True,
+                # lazy_parse only recommended when not changing & saving
             )
             .sort((cls.created_at, pymongo.ASCENDING))
             .to_list()
@@ -256,6 +256,9 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     @classmethod
     async def get_all(cls) -> list[Self]:
+        """Fetch all entries for parsing.
+        Just use this for reading. TODO: make sure only ID & state
+        """
         # TODO: this can probably blow up fast, as we only need 2 fields
         return await cls.all(lazy_parse=True).sort((cls.created_at, pymongo.ASCENDING)).to_list()
 
@@ -309,7 +312,7 @@ class WebExperiment(Document, ResultData, ErrorData):
             cls.started_at != None,  # noqa: E711
             cls.scheduler_error == None,  # noqa: E711
             fetch_links=True,
-            lazy_parse=True,
+            # lazy_parse only recommended when not changing & saving
         ).to_list()
         for _xp in stuck_xps:
             log.info("Resetting experiment: %s", _xp.id)

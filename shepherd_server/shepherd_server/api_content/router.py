@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from shepherd_core.data_models import ContentModel
 from shepherd_core.data_models import EnergyEnvironment
 from shepherd_core.data_models import VirtualHarvesterConfig
@@ -19,16 +21,17 @@ async def list_content_types() -> list[str]:
 
 
 @router.get("/{content}")
-async def list_content_by_type(content: str) -> dict[int, str]:
+async def list_content_by_type(content: str) -> JSONResponse:
     if content not in content_names:
         raise HTTPException(404, "Not Found")
     data = tb_client.query_ids(content)
     data = {uid: tb_client.query_item(content, uid=uid).get("name") for uid in data}
-    return dict(sorted(data.items()))
+    return JSONResponse(content=jsonable_encoder(sorted(data.items())))
     # TODO: replace fixture-endpoints by database-endpoints
     # TODO: include user/group-data
     # TODO: add setters
     # TODO: add modifiers
+    # TODO: returning a dict removes order-by-value (now by key)
 
 
 @router.get("/{content}/{name}")

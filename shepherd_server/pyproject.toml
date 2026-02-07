@@ -35,7 +35,7 @@ dependencies = [
     "beanie>=2.0",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd-core==2026.2.3",
+    "shepherd-core==2026.2.4",
     "python-decouple",
     "shepherd-herd>=2026.2.1",
     # TODO: python-multipart

@@ -218,7 +218,7 @@ def sample_target_config() -> TargetConfig:
             name="FW_TestXYZ",
             data=fw_tools.file_to_base64(firmware_path),
             data_type=FirmwareDType.base64_elf,
-            data_local=True,
+            data_2_copy=False,
             mcu=MCU(name="nRF52"),
         ),
         power_tracing=None,

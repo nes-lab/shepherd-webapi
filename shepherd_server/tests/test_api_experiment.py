@@ -169,7 +169,7 @@ def test_create_experiment_with_unconstrained_path(
             name="FW_TestXYZ",
             data=Path("/etc/shepherd/private_data.elf"),
             data_type=sdm.FirmwareDType.path_elf,
-            data_local=True,
+            data_2_copy=True,
             mcu=MCU(name="nRF52"),
         ),
         power_tracing=None,
@@ -189,7 +189,7 @@ def test_create_experiment_with_unconstrained_path(
         print(response.status_code)
         print(response.json())
         # TODO: old .is_contained is faulty, so this won't trigger for now
-        assert response.status_code >= 4000  # expect 403
+        assert response.status_code >= 400  # expect 403
 
 
 def test_list_experiments_is_authenticated(client: TestClient) -> None:

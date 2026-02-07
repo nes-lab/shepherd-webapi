@@ -10,9 +10,10 @@
 
 - pinpoint python-version for server
 - scheduler - fix service running in dry-mode per default
-- fix and improve statistics
+- fix and improve statistics (i.e. add hints about error and deletion-timestamp)
 - several small bugfixes & improvements of examples
-- improve db-performance for handling web-experiments
+- improve db-performance for handling web-experiments (avoids possible ram-overflow)
+- content-endpoints now only output names (no IDs anymore)
 
 ## v2026.02.1
 

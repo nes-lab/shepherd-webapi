@@ -2,10 +2,13 @@ import copy
 import shutil
 import subprocess
 from datetime import datetime
+from datetime import timedelta
 from io import StringIO
 from pathlib import Path
+from typing import Self
 from uuid import UUID
 from uuid import uuid4
+from warnings import deprecated
 
 import pymongo
 from beanie import Document
@@ -13,9 +16,11 @@ from beanie import Link
 from beanie.operators import In
 from fastapi import UploadFile
 from pydantic import BaseModel
+from pydantic import EmailStr
 from pydantic import Field
 from shepherd_core import Reader as CoreReader
 from shepherd_core import local_now
+from shepherd_core import local_tz
 from shepherd_core.data_models import Experiment
 
 from shepherd_server.api_user.models import User
@@ -231,34 +236,54 @@ class WebExperiment(Document, ResultData, ErrorData):
         validate_on_save = True
 
     @classmethod
-    async def get_by_id(cls, experiment_id: UUID) -> "None | WebExperiment":
+    async def get_by_id(cls, experiment_id: UUID) -> None | Self:
         return await cls.find_one(
             cls.id == experiment_id,
             fetch_links=True,
+            # lazy_parse only recommended when not changing & saving
         )
 
     @classmethod
-    async def get_by_user(cls, user: User) -> list["WebExperiment"]:
+    @deprecated("Usage discouraged, as each element may be 1 - 10 MiB in size.")
+    async def get_by_user(cls, user: User) -> list[Self]:
         return await (
             cls.find(
                 cls.owner.email == user.email,
                 fetch_links=True,
+                # lazy_parse only recommended when not changing & saving
             )
             .sort((cls.created_at, pymongo.ASCENDING))
             .to_list()
         )
 
     @classmethod
-    async def get_all(cls) -> list["WebExperiment"]:
-        return await cls.all().sort((cls.created_at, pymongo.ASCENDING)).to_list()
+    async def get_all_states(cls, user: User | None = None) -> dict[UUID, str]:
+        """Fetch all states of existing experiments.
+
+        - removed .sort((cls.created_at, pymongo.ASCENDING)) as order was discarded by fastapi
+        """
+        if user is None:
+            data = await cls.all(lazy_parse=True).to_list()
+        else:
+            data = await cls.find(
+                cls.owner.email == user.email,
+                fetch_links=True,
+                lazy_parse=True,
+            ).to_list()
+        return {date.id: date.state for date in data}
 
     @classmethod
     async def get_storage(cls, user: User) -> int:
-        _xps = await cls.get_by_user(user)
-        return sum(_xp.result_size for _xp in _xps)
+        # TODO: performance optimization
+        size = await cls.find(
+            cls.owner.email == user.email,
+            fetch_links=True,
+            lazy_parse=True,
+        ).sum(cls.result_size)
+        return int(size) if size else 0
 
     @classmethod
-    async def get_next_scheduling(cls, *, only_elevated: bool = False) -> "None | WebExperiment":
+    async def get_next_scheduling(cls, *, only_elevated: bool = False) -> None | Self:
         """
         Finds the WebExperiment with the oldest scheduling_at datetime,
         that has not been executed yet (status less than active).
@@ -287,6 +312,7 @@ class WebExperiment(Document, ResultData, ErrorData):
                 cls.started_at == None,  # noqa: E711
                 cls.owner.email == user.email,
                 fetch_links=True,
+                lazy_parse=True,
             )
             .limit(1)
             .to_list()
@@ -300,6 +326,8 @@ class WebExperiment(Document, ResultData, ErrorData):
             cls.finished_at == None,  # noqa: E711 beanie cannot handle 'is not None'
             cls.started_at != None,  # noqa: E711
             cls.scheduler_error == None,  # noqa: E711
+            fetch_links=True,
+            # lazy_parse only recommended when not changing & saving
         ).to_list()
         for _xp in stuck_xps:
             log.info("Resetting experiment: %s", _xp.id)
@@ -309,41 +337,44 @@ class WebExperiment(Document, ResultData, ErrorData):
     @classmethod
     async def prune(cls, users: list[User] | None = None, *, dry_run: bool = True) -> int:
         # TODO: find xp with missing link to user (zombies)
-        xps_2_prune = []
+        xp_ids_2_prune = []
 
         # fetch experiments by user
         if users is not None:
             for user in users:
-                xps_2_prune += await cls.get_by_user(user)
+                xp_ids_2_prune += list((await cls.get_all_states(user)).keys())
 
         # get oldest XP of users over quota
-        users_all = await User.find_all().to_list()
+        users_all = await User.find_all(lazy_parse=True).to_list()
         xp_date_limit = local_now() - config.age_min_experiment
         for user in users_all:
-            xps_user = await cls.get_by_user(user)  # already sorted by age
-            storage_user = cls.get_storage(user)
-            for xp in xps_user:
+            xp_ids_user = await cls.get_all_states(user)
+            storage_user = await cls.get_storage(user)
+            for xp_id in xp_ids_user:
+                xp = await cls.get_by_id(xp_id)
                 if xp.created_at >= xp_date_limit:
-                    break
+                    continue
                 if storage_user >= user.quota_storage:
-                    xps_2_prune.append(xp)
+                    xp_ids_2_prune.append(xp.id)
                     storage_user -= xp.result_size
 
         # get xp exceeding max age
-        xps_2_prune += await cls.find(
+        xp_ids_2_prune += await cls.find(
             cls.created_at <= local_now() - config.age_max_experiment,
             fetch_links=True,
         ).to_list()
 
         # calculate size of experiments
-        xps_2_prune = set(xps_2_prune)
-        size_total = sum(xp.result_size for xp in xps_2_prune)
+        xp_ids_2_prune = set(xp_ids_2_prune)
+        size_total = sum((await cls.get_by_id(xp_id)).result_size for xp_id in xp_ids_2_prune)
 
         if dry_run:
             log.info("Pruning old experiments could free: %d MiB", size_total / (2**20))
         else:
-            for xp in xps_2_prune:
+            for xp_id in xp_ids_2_prune:
+                xp = await cls.get_by_id(xp_id)
                 log.debug(" -> deleting experiment %s", xp.name)
+                await ExperimentStats.update_with(xp, to_be_deleted=True)
                 await xp.delete_content()
                 await xp.delete()
             log.info("Pruning old experiments freed: %d MiB", size_total / (2**20))
@@ -391,3 +422,116 @@ class WebExperiment(Document, ResultData, ErrorData):
             f"- executed  @ {as_iso(self.executed_at)} (UTC)\n"
             f"- finished  @ {as_iso(self.finished_at)} (UTC)\n"
         )
+
+
+class ExperimentStats(Document):
+    """This will get updated sporadically throughout the life-time of WebExperiment.
+    This will at least get created before WebExp gets deleted.
+    """
+
+    id: UUID
+
+    owner: EmailStr | None = None
+
+    created_at: datetime | None = None
+    started_at: datetime | None = None
+    executed_at: datetime | None = None
+    finished_at: datetime | None = None
+
+    deleted_at: datetime | None = None
+
+    state: str | None = None
+    duration: timedelta | None = None
+    result_size: int = 0
+
+    had_errors: bool = False
+    has_missing_data: bool = False
+    max_exit_code: int | None = None
+    scheduler_error: str | None = None
+    missing_observers: list[str] | None = None
+
+    # TODO: if these statistics stay, consider adding
+    #      - used eenvs &
+    #      - targets / node-count / used MCUs?
+    #      - which tracers are used?
+    #      - to get a feeling what is desired
+
+    class Settings:  # allows using .save_changes()
+        use_state_management = True
+        state_management_save_previous = True
+        validate_on_save = True
+
+    @classmethod
+    async def derive_from(cls, xp: WebExperiment) -> Self:
+        data = cls(
+            id=xp.id,
+            owner=xp.owner.email,
+            created_at=xp.created_at,
+            started_at=xp.started_at,
+            executed_at=xp.executed_at,
+            finished_at=xp.finished_at,
+            state=xp.state,
+            duration=xp.experiment.duration,
+            result_size=xp.result_size,
+            # errors
+            had_errors=xp.had_errors,
+            has_missing_data=xp.has_missing_data,
+            max_exit_code=xp.max_exit_code,
+            scheduler_error=xp.scheduler_error,
+            missing_observers=xp.missing_observers,
+        )
+        await data.save()
+        return data
+
+    @classmethod
+    async def update_with(
+        cls,
+        xp: WebExperiment,
+        *,
+        to_be_deleted: bool = False,
+    ) -> Self:
+
+        data: Self = await cls.find_one(
+            cls.id == xp.id,
+        )
+        if data is None:
+            return await cls.derive_from(xp)
+        data.id = xp.id
+        data.owner = xp.owner.email
+        # timestamps
+        data.created_at = xp.created_at
+        data.started_at = xp.started_at
+        data.executed_at = xp.executed_at
+        data.finished_at = xp.finished_at
+        # states
+        data.state = xp.state
+        data.duration = xp.experiment.duration
+        data.result_size = xp.result_size
+        # errors
+        data.had_errors = xp.had_errors
+        data.has_missing_data = xp.has_missing_data
+        data.max_exit_code = xp.max_exit_code
+        data.scheduler_error = xp.scheduler_error
+        data.missing_observers = xp.missing_observers
+
+        if to_be_deleted:
+            data.deleted_at = datetime.now(tz=local_tz())
+        await data.save_changes()
+        return data
+
+    @classmethod
+    async def get_by_id(cls, experiment_id: UUID) -> None | Self:
+        return await cls.find_one(
+            cls.id == experiment_id,
+        )
+
+    @classmethod
+    async def get_all_states(cls, user: User | None = None) -> dict[UUID, str]:
+        if user is None:
+            data = await cls.all(lazy_parse=True).to_list()
+        else:
+            data = await cls.find(
+                cls.owner == user.email,
+                lazy_parse=True,
+            ).to_list()
+        return {date.id: date.state for date in data}

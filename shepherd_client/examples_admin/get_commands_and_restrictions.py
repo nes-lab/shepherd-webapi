@@ -14,6 +14,6 @@ if False:
 
 if False:
     restrictions = [
-        "BatteryModel is not integrated yet, so an older core-lib is needed (2025.8.1)",
+        "Breaking changes! Update client to version >= 2026.2.2",
     ]
     client.set_restrictions(restrictions)

@@ -189,7 +189,7 @@ class UserClient(WebClient):
     # ####################################################################
 
     def list_experiments(self, *, only_finished: bool = False) -> list[UUID]:
-        """Query users experiment-IDs (chronological order)."""
+        """Query users experiment-IDs."""
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment",
             headers=self._auth,

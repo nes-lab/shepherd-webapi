@@ -2,11 +2,18 @@
 
 ## v2026.02.2
 
-- switch to newest core-lib -> **breaking changes**!
+**Breaking change:** Switch to newest core-lib!
 - users can now use the new battery-model for the virtual source
 - users can now use the new energyEnvironment-model
+
+### Server
+
 - pinpoint python-version for server
 - scheduler - fix service running in dry-mode per default
+- fix and improve statistics (i.e. add hints about error and deletion-timestamp)
+- several small bugfixes & improvements of examples
+- improve db-performance for handling web-experiments (avoids possible ram-overflow)
+- content-endpoints now only output names (no IDs anymore)
 
 ## v2026.02.1
 

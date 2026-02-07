@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Annotated
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -19,6 +18,7 @@ from shepherd_server.api_user.utils_misc import active_user_is_admin
 from shepherd_server.api_user.utils_misc import current_active_user
 from shepherd_server.config import config
 
+from .models import ExperimentStats
 from .models import WebExperiment
 
 router = APIRouter(prefix="/experiment", tags=["Experiment"])
@@ -69,16 +69,14 @@ async def create_experiment(
 async def list_experiments(
     user: Annotated[User, Depends(current_active_user)],
 ) -> dict[UUID, str]:
-    web_experiments = await WebExperiment.get_by_user(user)
-    xp_states: dict[UUID, str] = {wex.id: wex.state for wex in web_experiments}
-    return xp_states
+    return await WebExperiment.get_all_states(user=user)
 
 
 @router.get("/all", dependencies=[Depends(active_user_is_admin)])
 async def list_all_experiments() -> dict[UUID, str]:
-    web_experiments = await WebExperiment.get_all()
-    xp_states: dict[UUID, str] = {wex.id: wex.state for wex in web_experiments}
-    return xp_states
+    st_states = await ExperimentStats.get_all_states()
+    xp_states = await WebExperiment.get_all_states()
+    return st_states | xp_states
 
 
 @router.get("/{experiment_id}")
@@ -108,6 +106,7 @@ async def delete_experiment(
     if web_experiment.started_at is not None and web_experiment.finished_at is None:
         # TODO: possible race-condition
         raise HTTPException(409, "Experiment is running - cannot delete")
+    await ExperimentStats.update_with(web_experiment, to_be_deleted=True)
     await web_experiment.delete_content()
     await web_experiment.delete()
     return Response(status_code=204)
@@ -181,24 +180,21 @@ async def download(
 async def statistics(
     experiment_id: UUID,
     user: Annotated[User, Depends(current_active_user)],
-) -> dict[str, Any]:
-    web_experiment = await WebExperiment.get_by_id(experiment_id)
-    if web_experiment is None:
+) -> ExperimentStats:
+    """Trigger and fetch stat-update for all existing WebExperiments."""
+    xp = await WebExperiment.get_by_id(experiment_id)
+    if isinstance(xp, WebExperiment):
+        xp = await ExperimentStats.update_with(xp)
+    else:
+        xp = await ExperimentStats.get_by_id(experiment_id)
+    if xp is None:
         raise HTTPException(404, "Not Found")
 
-    data = {
-        "id": web_experiment.id,
-        "state": web_experiment.state,
-        "executed_at": web_experiment.executed_at,
-        "duration": web_experiment.experiment.duration,
-        "size": web_experiment.result_size,
-        "owner": web_experiment.owner.email,
-    }
     # TODO: route privacy should be modeled canonically
     if user.role == UserRole.admin:
-        return data
-    if web_experiment.owner.email == user.email:
-        return data
+        return xp
+    if xp.owner == user.email:
+        return xp
     raise HTTPException(403, "Forbidden")
 
 

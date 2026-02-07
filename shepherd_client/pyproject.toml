@@ -29,7 +29,7 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-    "shepherd-core>=2026.2.3",
+    "shepherd-core>=2026.2.4",
     "requests",
     "pydantic[email]>=2.11.5",
     "exrex",  # for automatic password creation
@@ -43,8 +43,8 @@ dev = ["pandas"]
 test = [
     "pytest",
     "pytest-click",
-    "pytest-dependency",
-    "pytest-timeout",
+    #"pytest-dependency",
+    #"pytest-timeout",
     "coverage",
 ]
 

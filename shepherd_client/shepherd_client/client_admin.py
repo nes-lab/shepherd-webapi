@@ -159,7 +159,7 @@ class AdminClient(UserClient):
     # ####################################################################
 
     def list_all_experiments(self, *, only_finished: bool = False) -> list[UUID]:
-        """Query experiment-IDs (all, chronological order)."""
+        """Query experiment-IDs (from all users, even deleted ones)."""
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment/all",
             headers=self._auth,

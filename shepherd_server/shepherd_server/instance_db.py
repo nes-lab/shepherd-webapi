@@ -11,6 +11,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from shepherd_core import local_now
 from shepherd_core.config import config as core_cfg
 
+from .api_experiment.models import ExperimentStats
 from .api_experiment.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
 from .api_user.models import PasswordStr
@@ -28,7 +29,10 @@ async def db_client() -> AsyncDatabase:
     """Call this from within your event loop to get beanie setup."""
     client = AsyncMongoClient("mongodb://localhost:27017")
     # Note: if ".shp" does not exist, it will be created
-    await init_beanie(database=client.shp, document_models=[User, WebExperiment, TestbedDB])
+    await init_beanie(
+        database=client.shp,
+        document_models=[User, WebExperiment, TestbedDB, ExperimentStats],
+    )
     return client.shp
 
 

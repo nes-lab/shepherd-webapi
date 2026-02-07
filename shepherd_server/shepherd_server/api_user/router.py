@@ -7,8 +7,8 @@ from fastapi import HTTPException
 from fastapi import Response
 from pydantic import EmailStr
 from shepherd_core import local_now
-from shepherd_core.data_models import Experiment
 
+from shepherd_server.api_experiment.models import ExperimentStats
 from shepherd_server.api_experiment.models import WebExperiment
 
 from .models import PasswordStr
@@ -61,9 +61,10 @@ async def delete_user(
     user: Annotated[User, Depends(current_active_user)],
 ) -> Response:
     """Delete current user and its experiments & content."""
-
-    experiments = await Experiment.get_by_user(user)
-    for xp in experiments:
+    xp_states = await WebExperiment.get_all_states(user)
+    for xp_id in xp_states:
+        xp = await WebExperiment.get_by_id(xp_id)
+        await ExperimentStats.update_with(xp, to_be_deleted=True)
         await xp.delete_content()
         await xp.delete()
     await user.delete()
@@ -92,6 +93,7 @@ async def update_quota(
         _user.custom_quota_storage = quota.custom_quota_storage
     await _user.save_changes()
     # TODO: inform user about it?
+    # TODO: logic should go to into user-model
     return _user
 
 

@@ -21,21 +21,20 @@ async def list_content_types() -> list[str]:
 
 
 @router.get("/{content}")
-async def list_content_by_type(content: str) -> JSONResponse:
+async def list_content_by_type(content: str) -> list[str]:
     if content not in content_names:
         raise HTTPException(404, "Not Found")
     data = tb_client.query_ids(content)
-    data = {uid: tb_client.query_item(content, uid=uid).get("name") for uid in data}
-    return JSONResponse(content=jsonable_encoder(dict(sorted(data.items()))))
+    return sorted([tb_client.query_item(content, uid=uid).get("name") for uid in data])
+    # -> moved from sorted dict[ID,name] (that was resorted by fastapi) to just list of names
     # TODO: replace fixture-endpoints by database-endpoints
     # TODO: include user/group-data
     # TODO: add setters
     # TODO: add modifiers
-    # TODO: returning a dict removes order-by-value (now by key)
 
 
 @router.get("/{content}/{name}")
-async def get_content_by_type(content: str, name: str) -> ContentModel:
+async def get_content_by_type_and_name(content: str, name: str) -> ContentModel:
     if content not in content_names:
         raise HTTPException(404, "Not Found")
     try:

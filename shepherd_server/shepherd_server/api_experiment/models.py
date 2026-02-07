@@ -243,8 +243,8 @@ class WebExperiment(Document, ResultData, ErrorData):
             # lazy_parse only recommended when not changing & saving
         )
 
-    @deprecated("Usage discouraged, as each element may be 1 - 10 MiB in size.")
     @classmethod
+    @deprecated("Usage discouraged, as each element may be 1 - 10 MiB in size.")
     async def get_by_user(cls, user: User) -> list[Self]:
         return await (
             cls.find(

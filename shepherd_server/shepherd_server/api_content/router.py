@@ -26,7 +26,7 @@ async def list_content_by_type(content: str) -> JSONResponse:
         raise HTTPException(404, "Not Found")
     data = tb_client.query_ids(content)
     data = {uid: tb_client.query_item(content, uid=uid).get("name") for uid in data}
-    return JSONResponse(content=jsonable_encoder(sorted(data.items())))
+    return JSONResponse(content=jsonable_encoder(dict(sorted(data.items()))))
     # TODO: replace fixture-endpoints by database-endpoints
     # TODO: include user/group-data
     # TODO: add setters

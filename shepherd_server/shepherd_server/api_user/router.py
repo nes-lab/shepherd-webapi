@@ -61,9 +61,9 @@ async def delete_user(
     user: Annotated[User, Depends(current_active_user)],
 ) -> Response:
     """Delete current user and its experiments & content."""
-
-    experiments = await WebExperiment.get_by_user(user)
-    for xp in experiments:
+    xp_states = await WebExperiment.get_all_states(user)
+    for xp_id in xp_states:
+        xp = await WebExperiment.get_by_id(xp_id)
         await ExperimentStats.update_with(xp, to_be_deleted=True)
         await xp.delete_content()
         await xp.delete()

@@ -69,17 +69,13 @@ async def create_experiment(
 async def list_experiments(
     user: Annotated[User, Depends(current_active_user)],
 ) -> dict[UUID, str]:
-    web_experiments = await WebExperiment.get_by_user(user)
-    xp_states: dict[UUID, str] = {wex.id: wex.state for wex in web_experiments}
-    return xp_states
+    return await WebExperiment.get_all_states(user=user)
 
 
 @router.get("/all", dependencies=[Depends(active_user_is_admin)])
 async def list_all_experiments() -> dict[UUID, str]:
-    stat_experiments = await ExperimentStats.get_all()
-    st_states: dict[UUID, str] = {sex.id: sex.state for sex in stat_experiments}
-    web_experiments = await WebExperiment.get_all()
-    xp_states: dict[UUID, str] = {wex.id: wex.state for wex in web_experiments}
+    st_states = await ExperimentStats.get_all_states()
+    xp_states = await WebExperiment.get_all_states()
     return st_states | xp_states
 
 

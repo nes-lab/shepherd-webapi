@@ -1,7 +1,5 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
 from shepherd_core.data_models import ContentModel
 from shepherd_core.data_models import EnergyEnvironment
 from shepherd_core.data_models import VirtualHarvesterConfig
@@ -31,6 +29,7 @@ async def list_content_by_type(content: str) -> list[str]:
     # TODO: include user/group-data
     # TODO: add setters
     # TODO: add modifiers
+    # TODO: avoid printing deprecated entries
 
 
 @router.get("/{content}/{name}")

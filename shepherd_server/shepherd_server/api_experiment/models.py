@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Self
 from uuid import UUID
 from uuid import uuid4
+from warnings import deprecated
 
 import pymongo
 from beanie import Document
@@ -235,15 +236,16 @@ class WebExperiment(Document, ResultData, ErrorData):
         validate_on_save = True
 
     @classmethod
-    async def get_by_id(cls, experiment_id: UUID) -> "None | WebExperiment":
+    async def get_by_id(cls, experiment_id: UUID) -> None | Self:
         return await cls.find_one(
             cls.id == experiment_id,
             fetch_links=True,
             # lazy_parse only recommended when not changing & saving
         )
 
+    @deprecated("Usage discouraged, as each element may be 1 - 10 MiB in size.")
     @classmethod
-    async def get_by_user(cls, user: User) -> list["WebExperiment"]:
+    async def get_by_user(cls, user: User) -> list[Self]:
         return await (
             cls.find(
                 cls.owner.email == user.email,
@@ -255,20 +257,33 @@ class WebExperiment(Document, ResultData, ErrorData):
         )
 
     @classmethod
-    async def get_all(cls) -> list[Self]:
-        """Fetch all entries for parsing.
-        Just use this for reading. TODO: make sure only ID & state
+    async def get_all_states(cls, user: User | None = None) -> dict[UUID, str]:
+        """Fetch all states of existing experiments.
+
+        - removed .sort((cls.created_at, pymongo.ASCENDING)) as order was discarded by fastapi
         """
-        # TODO: this can probably blow up fast, as we only need 2 fields
-        return await cls.all(lazy_parse=True).sort((cls.created_at, pymongo.ASCENDING)).to_list()
+        if user is None:
+            data = await cls.all(lazy_parse=True).to_list()
+        else:
+            data = await cls.find(
+                cls.owner.email == user.email,
+                fetch_links=True,
+                lazy_parse=True,
+            ).to_list()
+        return {date.id: date.state for date in data}
 
     @classmethod
     async def get_storage(cls, user: User) -> int:
-        _xps = await cls.get_by_user(user)
-        return sum(_xp.result_size for _xp in _xps)
+        # TODO: performance optimization
+        size = await cls.find(
+            cls.owner.email == user.email,
+            fetch_links=True,
+            lazy_parse=True,
+        ).sum(cls.result_size)
+        return int(size) if size else 0
 
     @classmethod
-    async def get_next_scheduling(cls, *, only_elevated: bool = False) -> "None | WebExperiment":
+    async def get_next_scheduling(cls, *, only_elevated: bool = False) -> None | Self:
         """
         Finds the WebExperiment with the oldest scheduling_at datetime,
         that has not been executed yet (status less than active).
@@ -322,40 +337,42 @@ class WebExperiment(Document, ResultData, ErrorData):
     @classmethod
     async def prune(cls, users: list[User] | None = None, *, dry_run: bool = True) -> int:
         # TODO: find xp with missing link to user (zombies)
-        xps_2_prune = []
+        xp_ids_2_prune = []
 
         # fetch experiments by user
         if users is not None:
             for user in users:
-                xps_2_prune += await cls.get_by_user(user)
+                xp_ids_2_prune += list((await cls.get_all_states(user)).keys())
 
         # get oldest XP of users over quota
         users_all = await User.find_all(lazy_parse=True).to_list()
         xp_date_limit = local_now() - config.age_min_experiment
         for user in users_all:
-            xps_user = await cls.get_by_user(user)  # already sorted by age
-            storage_user = cls.get_storage(user)
-            for xp in xps_user:
+            xp_ids_user = await cls.get_all_states(user)
+            storage_user = await cls.get_storage(user)
+            for xp_id in xp_ids_user:
+                xp = await cls.get_by_id(xp_id)
                 if xp.created_at >= xp_date_limit:
-                    break
+                    continue
                 if storage_user >= user.quota_storage:
-                    xps_2_prune.append(xp)
+                    xp_ids_2_prune.append(xp.id)
                     storage_user -= xp.result_size
 
         # get xp exceeding max age
-        xps_2_prune += await cls.find(
+        xp_ids_2_prune += await cls.find(
             cls.created_at <= local_now() - config.age_max_experiment,
             fetch_links=True,
         ).to_list()
 
         # calculate size of experiments
-        xps_2_prune = set(xps_2_prune)
-        size_total = sum(xp.result_size for xp in xps_2_prune)
+        xp_ids_2_prune = set(xp_ids_2_prune)
+        size_total = sum((await cls.get_by_id(xp_id)).result_size for xp_id in xp_ids_2_prune)
 
         if dry_run:
             log.info("Pruning old experiments could free: %d MiB", size_total / (2**20))
         else:
-            for xp in xps_2_prune:
+            for xp_id in xp_ids_2_prune:
+                xp = await cls.get_by_id(xp_id)
                 log.debug(" -> deleting experiment %s", xp.name)
                 await ExperimentStats.update_with(xp, to_be_deleted=True)
                 await xp.delete_content()
@@ -482,11 +499,18 @@ class ExperimentStats(Document):
         return data
 
     @classmethod
-    async def get_by_id(cls, experiment_id: UUID) -> "None | ExperimentStats":
+    async def get_by_id(cls, experiment_id: UUID) -> None | Self:
         return await cls.find_one(
             cls.id == experiment_id,
         )
 
     @classmethod
-    async def get_all(cls) -> list["ExperimentStats"]:
-        return await cls.all().sort((cls.created_at, pymongo.ASCENDING)).to_list()
+    async def get_all_states(cls, user: User | None = None) -> dict[UUID, str]:
+        if user is None:
+            data = await cls.all(lazy_parse=True).to_list()
+        else:
+            data = await cls.find(
+                cls.owner == user.email,
+                lazy_parse=True,
+            ).to_list()
+        return {date.id: date.state for date in data}

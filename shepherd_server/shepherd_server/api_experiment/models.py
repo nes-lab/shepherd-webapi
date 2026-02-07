@@ -444,6 +444,12 @@ class ExperimentStats(Document):
     duration: timedelta | None = None
     result_size: int = 0
 
+    had_errors: bool = False
+    has_missing_data: bool = False
+    max_exit_code: int | None = None
+    scheduler_error: str | None = None
+    missing_observers: list[str] | None = None
+
     # TODO: if these statistics stay, consider adding
     #      - used eenvs &
     #      - targets / node-count / used MCUs?
@@ -467,6 +473,12 @@ class ExperimentStats(Document):
             state=xp.state,
             duration=xp.experiment.duration,
             result_size=xp.result_size,
+            # errors
+            had_errors=xp.had_errors,
+            has_missing_data=xp.has_missing_data,
+            max_exit_code=xp.max_exit_code,
+            scheduler_error=xp.scheduler_error,
+            missing_observers=xp.missing_observers,
         )
         await data.save()
         return data
@@ -486,13 +498,22 @@ class ExperimentStats(Document):
             return await cls.derive_from(xp)
         data.id = xp.id
         data.owner = xp.owner.email
+        # timestamps
         data.created_at = xp.created_at
         data.started_at = xp.started_at
         data.executed_at = xp.executed_at
         data.finished_at = xp.finished_at
+        # states
         data.state = xp.state
         data.duration = xp.experiment.duration
         data.result_size = xp.result_size
+        # errors
+        data.had_errors = xp.had_errors
+        data.has_missing_data = xp.has_missing_data
+        data.max_exit_code = xp.max_exit_code
+        data.scheduler_error = xp.scheduler_error
+        data.missing_observers = xp.missing_observers
+
         if to_be_deleted:
             data.deleted_at = datetime.now(tz=local_tz())
         await data.save_changes()

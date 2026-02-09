@@ -3,24 +3,37 @@ from pathlib import Path
 import isodate
 import pandas as pd
 from shepherd_core import log
+from tqdm import tqdm
 
 from shepherd_client import AdminClient
 
-client = AdminClient()
-
 file_result = Path(__file__).with_suffix(".csv")
 
-if not file_result.exists():
-    xp_ids = client.list_all_experiments()
-    log.info(f"Fill fetch data from {len(xp_ids)} experiments")
+client = AdminClient()
 
-    xp_stats = [client.get_experiment_statistics(xp_id) for xp_id in xp_ids]
+# load locally if available
+data = (
+    pd.read_csv(file_result)
+    if file_result.exists()
+    else pd.DataFrame(columns=["_id", "state", "duration", "created_at", "deleted_at"])
+).set_index("_id")
 
-    data = pd.DataFrame(data=xp_stats)
-    data.to_csv(file_result)
-else:
-    data = pd.read_csv(file_result)
+# update - only non-deleted entries
+xp_ids = [
+    xp_id
+    for xp_id in client.list_all_experiments()
+    if xp_id not in data.index or pd.isna(data.loc[xp_id, "deleted_at"])
+]
+data_new = [
+    client.get_experiment_statistics(xp_id) for xp_id in tqdm(xp_ids, "fetching experiments")
+]
+data = pd.concat([data.reset_index(), pd.DataFrame(data=data_new)])
+data = data.drop_duplicates("_id", keep="last").sort_values("created_at").set_index("_id")
 
+# store locally
+data.reset_index().to_csv(file_result)
+
+# analyze
 log.info("Found:")
 data["duration"] = data["duration"].apply(isodate.parse_duration)
 log.info(

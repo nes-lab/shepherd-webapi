@@ -8,7 +8,7 @@ description = "Interface between the Testbed Instance and the User"
 readme = "README.md"
 dependencies = [
     "shepherd-server[dev,test]",
-    "shepherd-client[dev,test]",
+    "shepherd-client[admin,dev,test]",
     # dev
     "prek",  # pre-commit plugin-replacement
     "bump2version",

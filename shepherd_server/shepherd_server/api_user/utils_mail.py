@@ -79,7 +79,7 @@ class FastMailEngine(MailEngine):
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Email Verification",
-                body="Welcome to the Shepherd Nova Testbed! "
+                body="Welcome to the Shepherd Nova Testbed!"
                 f"You just need to verify your email to complete registration: {_url}",
                 subtype=MessageType.plain,  # TODO: replace with HTTP + Link
             )
@@ -92,7 +92,9 @@ class FastMailEngine(MailEngine):
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Registration Complete",
-                body="You are now fully registered and can use the Testbed",
+                body="You are now fully registered and can use the Testbed!"
+                "\n\nFirst steps for running your experiments are documented here:"
+                "\nhttps://nes-lab.github.io/shepherd-nova/content/getting_started.html",
                 subtype=MessageType.plain,
             )
             await mail.send_message(message)

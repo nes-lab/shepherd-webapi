@@ -383,10 +383,10 @@ class WebExperiment(Document, ResultData, ErrorData):
     @property
     def state(self) -> str:
         # not included scheduler_error here
-        if self.finished_at is not None:
-            if self.result_paths is not None:
-                return "finished"
+        if self.had_errors:
             return "failed"
+        if self.finished_at is not None:
+            return "finished"
         if self.started_at is not None:
             return "running"
         if self.requested_execution_at is not None:

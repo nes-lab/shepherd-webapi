@@ -1,6 +1,6 @@
-# install       pip3 install pre-commit
-# run           pre-commit run -a  # or --all-files
-# update deps   pre-commit autoupdate
+# install       pip3 install prek
+# run           prek run -a  # or --all-files
+# update deps   prek autoupdate
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -49,7 +49,7 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.0'
+    rev: 'v0.15.1'
     hooks:
       - id: ruff-format
       - id: ruff-check

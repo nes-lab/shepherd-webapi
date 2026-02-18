@@ -10,7 +10,7 @@ dependencies = [
     "shepherd-server[dev,test]",
     "shepherd-client[admin,dev,test]",
     # dev
-    "prek",  # pre-commit plugin-replacement
+    "prek",  # pre-commit replacement
     "bump2version",
     "pyright",
     "ty",

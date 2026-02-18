@@ -39,7 +39,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-admin = ["pandas", "isodate"]
+admin = ["pandas", "isodate", "trafficbench"]
 dev = []
 test = [
     "pytest",

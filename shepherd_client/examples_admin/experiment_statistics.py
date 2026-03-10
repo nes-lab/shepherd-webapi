@@ -31,7 +31,7 @@ data = pd.concat([data.reset_index(), pd.DataFrame(data=data_new)])
 data = data.drop_duplicates("_id", keep="last").sort_values("created_at").set_index("_id")
 
 # store locally
-data.reset_index().to_csv(file_result)
+data.reset_index().to_csv(file_result, index=False)
 
 # analyze
 log.info("Found:")

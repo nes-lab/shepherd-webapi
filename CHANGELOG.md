@@ -1,5 +1,14 @@
 # History of Changes
 
+## v2026.03.1
+
+- add admin-flavor for webclient (`install .[admin]`)
+- extend statistics about the testbed (only for admin)
+- improve mails to user
+- server - build-script makes DB backup beforehand
+- server - fix failed ExperimentStats-updates
+- replace pre-commit with prek
+
 ## v2026.02.2
 
 **Breaking change:** Switch to newest core-lib!

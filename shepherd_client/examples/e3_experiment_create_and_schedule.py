@@ -8,8 +8,8 @@
         created -> scheduled -> running -> finished
                                         -> failed (finished with error)
 """
+
 import sys
-from pathlib import Path
 
 # start example
 import shepherd_core.data_models as sdm

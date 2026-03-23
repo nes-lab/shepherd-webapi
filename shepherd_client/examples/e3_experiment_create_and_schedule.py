@@ -6,10 +6,10 @@
     - scheduling will fail if your quota is exceeded
 - the state of the experiment progresses from:
         created -> scheduled -> running -> finished
-                                        -> failed (alternatively on error)
+                                        -> failed (finished with error)
 """
-
 import sys
+from pathlib import Path
 
 # start example
 import shepherd_core.data_models as sdm
@@ -42,5 +42,7 @@ sys.exit()
 # Experiments can be scripted for parameter sweeps, etc.
 # To simplify code it is possible to mass-schedule, as only "created" experiments are really queued
 
+# start extra
 for xp_id in client.list_experiments():
     client.schedule_experiment(xp_id)
+# end extra

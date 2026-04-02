@@ -170,7 +170,7 @@ async def download(
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 
-    if web_experiment.state != "finished":
+    if web_experiment.state not in {"finished", "failed"}:
         raise HTTPException(409, "Experiment not yet finished")
 
     return list(web_experiment.result_paths.keys())

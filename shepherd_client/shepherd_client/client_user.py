@@ -208,7 +208,7 @@ class UserClient(WebClient):
         """
         rsp = requests.post(
             url=f"{self._cfg.server}/experiment",
-            data=xp.model_dump_json(),
+            json=xp.model_dump(mode="json"),
             headers=self._auth,
             timeout=3,
         )

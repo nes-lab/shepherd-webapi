@@ -42,7 +42,7 @@ class DBClient:
             parameters=data.model_dump(),
         )
         if self._connected:
-            r = self._req.post(self._server + "/add", data=wrap.model_dump_json(), timeout=2)
+            r = self._req.post(self._server + "/add", json=wrap.model_dump(mode="json"), timeout=2)
             r.raise_for_status()
         else:
             self._fixtures.insert_model(wrap)

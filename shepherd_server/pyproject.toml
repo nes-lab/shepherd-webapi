@@ -6,7 +6,7 @@ keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "
 authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
-version = "2026.02.2"
+version = "2026.04.1"
 
 readme = {file = "README.md", content-type = "text/markdown"}
 
@@ -24,7 +24,7 @@ classifiers = [
     "Natural Language :: English"
 ]
 
-requires-python = "==3.13"
+requires-python = "==3.13.*"
 dependencies = [
     "pyaml",
     "fastapi[standard]",
@@ -65,7 +65,7 @@ Source = "https://github.com/nes-lab/shepherd-webapi"
 shepherd-server = "shepherd_server.cli:cli"
 
 [build-system]
-requires = ["uv_build>=0.9.7,<0.10.0"]
+requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
 # ⤷ switched to uv because package is not public
 

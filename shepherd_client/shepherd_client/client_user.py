@@ -198,7 +198,7 @@ class UserClient(WebClient):
         if not rsp.ok:
             return []
         if only_finished:
-            return [key for key, value in rsp.json().items() if value == "finished"]
+            return [key for key, value in rsp.json().items() if value in ["finished", "failed"]]
         return list(rsp.json().keys())
 
     def create_experiment(self, xp: Experiment) -> UUID | None:
@@ -208,7 +208,7 @@ class UserClient(WebClient):
         """
         rsp = requests.post(
             url=f"{self._cfg.server}/experiment",
-            data=xp.model_dump_json(),
+            json=xp.model_dump(mode="json"),
             headers=self._auth,
             timeout=3,
         )

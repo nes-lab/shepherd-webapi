@@ -383,10 +383,10 @@ class WebExperiment(Document, ResultData, ErrorData):
     @property
     def state(self) -> str:
         # not included scheduler_error here
-        if self.finished_at is not None:
-            if self.result_paths is not None:
-                return "finished"
+        if self.had_errors:
             return "failed"
+        if self.finished_at is not None:
+            return "finished"
         if self.started_at is not None:
             return "running"
         if self.requested_execution_at is not None:
@@ -463,25 +463,28 @@ class ExperimentStats(Document):
 
     @classmethod
     async def derive_from(cls, xp: WebExperiment) -> Self:
-        data = cls(
-            id=xp.id,
-            owner=xp.owner.email,
-            created_at=xp.created_at,
-            started_at=xp.started_at,
-            executed_at=xp.executed_at,
-            finished_at=xp.finished_at,
-            state=xp.state,
-            duration=xp.experiment.duration,
-            result_size=xp.result_size,
-            # errors
-            had_errors=xp.had_errors,
-            has_missing_data=xp.has_missing_data,
-            max_exit_code=xp.max_exit_code,
-            scheduler_error=xp.scheduler_error,
-            missing_observers=xp.missing_observers,
-        )
+        data = cls(id=xp.id)
+        data.update_common_fields(xp)
         await data.save()
         return data
+
+    def update_common_fields(self, xp: WebExperiment) -> None:
+        self.owner = xp.owner.email
+        # timestamps
+        self.created_at = xp.created_at
+        self.started_at = xp.started_at
+        self.executed_at = xp.executed_at
+        self.finished_at = xp.finished_at
+        # states
+        self.state = xp.state
+        self.duration = xp.experiment.duration
+        self.result_size = xp.result_size
+        # errors
+        self.had_errors = xp.had_errors
+        self.has_missing_data = xp.has_missing_data
+        self.max_exit_code = xp.max_exit_code
+        self.scheduler_error = xp.scheduler_error
+        self.missing_observers = xp.missing_observers
 
     @classmethod
     async def update_with(
@@ -491,28 +494,11 @@ class ExperimentStats(Document):
         to_be_deleted: bool = False,
     ) -> Self:
 
-        data: Self = await cls.find_one(
-            cls.id == xp.id,
-        )
+        data: Self = await cls.find_one(cls.id == xp.id)
         if data is None:
-            return await cls.derive_from(xp)
-        data.id = xp.id
-        data.owner = xp.owner.email
-        # timestamps
-        data.created_at = xp.created_at
-        data.started_at = xp.started_at
-        data.executed_at = xp.executed_at
-        data.finished_at = xp.finished_at
-        # states
-        data.state = xp.state
-        data.duration = xp.experiment.duration
-        data.result_size = xp.result_size
-        # errors
-        data.had_errors = xp.had_errors
-        data.has_missing_data = xp.has_missing_data
-        data.max_exit_code = xp.max_exit_code
-        data.scheduler_error = xp.scheduler_error
-        data.missing_observers = xp.missing_observers
+            data = await cls.derive_from(xp)
+        else:
+            data.update_common_fields(xp)
 
         if to_be_deleted:
             data.deleted_at = datetime.now(tz=local_tz())

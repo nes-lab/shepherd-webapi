@@ -17,15 +17,19 @@ for xp_id in client.list_experiments(only_finished=True):
     client.download_experiment(xp_id, path_here)
 
 # and later when you are sure your data is fine:
-for xp_id in client.list_experiments():
-    state = client.get_experiment_state(xp_id)
-    if state in {"failed", "finished"}:
-        client.delete_experiment(xp_id)
+for xp_id in client.list_experiments(only_finished=True):
+    client.delete_experiment(xp_id)
 # end example
+
+import sys
+
+sys.exit(0)
 
 # ########### EXTRA ##################
 
 # you can also directly delete your data after download
 
+# start extra
 for xp_id in client.list_experiments(only_finished=True):
     client.download_experiment(xp_id, path_here, delete_on_server=True)
+# end extra

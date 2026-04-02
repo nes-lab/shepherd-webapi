@@ -128,8 +128,9 @@ class UserTestClient(TestClient):
     A few notes for avoiding pits:
 
     - requests like .patch(), ... have a data AND json argument
-    - data is for completely serialized objects like model.model_dump_json()
-    - json digests dicts, self-assembled, composed with .model_dump(mode="json")
+    - content is for completely serialized objects like model.model_dump_json()
+    - data digests self-assembled, flat dicts (i.e. auth-data)
+    - json digests dicts i.e. composed with .model_dump(mode="json")
         - mixing json-strings and dicts won't work, i.e. {"quota": quota.model_dump_json()}
         - .model_dump() may produce dicts that are not json-serializable
     """

@@ -1,10 +1,20 @@
 # History of Changes
 
+## v2026.04.1 - unreleased
+
+- add admin-flavor for webclient (`install .[admin]`)
+- extend statistics about the testbed (only for admin)
+- improve mails to user
+- server - build-script makes DB backup beforehand
+- server - fix failed ExperimentStats-updates
+- fix deprecated httpx-usage (`.post(data=model.model_dump_json())` is replaced by `.post(json=model.model_dump(mode="json"))`)
+- replace pre-commit with prek
+
 ## v2026.02.2
 
 **Breaking change:** Switch to newest core-lib!
-- users can now use the new battery-model for the virtual source
-- users can now use the new energyEnvironment-model
+- users must now use the new battery-model for the virtual source
+- users must now use the new energyEnvironment-model
 
 ### Server
 

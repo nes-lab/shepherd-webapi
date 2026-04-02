@@ -3,6 +3,8 @@ sudo systemctl stop shepherd-scheduler
 sudo systemctl stop shepherd-api
 #
 sudo pkill shepherd-*
+timestamp=$(date --iso=seconds | tr ':' '-' | tr '+T' '_')
+mongodump --out="~/mongo-backup/$timestamp"
 #
 sudo -E ~/.local/bin/uv tool uninstall shepherd-server
 ~/.local/bin/uv tool install git+https://github.com/nes-lab/shepherd-webapi.git@main#subdirectory=shepherd_server --force

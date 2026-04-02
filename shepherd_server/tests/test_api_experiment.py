@@ -26,7 +26,7 @@ def test_create_experiment_succeeds(
     with client.authenticate_user_1():
         response = client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
         assert response.status_code == 200
 
@@ -43,7 +43,7 @@ def test_create_experiment_as_admin_succeeds(
 
         response = client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
         assert response.status_code == 200
 
@@ -63,7 +63,7 @@ def test_create_experiment_needs_duration(
     with client.authenticate_user_1():
         response = client.post(
             "/experiment",
-            data=_xp.model_dump_json(),
+            json=_xp.model_dump(mode="json"),
         )
         assert response.status_code >= 400
 
@@ -80,7 +80,7 @@ def test_create_experiment_duration_has_quota(
     with client.authenticate_user_1():
         response = client.post(
             "/experiment",
-            data=_xp.model_dump_json(),
+            json=_xp.model_dump(mode="json"),
         )
         assert response.status_code >= 400
 
@@ -108,7 +108,7 @@ def test_create_experiment_duration_with_expired_quota(
         )
         response = client.post(
             "/experiment",
-            data=_xp.model_dump_json(exclude_defaults=True),
+            json=_xp.model_dump(exclude_defaults=True, mode="json"),
         )
         assert response.status_code >= 400
 
@@ -136,7 +136,7 @@ def test_create_experiment_duration_with_valid_quota(
         )
         response = client.post(
             "/experiment",
-            data=xp.model_dump_json(exclude_defaults=True),
+            json=xp.model_dump(exclude_defaults=True, mode="json"),
         )
         assert response.status_code == 200
 
@@ -154,7 +154,7 @@ def test_create_experiment_only_fifo_scheduler(
     with client.authenticate_user_1():
         response = client.post(
             "/experiment",
-            data=xp.model_dump_json(),
+            json=xp.model_dump(mode="json"),
         )
         assert response.status_code >= 400
 
@@ -184,7 +184,7 @@ def test_create_experiment_with_unconstrained_path(
     with client.authenticate_user_1():
         response = client.post(
             "/experiment",
-            data=xp.model_dump_json(),
+            json=xp.model_dump(mode="json"),
         )
         print(response.status_code)
         print(response.json())
@@ -226,7 +226,7 @@ def test_experiments_are_private_to_user(
 
         response = client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
         assert response.status_code == 200
 
@@ -244,7 +244,7 @@ def created_experiment_id(
     with client.authenticate_user_1():
         response = client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
     assert response.status_code == 200
     return response.json()
@@ -282,7 +282,7 @@ def test_get_experiment_is_private_to_user(
     with client.authenticate_user_1():
         client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
         response = client.get("/experiment")
         experiment_id = next(iter(response.json().keys()))
@@ -320,7 +320,7 @@ def test_get_all_experiments_shows_all(
     with client.authenticate_user_1():
         client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
 
     with client.authenticate_user_1():
@@ -386,7 +386,7 @@ def test_experiment_state_is_private_to_owner(
     with client.authenticate_user_1():
         client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
         response = client.get("/experiment")
         experiment_id = next(iter(response.json().keys()))
@@ -409,7 +409,7 @@ def test_experiment_statistics_is_private_to_owner(
     with client.authenticate_user_1():
         client.post(
             "/experiment",
-            data=sample_experiment.model_dump_json(),
+            json=sample_experiment.model_dump(mode="json"),
         )
         response = client.get("/experiment")
         experiment_id = next(iter(response.json().keys()))

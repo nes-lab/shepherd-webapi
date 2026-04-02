@@ -496,7 +496,7 @@ class ExperimentStats(Document):
 
         data: Self = await cls.find_one(cls.id == xp.id)
         if data is None:
-            await cls.derive_from(xp)
+            data = await cls.derive_from(xp)
         else:
             data.update_common_fields(xp)
 

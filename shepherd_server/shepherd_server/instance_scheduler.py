@@ -15,6 +15,7 @@ from shepherd_core import local_now
 from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
+from shepherd_core.testbed_client import tb_client
 from shepherd_herd.herd import Herd
 
 from .api_experiment.models import ReplyData
@@ -211,8 +212,8 @@ async def run_web_experiment(
     web_exp.observer_paths = testbed_tasks.get_output_paths()
     tb_status = await TestbedDB.get_one()
     web_exp.observers_requested = sorted(testbed_tasks.get_observers())
-    web_exp.observers_online = sorted(tb_status.scheduler.observers_online)
-    web_exp.observers_offline = sorted(tb_status.scheduler.observers_offline)
+    web_exp.observers_online = sorted(set(tb_status.scheduler.targets_online.values()))
+    web_exp.observers_offline = sorted(set(tb_status.scheduler.targets_offline.values()))
     await web_exp.update_time_start(web_exp.started_at, force=True)
     await web_exp.save_changes()
 
@@ -338,18 +339,30 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
     if isinstance(herd, Herd):
         await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
         tb_.scheduler.observer_count = len(herd.group_online)
-        tb_.scheduler.observers_online = sorted(
-            herd.hostnames[cnx.host] for cnx in herd.group_online
-        )
-        tb_.scheduler.observers_offline = sorted(
-            set(herd.hostnames.values()) - set(tb_.scheduler.observers_online)
-        )
+
+        tb_.scheduler.targets_online = {}
+        tb_.scheduler.targets_offline = {}
+        tb = Testbed(name=config.testbed_name)
+        observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
+        observers_offline = set(herd.hostnames.values()) - observers_online
+        for target_id in tb_client.query_ids("Target"):
+            observer_name = tb.get_observer(target_id).name
+            if observer_name in observers_online:
+                tb_.scheduler.targets_online[target_id].append(observer_name)
+            elif observer_name in observers_offline:
+                tb_.scheduler.targets_offline[target_id].append(observer_name)
+            else:
+                log.warning(
+                    f"Observer {observer_name} of Target {target_id} "
+                    "not found in list of online/offline observers"
+                )
     else:  # dry run or offline
         tb_.scheduler.observer_count = 0
-        tb_.scheduler.observers_online = []
-        tb_.scheduler.observers_offline = []
+        tb_.scheduler.targets_online = {}
+        tb_.scheduler.targets_offline = {}
 
     # TODO: include storage & uptime, warn via mail if low
+    # TODO: timesync
     await tb_.save_changes()
 
 
@@ -381,7 +394,6 @@ async def scheduler(
             herd.disable_progress_bar()
             log.info("Run initial herd-cleanup")
             await herd_cleanup(herd)
-
         # TODO: how to make sure there is only one scheduler? Singleton
         log.info("Checking experiment scheduling FIFO")
         await WebExperiment.reset_stuck_items()

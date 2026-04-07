@@ -11,8 +11,11 @@ class SchedulerStatus(BaseModel):
     dry_run: bool = False
     last_update: datetime | None = None
     observer_count: int = 0
-    observers_online: list[str] = []
-    observers_offline: list[str] = []
+    targets_note: str = (
+        "Mapping below is the target_ID (as integers) & their observer (i.e. sheep02)."
+    )
+    targets_online: dict[int, str] = {}
+    targets_offline: dict[int, str] = {}
 
 
 class RedirectStatus(BaseModel):

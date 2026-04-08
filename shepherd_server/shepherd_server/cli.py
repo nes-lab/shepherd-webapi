@@ -3,18 +3,13 @@ import signal
 import sys
 from pathlib import Path
 from types import FrameType
-from typing import Annotated
 
 import typer
 
-from .api_experiment.models import WebExperiment
+from . import instance_db as db
 from .api_user.models import PasswordStr
-from .api_user.models import User
-from .database_backup import backup_db
 from .database_prune import prune_db
 from .instance_api import run as run_api_server
-from .instance_db import db_create_admin
-from .instance_db import db_delete_all_experiments
 from .instance_redirect import run as run_redirect_server
 from .instance_scheduler import run as run_scheduler_server
 from .logger import log
@@ -120,7 +115,7 @@ def create_admin(email: str, password: PasswordStr) -> None:
     """Bootstrap database and add an admin.
 
     User will have to verify if mail-service is activated."""
-    asyncio.run(db_create_admin(email, password))
+    asyncio.run(db.db_create_admin(email, password))
 
 
 @cli.command()
@@ -130,29 +125,24 @@ def prune(*, delete: bool = False) -> None:
 
 
 @cli.command()
-# def init(file: Path | None = None) -> None:
-def init() -> None:
-    """Creates structures in database, can also recover data from a backup"""
-    # TODO: implement
-    asyncio.run(db_delete_all_experiments())
-
-
-@cli.command()
-def backup(
-    path: Annotated[
-        Path,
-        typer.Argument(
-            exists=True, file_okay=False, dir_okay=True, writable=True, resolve_path=True
-        ),
-    ],
+def reset(
+    *, users: bool = False, experiments: bool = False, stats: bool = False, testbed: bool = False
 ) -> None:
-    """Dumps content of database to a file (in addition to MongoDump-tool)"""
-    # TODO: fails ATM
-    log.warning("Dumping content of database to YAML-files does not fully work ATM")
-    asyncio.run(backup_db(WebExperiment, path))
-    if False:
-        asyncio.run(backup_db(User, path))
-    # TODO: dump to file, restore from it - can beanie do it?
+    """Delete structures in database - mainly to help to recover after major refactorings."""
+    if any([users, experiments, stats, testbed]):
+        log.warning("You are about to delete actual data from the DB! Do you have backups?")
+        response = typer.prompt("Press y to continue")
+        if response.lower() != "y":
+            log.info("Process interrupted by user")
+            sys.exit(0)
+    if users:
+        asyncio.run(db.db_delete_all_users())
+    if experiments:
+        asyncio.run(db.db_delete_all_experiments())
+    if stats:
+        asyncio.run(db.db_delete_all_experiment_stats())
+    if testbed:
+        asyncio.run(db.db_delete_testbed())
 
 
 if __name__ == "__main__":

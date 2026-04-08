@@ -1,5 +1,4 @@
 name: Publish Client-Package to PyPi
-
 on:
   workflow_dispatch:
   release:
@@ -8,12 +7,9 @@ on:
     tags:
       - 'v*.*.*'
     # branches: [ main ]  # handled as OR! (push to main OR tagged)
-
 permissions:
   contents: read
-
 jobs:
-
   publish:
     # if: github.ref == 'refs/heads/main' # TODO: does NOT work - is 'refs/tags/v2025.xx.x'
     runs-on: ubuntu-latest
@@ -25,23 +21,18 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.14"]
-
     steps:
-
       - name: Checkout 🛎️
         uses: actions/checkout@v6
-
       - name: Install uv 🔧 & set up Python 🐍
         uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
-          enable-cache: true
+          enable-cache: false
           activate-environment: true
-
       - name: Build package 🧱
         run: uv build --clear
         working-directory: "./shepherd_client"
-
       - name: Publish package 🥳
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

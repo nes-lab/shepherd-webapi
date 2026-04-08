@@ -66,6 +66,12 @@ repos:
 #      - id: ansible-lint
 #        files: \.(yaml|yml)$
 
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.23.1
+    hooks:
+      - id: zizmor
+        args: ["--min-severity", "high", "--no-progress", "--fix", "."]
+
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.2"
     hooks:

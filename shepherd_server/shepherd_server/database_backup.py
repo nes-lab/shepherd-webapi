@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 from uuid import UUID
+from warnings import deprecated
 
 import beanie
 import bson
@@ -43,6 +44,7 @@ yaml.add_representer(pathlib.Path, path2str, SafeDumper)
 yaml.add_representer(timedelta, time2int, SafeDumper)
 
 
+@deprecated("not useful in this form - MongoDB offers CLI-tools")
 async def backup_db(doc: type(Document), path: Path) -> Path:
     _client = await db_client()
     models = await doc.all().to_list()

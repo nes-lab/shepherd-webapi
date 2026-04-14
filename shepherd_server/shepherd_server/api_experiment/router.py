@@ -6,8 +6,8 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
-from shepherd_core import local_tz
-from shepherd_core.data_models import Experiment
+from shepherd_core.data_models.base.timezone import local_tz
+from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from starlette.responses import FileResponse

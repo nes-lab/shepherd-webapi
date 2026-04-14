@@ -6,7 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from pydantic import EmailStr
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 
 from shepherd_server.api_experiment.models import ExperimentStats
 from shepherd_server.api_experiment.models import WebExperiment

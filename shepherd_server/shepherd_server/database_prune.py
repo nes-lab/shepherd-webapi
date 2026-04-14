@@ -1,4 +1,4 @@
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 
 from .api_experiment.models import WebExperiment
 from .api_user.models import User

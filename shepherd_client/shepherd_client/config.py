@@ -10,8 +10,8 @@ from pydantic import EmailStr
 from pydantic import Field
 from pydantic import HttpUrl
 from pydantic import StringConstraints
-from shepherd_core import local_now
-from shepherd_core.data_models import Wrapper
+from shepherd_core.data_models.base.timezone import local_now
+from shepherd_core.data_models.base.wrapper import Wrapper
 from shepherd_core.logger import log
 from yaml import Node
 from yaml import SafeDumper

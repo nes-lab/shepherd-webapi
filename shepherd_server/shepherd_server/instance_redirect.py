@@ -10,7 +10,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 
 from .api_testbed.models_status import TestbedDB
 from .config import config

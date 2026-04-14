@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import shepherd_core.data_models as sdm
 from fastapi.testclient import TestClient
-from shepherd_core import local_tz
+from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.testbed import MCU
 from shepherd_server.api_user.models import UserQuota
 from shepherd_server.config import config

@@ -10,8 +10,8 @@ from uuid import UUID
 
 import numpy as np
 from beanie import Link
-from shepherd_core import Writer as CoreWriter
-from shepherd_core import local_now
+from shepherd_core.writer import Writer as CoreWriter
+from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed

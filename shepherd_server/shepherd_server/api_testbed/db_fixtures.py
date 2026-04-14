@@ -10,9 +10,9 @@ from typing import Self
 
 import yaml
 from pydantic import validate_call
-from shepherd_core import local_now
-from shepherd_core import local_tz
-from shepherd_core.data_models import Wrapper
+from shepherd_core.data_models.base.timezone import local_now
+from shepherd_core.data_models.base.timezone import local_tz
+from shepherd_core.data_models.base.wrapper import Wrapper
 from shepherd_core.logger import log
 from shepherd_core.testbed_client.cache_path import cache_user_path
 

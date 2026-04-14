@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 
 from shepherd_server.api_user.models import User
 from shepherd_server.api_user.utils_misc import verify_password_hash

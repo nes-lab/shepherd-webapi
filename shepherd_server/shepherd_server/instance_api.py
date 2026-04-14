@@ -17,7 +17,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.responses import FileResponse

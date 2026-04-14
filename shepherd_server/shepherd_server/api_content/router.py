@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from shepherd_core.data_models import ContentModel
-from shepherd_core.data_models import EnergyEnvironment
-from shepherd_core.data_models import VirtualHarvesterConfig
-from shepherd_core.data_models import VirtualSourceConfig
+from shepherd_core.data_models.base.content import ContentModel
+from shepherd_core.data_models.content import EnergyEnvironment
+from shepherd_core.data_models.content import VirtualHarvesterConfig
+from shepherd_core.data_models.content import VirtualSourceConfig
 from shepherd_core.testbed_client import tb_client
 
 router = APIRouter(prefix="/content", tags=["Content"])

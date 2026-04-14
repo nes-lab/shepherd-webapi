@@ -8,7 +8,7 @@ from pydantic import EmailStr
 from pydantic import validate_call
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.config import config as core_cfg
 
 from .api_experiment.models import ExperimentStats

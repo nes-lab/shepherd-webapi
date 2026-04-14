@@ -16,8 +16,8 @@ from pydantic import Field
 from pydantic import PositiveInt
 from pydantic import StringConstraints
 from pydantic import computed_field
-from shepherd_core import local_now
-from shepherd_core import local_tz
+from shepherd_core.data_models.base.timezone import local_now
+from shepherd_core.data_models.base.timezone import local_tz
 
 from shepherd_server.config import config
 

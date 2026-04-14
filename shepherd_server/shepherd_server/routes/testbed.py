@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from shepherd_core import tb_client
-from shepherd_core.data_models import Wrapper
-from shepherd_core.data_models import content as shp_cnt
-from shepherd_core.data_models import testbed as shp_tb
+from shepherd_core.testbed_client import tb_client
+from shepherd_core.data_models.base.wrapper import Wrapper
+from shepherd_core.data_models import content as shp_content
+from shepherd_core.data_models import testbed as shp_testbed
 
 from shepherd_server.api_user.utils_misc import current_active_user
 
@@ -19,17 +19,17 @@ router = APIRouter(
 # TODO: implement a generator -> nicer documentation needed
 name2model = {
     # testbed-components
-    "Cape": shp_tb.Cape,
-    "GPIO": shp_tb.GPIO,
-    "MCU": shp_tb.MCU,
-    "Observer": shp_tb.Observer,
-    "Target": shp_tb.Target,
-    "Testbed": shp_tb.Testbed,
+    "Cape": shp_testbed.Cape,
+    "GPIO": shp_testbed.GPIO,
+    "MCU": shp_testbed.MCU,
+    "Observer": shp_testbed.Observer,
+    "Target": shp_testbed.Target,
+    "Testbed": shp_testbed.Testbed,
     # content
-    "EnergyEnvironment": shp_cnt.EnergyEnvironment,
-    "Firmware": shp_cnt.Firmware,
-    "VirtualHarvesterConfig": shp_cnt.VirtualHarvesterConfig,
-    "VirtualSourceConfig": shp_cnt.VirtualSourceConfig,
+    "EnergyEnvironment": shp_content.EnergyEnvironment,
+    "Firmware": shp_content.Firmware,
+    "VirtualHarvesterConfig": shp_content.VirtualHarvesterConfig,
+    "VirtualSourceConfig": shp_content.VirtualSourceConfig,
 }
 
 

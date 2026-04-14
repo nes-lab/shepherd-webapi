@@ -9,8 +9,8 @@ import beanie
 import bson
 import yaml
 from beanie import Document
-from shepherd_core import local_now
-from shepherd_core.data_models import Wrapper
+from shepherd_core.data_models.base.timezone import local_now
+from shepherd_core.data_models.base.wrapper import Wrapper
 from yaml import Node
 from yaml import SafeDumper
 

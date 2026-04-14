@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from fastapi import status
 from jose import JWTError
 from jose import jwt
-from shepherd_core import local_tz
+from shepherd_core.data_models.base.timezone import local_tz
 
 from shepherd_server.config import config
 

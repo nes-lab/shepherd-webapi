@@ -18,10 +18,10 @@ from fastapi import UploadFile
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from shepherd_core import Reader as CoreReader
-from shepherd_core import local_now
-from shepherd_core import local_tz
-from shepherd_core.data_models import Experiment
+from shepherd_core.reader import Reader as CoreReader
+from shepherd_core.data_models.base.timezone import local_now
+from shepherd_core.data_models.base.timezone import local_tz
+from shepherd_core.data_models.experiment import Experiment
 
 from shepherd_server.api_user.models import User
 from shepherd_server.api_user.models import UserRole

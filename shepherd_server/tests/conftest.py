@@ -8,13 +8,13 @@ from uuid import UUID
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from shepherd_core import Writer as CoreWriter
+from shepherd_core.writer import Writer as CoreWriter
 from shepherd_core import fw_tools
-from shepherd_core import local_tz
+from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.config import config as core_cfg
-from shepherd_core.data_models import FirmwareDType
-from shepherd_core.data_models import GpioTracing
-from shepherd_core.data_models import UartLogging
+from shepherd_core.data_models.content.enum_datatypes import FirmwareDType
+from shepherd_core.data_models.experiment import GpioTracing
+from shepherd_core.data_models.experiment import UartLogging
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.experiment import Experiment

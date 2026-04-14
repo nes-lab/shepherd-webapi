@@ -23,13 +23,14 @@ async def list_content_by_type(content: str) -> list[str]:
     if content not in content_names:
         raise HTTPException(404, "Not Found")
     data = tb_client.query_ids(content)
-    return sorted([tb_client.query_item(content, uid=uid).get("name") for uid in data])
+    models = [tb_client.query_item(content, uid=uid) for uid in data]
+    models = [model for model in models if model.get("deprecated") is None]
+    return sorted([model.get("name") for model in models])
     # -> moved from sorted dict[ID,name] (that was resorted by fastapi) to just list of names
     # TODO: replace fixture-endpoints by database-endpoints
     # TODO: include user/group-data
     # TODO: add setters
     # TODO: add modifiers
-    # TODO: avoid printing deprecated entries
 
 
 @router.get("/{content}/{name}")

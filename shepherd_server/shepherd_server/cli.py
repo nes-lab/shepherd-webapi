@@ -6,12 +6,7 @@ from types import FrameType
 
 import typer
 
-from . import instance_db as db
 from .api_user.models import PasswordStr
-from .database_prune import prune_db
-from .instance_api import run as run_api_server
-from .instance_redirect import run as run_redirect_server
-from .instance_scheduler import run as run_scheduler_server
 from .logger import log
 from .logger import set_verbosity
 
@@ -73,6 +68,8 @@ def version() -> None:
 @cli.command()
 def run_api() -> None:
     """Start web api to access data."""
+    from .instance_api import run as run_api_server
+
     run_api_server()
 
 
@@ -84,12 +81,16 @@ def run_scheduler(
 
     This is separate to webAPI to allow starting/stopping both individually
     """
+    from .instance_scheduler import run as run_scheduler_server
+
     run_scheduler_server(inventory, dry_run=dry_run, only_elevated=only_elevated)
 
 
 @cli.command()
 def run_redirect() -> None:
     """Start http redirect to landing-page."""
+    from .instance_redirect import run as run_redirect_server
+
     run_redirect_server()
 
 
@@ -97,6 +98,10 @@ def run_redirect() -> None:
 def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
     """Start ALL sub-services in separate subprocess."""
     from concurrent.futures import ProcessPoolExecutor
+
+    from .instance_api import run as run_api_server
+    from .instance_redirect import run as run_redirect_server
+    from .instance_scheduler import run as run_scheduler_server
 
     # TODO: either log-messages are muted or scheduler is not running correctly
     with ProcessPoolExecutor() as ppe:
@@ -115,12 +120,16 @@ def create_admin(email: str, password: PasswordStr) -> None:
     """Bootstrap database and add an admin.
 
     User will have to verify if mail-service is activated."""
+    from . import instance_db as db
+
     asyncio.run(db.db_create_admin(email, password))
 
 
 @cli.command()
 def prune(*, delete: bool = False) -> None:
     """Clean up Database."""
+    from .database_prune import prune_db
+
     asyncio.run(prune_db(dry_run=not delete))
 
 
@@ -134,6 +143,8 @@ def reset(
     yes: bool = False,
 ) -> None:
     """Delete structures in database - mainly to help to recover after major refactorings."""
+    from . import instance_db as db
+
     if any([users, experiments, stats, testbed]):
         log.warning("You are about to delete actual data from the DB! Do you have backups?")
         if not yes:
@@ -150,6 +161,15 @@ def reset(
         asyncio.run(db.db_delete_all_experiment_stats())
     if testbed:
         asyncio.run(db.db_delete_testbed())
+
+
+@cli.command(short_help="Determine state of content files")
+def content(*, verify: bool = False) -> None:
+    from shepherd_herd import Herd
+
+    herd = Herd()
+    invalid = herd.find_invalid_content(verify=verify)
+    typer.Exit(int(invalid))
 
 
 if __name__ == "__main__":

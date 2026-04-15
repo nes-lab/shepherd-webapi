@@ -2,13 +2,32 @@
 
 ## v2026.04.1 - unreleased
 
+### Client
+
 - add admin-flavor for webclient (`install .[admin]`)
 - extend statistics about the testbed (only for admin)
+- adapt to new behavior of core-lib & fixture-client
+
+### Server
+
+- add target-ids to list of online observers in root-API
 - improve mails to user
-- server - build-script makes DB backup beforehand
-- server - fix failed ExperimentStats-updates
+- content-route -> only serve non-deprecated and visible2all entries for now
+- adapt to new behavior of core-lib & fixture-client
+- build-script makes DB backup beforehand
+- fix failed ExperimentStats-updates
+- remove integrated backup-function (there are mongodb-commands for that)
+- add granular CLI to reset / delete parts of the database
+- allow checking for content-files via CLI-command
+
+### Misc
+
 - fix deprecated httpx-usage (`.post(data=model.model_dump_json())` is replaced by `.post(json=model.model_dump(mode="json"))`)
 - replace pre-commit with prek
+- add zizmor to find vulnerabilities in GH actions
+  - explicitly clear permissions of GH-actions and reduce elevation-surface
+- avoid importing from root shepherd_core and core.data_models
+- rename integrated configs to `ClientConfig` and `ServerConfig` to avoid confusing it with core-config (which is now called `CoreConfig`)
 
 ## v2026.02.2
 

@@ -126,15 +126,22 @@ def prune(*, delete: bool = False) -> None:
 
 @cli.command()
 def reset(
-    *, users: bool = False, experiments: bool = False, stats: bool = False, testbed: bool = False
+    *,
+    users: bool = False,
+    experiments: bool = False,
+    stats: bool = False,
+    testbed: bool = False,
+    yes: bool = False,
 ) -> None:
     """Delete structures in database - mainly to help to recover after major refactorings."""
     if any([users, experiments, stats, testbed]):
         log.warning("You are about to delete actual data from the DB! Do you have backups?")
-        response = typer.prompt("Press y to continue")
-        if response.lower() != "y":
-            log.info("Process interrupted by user")
-            sys.exit(0)
+        if not yes:
+            # ask for permission
+            response = typer.prompt("Press y to continue")
+            if response.lower() != "y":
+                log.info("Process interrupted by user")
+                sys.exit(0)
     if users:
         asyncio.run(db.db_delete_all_users())
     if experiments:

@@ -95,19 +95,57 @@ def test_cli_create_admin_new(client: TestClient, mail_engine_mock: MailEngine) 
         assert verification_response.status_code == 200
 
 
-def test_cli_init_short() -> None:
-    res = CliRunner().invoke(
-        app=cli,
-        args=["-v", "init"],
-    )
+def test_cli_reset_nothing() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset"])
     assert res.exit_code == 0
 
 
-def test_cli_backup_short() -> None:
-    res = CliRunner().invoke(
-        app=cli,
-        args=["-v", "backup", "."],
-    )
+@pytest.mark.timeout(1)
+def test_cli_reset_users_fail() -> None:
+    # each expects user-confirmation before doing anything!
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--users"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_experiments_fail() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--experiments"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_stats_fail() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--stats"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_testbed_fail() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--testbed"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_users() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--users", "--yes"])
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_experiments() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--experiments", "--yes"])
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_stats() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--stats", "--yes"])
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_testbed() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--testbed", "--yes"])
     assert res.exit_code == 0
 
 

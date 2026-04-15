@@ -8,7 +8,6 @@ from pydantic import EmailStr
 from pydantic import validate_call
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
-from shepherd_core.config import config as core_cfg
 from shepherd_core.data_models.base.timezone import local_now
 
 from .api_experiment.models import ExperimentStats
@@ -21,8 +20,6 @@ from .api_user.utils_misc import calculate_hash
 from .api_user.utils_misc import calculate_password_hash
 from .config import server_config
 from .logger import log
-
-core_cfg.TESTBED = server_config.testbed_name
 
 
 async def db_client() -> AsyncDatabase:

@@ -9,7 +9,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from shepherd_core import fw_tools
-from shepherd_core.config import config as core_cfg
+from shepherd_core.config import core_config
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
@@ -33,7 +33,7 @@ from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
 
 # switch core-lib to another fixture
-core_cfg.TESTBED = "unit_testing_testbed"
+core_config.TESTBED = "unit_testing_testbed"
 server_cfg.mail_enabled = False
 
 

@@ -33,7 +33,6 @@ dependencies = [
     "requests",
     "pydantic[email]>=2.11.5",
     "exrex",  # for automatic password creation
-    "pyaml",
     "typer",
     "certifi>=2025.6.15",
 ]

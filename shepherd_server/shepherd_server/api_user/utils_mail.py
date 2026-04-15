@@ -9,16 +9,16 @@ from fastapi_mail import MessageType
 from pydantic import EmailStr
 
 from shepherd_server.api_experiment.models import WebExperiment
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 from shepherd_server.logger import log
 
 mail_conf = ConnectionConfig(
-    MAIL_USERNAME=config.mail_username,
-    MAIL_PASSWORD=config.mail_password,
-    MAIL_FROM=config.mail_sender,
-    MAIL_FROM_NAME=config.mail_sender_name,
-    MAIL_PORT=config.mail_port,
-    MAIL_SERVER=config.mail_server,
+    MAIL_USERNAME=server_config.mail_username,
+    MAIL_PASSWORD=server_config.mail_password,
+    MAIL_FROM=server_config.mail_sender,
+    MAIL_FROM_NAME=server_config.mail_sender_name,
+    MAIL_PORT=server_config.mail_port,
+    MAIL_SERVER=server_config.mail_server,
     MAIL_STARTTLS=False,
     MAIL_SSL_TLS=True,
     USE_CREDENTIALS=True,
@@ -59,7 +59,7 @@ class FastMailEngine(MailEngine):
         """Send approval request to admin / contact email."""
         # Change this later to public endpoint
         log.debug("-> EMAIL APPROVAL")
-        if config.mail_enabled:
+        if server_config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Testbed Approval",
@@ -73,9 +73,9 @@ class FastMailEngine(MailEngine):
     @staticmethod
     async def send_verification_email(email: EmailStr, token: str) -> None:
         """Send user verification email."""
-        _url = f"{config.server_url()}/user/verify/{token}"
+        _url = f"{server_config.server_url()}/user/verify/{token}"
         log.info("Verification E-Mail was sent to User (Account deactivated by default).")
-        if config.mail_enabled:
+        if server_config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Email Verification",
@@ -88,7 +88,7 @@ class FastMailEngine(MailEngine):
     @staticmethod
     async def send_registration_complete_email(email: EmailStr) -> None:
         log.debug("-> EMAIL REGISTRATION")
-        if config.mail_enabled:
+        if server_config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Registration Complete",
@@ -103,9 +103,9 @@ class FastMailEngine(MailEngine):
     async def send_password_reset_email(email: EmailStr, token: str) -> None:
         """Send password reset email."""
         # Change this later to public endpoint
-        _url = f"{config.server_url()}/user/reset-password/{token}"
+        _url = f"{server_config.server_url()}/user/reset-password/{token}"
         log.debug("-> EMAIL RESET POST to %s", _url)
-        if config.mail_enabled:
+        if server_config.mail_enabled:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Password Reset",
@@ -152,9 +152,9 @@ class FastMailEngine(MailEngine):
 
         extra_subj = " with errors" if web_exp.had_errors else ""
         log.debug("-> EMAIL XP-Finished" + extra_subj)
-        if config.mail_enabled:
+        if server_config.mail_enabled:
             message = MessageSchema(
-                recipients=list({email, config.contact["email"]})
+                recipients=list({email, server_config.contact["email"]})
                 if web_exp.had_errors
                 else [email],
                 subject="[Shepherd] Experiment finished" + extra_subj,
@@ -175,9 +175,9 @@ class FastMailEngine(MailEngine):
         if len(_miss_pst) > 0:
             msg += f"- post-missing = {', '.join(sorted(_miss_pst))} (n={len(_miss_pst)})\n"
         log.debug("-> EMAIL Herd-reboot")
-        if config.mail_enabled:
+        if server_config.mail_enabled:
             message = MessageSchema(
-                recipients=[config.contact["email"]],  # only admin
+                recipients=[server_config.contact["email"]],  # only admin
                 subject="[Shepherd] Reboot issued",
                 body=msg,
                 subtype=MessageType.plain,

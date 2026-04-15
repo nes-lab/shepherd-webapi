@@ -10,12 +10,12 @@ from uuid import UUID
 
 import numpy as np
 from beanie import Link
-from shepherd_core.writer import Writer as CoreWriter
 from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import tb_client
+from shepherd_core.writer import Writer as CoreWriter
 from shepherd_herd.herd import Herd
 
 from .api_experiment.models import ReplyData
@@ -24,7 +24,7 @@ from .api_testbed.models_status import TestbedDB
 from .api_user.models import User
 from .api_user.utils_mail import mail_engine
 from .async_wrapper import async_wrap
-from .config import config
+from .config import server_config
 from .instance_db import db_available
 from .instance_db import db_client
 from .logger import log
@@ -204,7 +204,7 @@ async def run_web_experiment(
         log.warning("XP-dataset not found (deleted?) before running it")
         return had_error
     web_exp.started_at = local_now()
-    testbed = Testbed(name=config.testbed_name)
+    testbed = Testbed(name=server_config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     if not testbed_tasks.is_contained():
         log.error("Tasks used Paths outside of allowed directory-set")
@@ -319,7 +319,7 @@ async def notify_user(xp_id: UUID) -> None:
 
     # send out Mail if user wants it
     if web_exp.had_errors or not isinstance(web_exp.owner, Link | User):
-        await mail_engine().send_experiment_finished_email(config.contact["email"], web_exp)
+        await mail_engine().send_experiment_finished_email(server_config.contact["email"], web_exp)
         return
     all_done = not await WebExperiment.has_scheduled_by_user(web_exp.owner)
     if web_exp.had_errors or web_exp.experiment.email_results or all_done:
@@ -342,7 +342,7 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
 
         tb_.scheduler.targets_online = {}
         tb_.scheduler.targets_offline = {}
-        tb = Testbed(name=config.testbed_name)
+        tb = Testbed(name=server_config.testbed_name)
         observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
         observers_offline = set(herd.hostnames.values()) - observers_online
         for target_id in tb_client.query_ids("Target"):

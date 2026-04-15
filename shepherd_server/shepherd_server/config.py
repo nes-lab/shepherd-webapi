@@ -19,7 +19,7 @@ def _get_xdg_path(variable_name: str, default: str) -> Path:
 PATH_XDG_CONFIG = _get_xdg_path("XDG_CONFIG_HOME", ".config/")
 
 
-class ConfigDefault(BaseModel):
+class ServerConfigDefault(BaseModel):
     __slots__ = ()
     # web related
     root_url: str = dcoup_cfg("ROOT_URL", default="127.0.0.1")
@@ -86,4 +86,4 @@ class ConfigDefault(BaseModel):
         return f"http{'s' if self.ssl_available() else ''}://{self.root_url}:{self.root_port}"
 
 
-config = ConfigDefault()
+server_config = ServerConfigDefault()

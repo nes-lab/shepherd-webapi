@@ -29,7 +29,7 @@ from .api_testbed.models_status import TestbedDB
 from .api_testbed.models_status import TestbedStatus
 from .api_testbed.router import router as testbed_router
 from .api_user.router import router as user_router
-from .config import config
+from .config import server_config
 from .instance_db import db_available
 from .instance_db import db_client
 from .instance_db import db_context
@@ -111,7 +111,7 @@ async def update_status() -> None:
 
 
 def run() -> None:
-    ssl_enabled = config.ssl_available()
+    ssl_enabled = server_config.ssl_available()
     if ssl_enabled:
         app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -124,12 +124,12 @@ def run() -> None:
     uvi_args = {
         "app": f"{run.__module__}:app",
         "reload": False,
-        "port": config.root_port,
-        "host": config.root_url,
+        "port": server_config.root_port,
+        "host": server_config.root_url,
         # TODO: add resource limits - https://www.uvicorn.org/settings/#resource-limits
     }
     if ssl_enabled:
-        uvi_args["ssl_keyfile"] = config.ssl_keyfile.as_posix()
-        uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
+        uvi_args["ssl_keyfile"] = server_config.ssl_keyfile.as_posix()
+        uvi_args["ssl_certfile"] = server_config.ssl_certfile.as_posix()
     asyncio.run(update_status())
     uvicorn.run(**uvi_args)

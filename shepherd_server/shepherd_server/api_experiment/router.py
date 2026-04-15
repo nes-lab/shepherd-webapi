@@ -16,7 +16,7 @@ from shepherd_server.api_user.models import User
 from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_misc import active_user_is_admin
 from shepherd_server.api_user.utils_misc import current_active_user
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 
 from .models import ExperimentStats
 from .models import WebExperiment
@@ -40,7 +40,7 @@ async def create_experiment(
             403, f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)"
         )
 
-    tb = Testbed(name=config.testbed_name)
+    tb = Testbed(name=server_config.testbed_name)
     tb_tasks = TestbedTasks.from_xp(experiment, tb)
     try:
         contained = tb_tasks.is_contained()

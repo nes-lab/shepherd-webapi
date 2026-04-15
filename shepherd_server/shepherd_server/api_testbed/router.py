@@ -18,7 +18,7 @@ from shepherd_herd import Herd
 from shepherd_server.api_testbed.models_status import TestbedDB
 from shepherd_server.api_user.utils_misc import active_user_is_admin
 from shepherd_server.api_user.utils_misc import active_user_is_elevated
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 
 router = APIRouter(prefix="/testbed", tags=["Testbed"])
 
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/testbed", tags=["Testbed"])
 @router.get("")
 async def testbed_info() -> Testbed:
     try:
-        data = tb_client.query_item("Testbed", name=config.testbed_name)
+        data = tb_client.query_item("Testbed", name=server_config.testbed_name)
     except ValueError:
         data = None
     if data is None:
@@ -111,7 +111,7 @@ async def run_command(value: Annotated[str, Body(embed=True)]) -> Response:
 @router.get("/observer")
 async def list_observers() -> list[int]:
     try:
-        tb = Testbed(name=config.testbed_name)
+        tb = Testbed(name=server_config.testbed_name)
         data = [obs.id for obs in tb.observers]
     except ValueError:
         data = tb_client.query_ids("Observer")
@@ -132,7 +132,7 @@ async def get_observer(uid: int) -> Observer:
 @router.get("/cape")
 async def list_capes() -> list[int]:
     try:
-        tb = Testbed(name=config.testbed_name)
+        tb = Testbed(name=server_config.testbed_name)
         data = [obs.cape.id for obs in tb.observers if obs.cape is not None]
     except ValueError:
         data = tb_client.query_ids("Cape")
@@ -153,7 +153,7 @@ async def get_cape(uid: int) -> Cape:
 @router.get("/target")
 async def list_targets() -> list[int]:
     try:
-        tb = Testbed(name=config.testbed_name)
+        tb = Testbed(name=server_config.testbed_name)
         tgt_all = tb_client.query_ids("Target")
     except ValueError:
         return []

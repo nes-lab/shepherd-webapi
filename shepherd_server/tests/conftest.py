@@ -8,27 +8,27 @@ from uuid import UUID
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from shepherd_core.writer import Writer as CoreWriter
 from shepherd_core import fw_tools
-from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.config import config as core_cfg
-from shepherd_core.data_models.content.enum_datatypes import FirmwareDType
-from shepherd_core.data_models.experiment import GpioTracing
-from shepherd_core.data_models.experiment import UartLogging
+from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
+from shepherd_core.data_models.content.enum_datatypes import FirmwareDType
 from shepherd_core.data_models.experiment import Experiment
+from shepherd_core.data_models.experiment import GpioTracing
 from shepherd_core.data_models.experiment import TargetConfig
+from shepherd_core.data_models.experiment import UartLogging
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
+from shepherd_core.writer import Writer as CoreWriter
 from shepherd_server.api_experiment.models import WebExperiment
 from shepherd_server.api_user.models import User
 from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.api_user.utils_mail import mail_engine
 from shepherd_server.api_user.utils_misc import calculate_password_hash
-from shepherd_server.config import config as server_cfg
+from shepherd_server.config import server_config as server_cfg
 from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
 

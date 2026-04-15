@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.testbed import MCU
 from shepherd_server.api_user.models import UserQuota
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 
 from .conftest import UserTestClient
 
@@ -74,7 +74,7 @@ def test_create_experiment_duration_has_quota(
 ) -> None:
     _xp = sdm.Experiment(
         name="test-experiment",
-        duration=config.quota_default_duration + timedelta(seconds=5),
+        duration=server_config.quota_default_duration + timedelta(seconds=5),
         target_configs=[sample_target_config],
     )
     with client.authenticate_user_1():
@@ -103,7 +103,7 @@ def test_create_experiment_duration_with_expired_quota(
     with client.authenticate_user_1():
         _xp = sdm.Experiment(
             name="test-experiment",
-            duration=config.quota_default_duration + timedelta(seconds=5),
+            duration=server_config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
         )
         response = client.post(
@@ -131,7 +131,7 @@ def test_create_experiment_duration_with_valid_quota(
     with client.authenticate_user_1():
         xp = sdm.Experiment(
             name="test-experiment",
-            duration=config.quota_default_duration + timedelta(seconds=5),
+            duration=server_config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
         )
         response = client.post(

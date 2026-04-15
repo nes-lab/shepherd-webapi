@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.hash import pbkdf2_sha512
 
 from shepherd_server.api_auth.utils import decode_access_token
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 
 from .models import User
 from .models import UserRole
@@ -18,21 +18,21 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")  # Url = full route
 
 def calculate_password_hash(pw: str) -> str:
     """Automatically salts & hashes a password"""
-    if not config.auth_salt:
+    if not server_config.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
-    return pbkdf2_sha512.using(salt=config.auth_salt).hash(pw)
+    return pbkdf2_sha512.using(salt=server_config.auth_salt).hash(pw)
 
 
 def verify_password_hash(pw_plain: str, pw_hash: str) -> bool:
-    if not config.auth_salt:
+    if not server_config.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
-    return pbkdf2_sha512.using(salt=config.auth_salt).verify(pw_plain, pw_hash)
+    return pbkdf2_sha512.using(salt=server_config.auth_salt).verify(pw_plain, pw_hash)
 
 
 def calculate_hash(text: str) -> str:
-    if not config.auth_salt:
+    if not server_config.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
-    return sha3_512(config.auth_salt + text.encode("UTF-8")).hexdigest()
+    return sha3_512(server_config.auth_salt + text.encode("UTF-8")).hexdigest()
 
 
 async def query_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User | None:

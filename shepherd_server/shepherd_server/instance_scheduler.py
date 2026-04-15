@@ -18,6 +18,8 @@ from shepherd_core.testbed_client import tb_client
 from shepherd_core.writer import Writer as CoreWriter
 from shepherd_herd.herd import Herd
 
+from shepherd_server.instance_fixtures import prepare_fixture_client
+
 from .api_experiment.models import ReplyData
 from .api_experiment.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
@@ -425,6 +427,8 @@ def run(
     if not db_available(timeout=5):
         log.error("No connection to database! Will exit scheduler now.")
         return
+
+    prepare_fixture_client()
 
     try:
         asyncio.run(scheduler(inventory, dry_run=dry_run, only_elevated=only_elevated))

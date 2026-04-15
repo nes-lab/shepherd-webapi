@@ -33,6 +33,7 @@ from .config import server_config
 from .instance_db import db_available
 from .instance_db import db_client
 from .instance_db import db_context
+from .instance_fixtures import prepare_fixture_client
 from .logger import log
 
 # run with: uvicorn shepherd_server.webapi:app --reload
@@ -131,5 +132,7 @@ def run() -> None:
     if ssl_enabled:
         uvi_args["ssl_keyfile"] = server_config.ssl_keyfile.as_posix()
         uvi_args["ssl_certfile"] = server_config.ssl_certfile.as_posix()
+
+    prepare_fixture_client()
     asyncio.run(update_status())
     uvicorn.run(**uvi_args)

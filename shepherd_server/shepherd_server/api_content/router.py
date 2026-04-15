@@ -19,8 +19,6 @@ content_types = [
 ]
 content_names = [content.__name__ for content in content_types]
 
-tb_client.fixture_cache.complete_fixtures()
-
 
 @router.get("")
 async def list_content_types() -> list[str]:

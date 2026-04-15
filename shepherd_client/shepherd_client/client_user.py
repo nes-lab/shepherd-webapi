@@ -12,6 +12,7 @@ from pydantic import HttpUrl
 from pydantic import validate_call
 from requests import JSONDecodeError
 from requests import Response
+from shepherd_core.config import core_config
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
@@ -69,6 +70,10 @@ class UserClient(WebClient):
             self._cfg.password = password
         if save_credentials:
             self._cfg.to_file()
+
+        core_config.VALIDATE_INFRA = True
+        # TODO: also add server name and more from server
+        # TODO: maybe move this to webClient
         super().__init__()
         self.status()
         self._auth: dict | None = None

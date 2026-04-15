@@ -6,6 +6,8 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   static-analysis:
     uses: ./.github/workflows/static_analysis.yaml

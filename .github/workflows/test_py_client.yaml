@@ -3,6 +3,8 @@ name: Client - Build, install & [pytest]
 on:
   workflow_call:
 
+permissions: {}
+
 jobs:
   test_client:
 

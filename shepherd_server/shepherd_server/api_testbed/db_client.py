@@ -10,7 +10,7 @@ from shepherd_core.data_models.base.wrapper import Wrapper
 from shepherd_server.api_user.models import User
 
 
-class DBClient:
+class DBClient:  # TODO: modernize, inherit from core.AbcClient
     _instance: Self | None = None
 
     def __init__(self, server: str | None = None, token: str | Path | None = None) -> None:

@@ -24,6 +24,14 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v6
 
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.1
+        with:
+          mongodb-version: 8 # latest
+          # beanie supports v7 & 8
+          # https://beanie-odm.dev/changelog/
+          mongodb-port: 27017  # default (taken from instance_db.py)
+
       - name: Install uv 🔧 & set up Python 🐍
         uses: astral-sh/setup-uv@v7
         with:
@@ -39,4 +47,6 @@ jobs:
         run: uv pip install .[all]
         working-directory: "./shepherd_server"
 
-      # TODO: pytest (needs database)
+      - name: Unittests
+        run: pytest
+        working-directory: "./shepherd_server"

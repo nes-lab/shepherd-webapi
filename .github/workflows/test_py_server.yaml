@@ -10,11 +10,12 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.14", "3.13"] # managed by uv
+        python-version: ["3.14", "3.13"]
 
     runs-on: ubuntu-latest
     env:
       UV_PYTHON: ${{ matrix.python-version }}
+      AUTH_SALT: salty_business
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}-server

@@ -12,22 +12,6 @@ from shepherd_server.api_experiment.models import WebExperiment
 from shepherd_server.config import server_config
 from shepherd_server.logger import log
 
-mail_conf = ConnectionConfig(
-    MAIL_USERNAME=server_config.mail_username,
-    MAIL_PASSWORD=server_config.mail_password,
-    MAIL_FROM=server_config.mail_sender,
-    MAIL_FROM_NAME=server_config.mail_sender_name,
-    MAIL_PORT=server_config.mail_port,
-    MAIL_SERVER=server_config.mail_server,
-    MAIL_STARTTLS=False,
-    MAIL_SSL_TLS=True,
-    USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True,
-    MAIL_DEBUG=False,
-)
-
-mail = FastMail(mail_conf)
-
 
 class MailEngine:
     # TODO: reconsider term "MailEngine"
@@ -54,12 +38,30 @@ class MailEngine:
 
 
 class FastMailEngine(MailEngine):
-    @staticmethod
-    async def send_approval_email(email: EmailStr, token: str) -> None:
+    def __init__(self) -> None:
+        if server_config.mail_enabled:
+            mail_conf = ConnectionConfig(
+                MAIL_USERNAME=server_config.mail_username,
+                MAIL_PASSWORD=server_config.mail_password,
+                MAIL_FROM=server_config.mail_sender,
+                MAIL_FROM_NAME=server_config.mail_sender_name,
+                MAIL_PORT=server_config.mail_port,
+                MAIL_SERVER=server_config.mail_server,
+                MAIL_STARTTLS=False,
+                MAIL_SSL_TLS=True,
+                USE_CREDENTIALS=True,
+                VALIDATE_CERTS=True,
+                MAIL_DEBUG=False,
+            )
+            self.mail_srv = FastMail(mail_conf)
+        else:
+            self.mail_srv = None
+
+    async def send_approval_email(self, email: EmailStr, token: str) -> None:
         """Send approval request to admin / contact email."""
         # Change this later to public endpoint
         log.debug("-> EMAIL APPROVAL")
-        if server_config.mail_enabled:
+        if self.mail_srv is not None:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Testbed Approval",
@@ -68,14 +70,13 @@ class FastMailEngine(MailEngine):
                 "The client is available at: https://pypi.org/project/shepherd-client/",
                 subtype=MessageType.plain,
             )
-            await mail.send_message(message)
+            await self.mail_srv.send_message(message)
 
-    @staticmethod
-    async def send_verification_email(email: EmailStr, token: str) -> None:
+    async def send_verification_email(self, email: EmailStr, token: str) -> None:
         """Send user verification email."""
         _url = f"{server_config.server_url()}/user/verify/{token}"
         log.info("Verification E-Mail was sent to User (Account deactivated by default).")
-        if server_config.mail_enabled:
+        if self.mail_srv is not None:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Email Verification",
@@ -83,12 +84,11 @@ class FastMailEngine(MailEngine):
                 f"You just need to verify your email to complete registration: {_url}",
                 subtype=MessageType.plain,  # TODO: replace with HTTP + Link
             )
-            await mail.send_message(message)
+            await self.mail_srv.send_message(message)
 
-    @staticmethod
-    async def send_registration_complete_email(email: EmailStr) -> None:
+    async def send_registration_complete_email(self, email: EmailStr) -> None:
         log.debug("-> EMAIL REGISTRATION")
-        if server_config.mail_enabled:
+        if self.mail_srv is not None:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Registration Complete",
@@ -97,15 +97,14 @@ class FastMailEngine(MailEngine):
                 "\nhttps://nes-lab.github.io/shepherd-nova/content/getting_started.html",
                 subtype=MessageType.plain,
             )
-            await mail.send_message(message)
+            await self.mail_srv.send_message(message)
 
-    @staticmethod
-    async def send_password_reset_email(email: EmailStr, token: str) -> None:
+    async def send_password_reset_email(self, email: EmailStr, token: str) -> None:
         """Send password reset email."""
         # Change this later to public endpoint
         _url = f"{server_config.server_url()}/user/reset-password/{token}"
         log.debug("-> EMAIL RESET POST to %s", _url)
-        if server_config.mail_enabled:
+        if self.mail_srv is not None:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Password Reset",
@@ -113,11 +112,10 @@ class FastMailEngine(MailEngine):
                 f"{_url}\nIf you did not request this, please ignore this email",
                 subtype=MessageType.plain,
             )
-            await mail.send_message(message)
+            await self.mail_srv.send_message(message)
 
-    @staticmethod
     async def send_experiment_finished_email(
-        email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
+        self, email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
     ) -> None:
         msg = f"Experiment '{web_exp.experiment.name}' finished.\n"
         msg += web_exp.summary
@@ -152,7 +150,7 @@ class FastMailEngine(MailEngine):
 
         extra_subj = " with errors" if web_exp.had_errors else ""
         log.debug("-> EMAIL XP-Finished" + extra_subj)
-        if server_config.mail_enabled:
+        if self.mail_srv is not None:
             message = MessageSchema(
                 recipients=list({email, server_config.contact["email"]})
                 if web_exp.had_errors
@@ -162,10 +160,9 @@ class FastMailEngine(MailEngine):
                 subtype=MessageType.plain,
                 attachments=web_exp.get_terminal_output(only_faulty=True),
             )
-            await mail.send_message(message)
+            await self.mail_srv.send_message(message)
 
-    @staticmethod
-    async def send_herd_reboot_email(herd_composition: Mapping[str, set]) -> None:
+    async def send_herd_reboot_email(self, herd_composition: Mapping[str, set]) -> None:
         _all = set(herd_composition.get("all", []))
         _miss_pre = _all - set(herd_composition.get("pre", []))
         _miss_pst = _all - set(herd_composition.get("post", []))
@@ -175,15 +172,25 @@ class FastMailEngine(MailEngine):
         if len(_miss_pst) > 0:
             msg += f"- post-missing = {', '.join(sorted(_miss_pst))} (n={len(_miss_pst)})\n"
         log.debug("-> EMAIL Herd-reboot")
-        if server_config.mail_enabled:
+        if self.mail_srv is not None:
             message = MessageSchema(
                 recipients=[server_config.contact["email"]],  # only admin
                 subject="[Shepherd] Reboot issued",
                 body=msg,
                 subtype=MessageType.plain,
             )
-            await mail.send_message(message)
+            await self.mail_srv.send_message(message)
 
 
-def mail_engine() -> MailEngine:
-    return FastMailEngine()
+_engine = FastMailEngine()
+
+
+def get_mail_engine() -> MailEngine:
+    """Allow mocking the email-client."""
+    return _engine
+
+
+def set_mail_engine(engine: MailEngine) -> None:
+    """Allow mocking the email-client."""
+    global _engine  # noqa: PLW0603
+    _engine = engine

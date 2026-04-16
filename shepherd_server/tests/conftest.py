@@ -26,7 +26,6 @@ from shepherd_server.api_experiment.models import WebExperiment
 from shepherd_server.api_user.models import User
 from shepherd_server.api_user.models import UserRole
 from shepherd_server.api_user.utils_mail import MailEngine
-from shepherd_server.api_user.utils_mail import mail_engine
 from shepherd_server.api_user.utils_misc import calculate_password_hash
 from shepherd_server.config import server_config as server_cfg
 from shepherd_server.instance_api import app
@@ -204,8 +203,10 @@ class MockMailEngine(MailEngine):
 
 @pytest.fixture
 def mail_engine_mock() -> MailEngine:
+    from shepherd_server.api_user.utils_mail import set_mail_engine
+
     mock_engine = MockMailEngine()
-    app.dependency_overrides[mail_engine] = lambda: mock_engine
+    set_mail_engine(mock_engine)
     return mock_engine
 
 

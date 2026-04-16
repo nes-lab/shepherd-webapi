@@ -18,8 +18,7 @@ from .models import UserQuota
 from .models import UserRegistration
 from .models import UserRole
 from .models import UserUpdate
-from .utils_mail import MailEngine
-from .utils_mail import mail_engine
+from .utils_mail import get_mail_engine
 from .utils_misc import active_user_is_admin
 from .utils_misc import calculate_hash
 from .utils_misc import calculate_password_hash
@@ -105,14 +104,13 @@ async def update_quota(
 @router.post("/forgot-password")
 async def forgot_password(
     email: Annotated[EmailStr, Body(embed=True)],
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Send password reset email."""
     user = await User.by_email(email)
     if user is None:
         return Response(status_code=200)
     user.token_pw_reset = calculate_hash(user.email + str(local_now()))[-12:]
-    await mail_sys.send_password_reset_email(email, user.token_pw_reset)
+    await get_mail_engine().send_password_reset_email(email, user.token_pw_reset)
     await user.save_changes()
     return Response(status_code=200)
 
@@ -140,7 +138,6 @@ async def reset_password(
 @router.post("/approve", dependencies=[Depends(active_user_is_admin)])
 async def approve(
     email: Annotated[EmailStr, Body(embed=True)],
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Pre-Approve Email-Address for registration - also functions as validation.
 
@@ -150,14 +147,13 @@ async def approve(
     if user is not None:
         raise HTTPException(409, "Account already exists")
     token_verification = calculate_hash(email)[-12:]
-    await mail_sys.send_approval_email(email, token_verification)
+    await get_mail_engine().send_approval_email(email, token_verification)
     return Response(status_code=200, content=token_verification)
 
 
 @router.post("/register")
 async def user_registration(
     user_reg: UserRegistration,
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> UserOut:
     """Create a new user.
 
@@ -179,7 +175,7 @@ async def user_registration(
         role=UserRole.user,
     )
     await user.create()
-    await mail_sys.send_registration_complete_email(user_reg.email)
+    await get_mail_engine().send_registration_complete_email(user_reg.email)
     return user
 
 
@@ -187,7 +183,6 @@ async def user_registration(
 @router.post("/verify/{token}")
 async def verify_email(
     token: str,
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Verify the user's email with the supplied token.
 
@@ -203,7 +198,7 @@ async def verify_email(
     user.email_confirmed_at = local_now()
     user.token_verification = None
     user.disabled = False
-    await mail_sys.send_registration_complete_email(user.email)
+    await get_mail_engine().send_registration_complete_email(user.email)
     await user.save_changes()
     return Response(status_code=200, content="Verification successful")
 

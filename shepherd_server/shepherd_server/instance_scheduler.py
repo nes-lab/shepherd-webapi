@@ -24,7 +24,7 @@ from .api_experiment.models import ReplyData
 from .api_experiment.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
 from .api_user.models import User
-from .api_user.utils_mail import mail_engine
+from .api_user.utils_mail import get_mail_engine
 from .async_wrapper import async_wrap
 from .config import server_config
 from .instance_db import db_available
@@ -48,6 +48,11 @@ def herd_cleanup(herd: Herd) -> None:
 
 @async_wrap(timeout=5 * 60)
 def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
+    """Mod and program firmware to targets.
+
+    This makes one direct sheep-call: run preparation-tasks
+    """
+
     def tbt_patch_pre(tb_ts: TestbedTasks) -> TestbedTasks:
         tb_ts_pre = tb_ts.model_dump()
         ots_new = []
@@ -69,6 +74,11 @@ def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
 
 @async_wrap(timeout=30)
 def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
+    """Schedule the actual experiment of the user.
+
+    This makes one direct sheep-call: run emulation-task
+    """
+
     def tbt_patch_emu(tb_ts: TestbedTasks, ts_start: datetime) -> TestbedTasks:
         tb_ts_emu = tb_ts.model_dump()
         ots_new = []
@@ -189,7 +199,7 @@ async def herd_reboot(herd: Herd) -> None:
         "pre": {herd.hostnames[cnx.host] for cnx in group_pre},
         "post": {herd.hostnames[cnx.host] for cnx in herd.group_online},
     }
-    await mail_engine().send_herd_reboot_email(composition)
+    await get_mail_engine().send_herd_reboot_email(composition)
 
 
 async def run_web_experiment(
@@ -321,11 +331,13 @@ async def notify_user(xp_id: UUID) -> None:
 
     # send out Mail if user wants it
     if web_exp.had_errors or not isinstance(web_exp.owner, Link | User):
-        await mail_engine().send_experiment_finished_email(server_config.contact["email"], web_exp)
+        await get_mail_engine().send_experiment_finished_email(
+            server_config.contact["email"], web_exp
+        )
         return
     all_done = not await WebExperiment.has_scheduled_by_user(web_exp.owner)
     if web_exp.had_errors or web_exp.experiment.email_results or all_done:
-        await mail_engine().send_experiment_finished_email(
+        await get_mail_engine().send_experiment_finished_email(
             web_exp.owner.email, web_exp, all_done=all_done
         )
 

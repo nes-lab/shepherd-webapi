@@ -1,5 +1,4 @@
 import asyncio
-from unittest import mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -7,15 +6,7 @@ from pydantic import ValidationError
 from shepherd_server.api_user.utils_mail import MailEngine
 from shepherd_server.instance_db import db_create_admin
 
-from .conftest import MockMailEngine
 from .conftest import UserTestClient
-
-mocki = MockMailEngine()
-
-
-@mock.patch("shepherd_server.api_user.utils_mail.mail_engine")
-def mock_engine() -> MailEngine:
-    return mocki
 
 
 def test_create_admin_invalid_mail() -> None:
@@ -31,11 +22,12 @@ def test_create_admin_invalid_password() -> None:
 @pytest.mark.skip  # TODO: fix mock.problem - create_admin() sends real mail
 def test_unverified_admin_cannot_login(
     client: UserTestClient,
+    mail_engine_mock: MailEngine,
 ) -> None:
     # with mock.patch("shepherd_server.api_user.utils_mail.FastMailEngine", new=MockMailEngine):
     asyncio.run(db_create_admin("padmin2@cadmin.de", "1234567890"))
-    # mocki.send_verification_email("hasn@kanns", "ods")
-    mocki.send_verification_email.assert_called_once()
+    # mail_engine_mock.send_verification_email("hasn@kanns", "ods")
+    mail_engine_mock.send_verification_email.assert_called_once()
 
     with client.regular_joe():
         login_response = client.post(

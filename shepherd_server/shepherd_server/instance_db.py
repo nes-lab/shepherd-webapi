@@ -15,7 +15,7 @@ from .api_experiment.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
 from .api_user.models import PasswordStr
 from .api_user.models import User
-from .api_user.utils_mail import mail_engine
+from .api_user.utils_mail import get_mail_engine
 from .api_user.utils_misc import calculate_hash
 from .api_user.utils_misc import calculate_password_hash
 from .config import server_config
@@ -60,7 +60,7 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
         log.error("User with that email already exists")
         return
     token_verification = calculate_hash(email + str(local_now()))[-12:]
-    await mail_engine().send_verification_email(email, token_verification)
+    await get_mail_engine().send_verification_email(email, token_verification)
     admin = User(
         email=email,
         password_hash=calculate_password_hash(password),

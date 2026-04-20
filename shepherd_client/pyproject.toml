@@ -35,6 +35,8 @@ dependencies = [
     "exrex",  # for automatic password creation
     "typer",
     "certifi>=2025.6.15",
+    "ryaml",
+    "typing-extensions",
 ]
 
 [project.optional-dependencies]
@@ -71,12 +73,6 @@ platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
 shepherd-server = { git = "https://github.com/nes-lab/shepherd-webapi/", branch = "dev", subdirectory = "shepherd_server"}
 # temporary dev-versions of sub-packets
 
-[tool.pyright]
-root = "./"
-include = []
-pythonVersion = "3.10"
-pythonPlatform = "All"
-reportMissingParameterType = true
 
 [tool.aliases]
 test = "pytest"

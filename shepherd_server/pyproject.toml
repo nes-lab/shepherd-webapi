@@ -24,7 +24,7 @@ classifiers = [
     "Natural Language :: English"
 ]
 
-requires-python = "==3.13.*"
+requires-python = ">=3.10"
 dependencies = [
     "fastapi[standard]",
     "fastapi-mail",
@@ -37,6 +37,7 @@ dependencies = [
     "shepherd-core>=2026.4.1",
     "python-decouple",
     "shepherd-herd>=2026.2.1",
+    "typing-extensions",
     # TODO: python-multipart
 ]
 

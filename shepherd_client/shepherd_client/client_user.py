@@ -1,35 +1,24 @@
-"""Client-Class to access a testbed instance over the web."""
+"""Client-Class to access the server of a testbed instance over the internet."""
 
 import shutil
-from importlib import metadata
 from pathlib import Path
 from uuid import UUID
+from typing_extensions import deprecated
 
 import certifi
 import requests
 from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import validate_call
-from requests import JSONDecodeError
-from requests import Response
-from shepherd_core.config import core_config
 from shepherd_core.data_models import Experiment
-from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
 
-from .client_web import WebClient
-from .config import ClientConfig
+from .client_web import ContentClient
+from .client_web import msg
 from .config import PasswordStr
 
 
-def msg(rsp: Response) -> str:
-    try:
-        return f"{rsp.reason} - {rsp.json()['detail']}"
-    except JSONDecodeError:
-        return f"{rsp.reason}"
-
-
-class UserClient(WebClient):
+class UserClient(ContentClient):
     """Client-Class to access a testbed instance over the web.
 
     For online-queries the lib can be connected to the testbed-server.
@@ -58,12 +47,10 @@ class UserClient(WebClient):
         save_credentials: your inputs will be saved to your account (XDG-path or user/.config/),
                           -> you won't need to enter them again
         """
-        if debug:
-            increase_verbose_level(3)
+
         # TODO: no password and wanting to save should be disallowed, as the password would be lost
-        self._cfg = ClientConfig.from_file()
-        if server is not None:
-            self._cfg.server = server
+
+        super().__init__(server=server, debug=debug)
         if user_email is not None:
             self._cfg.user_email = user_email
         if password is not None:
@@ -71,48 +58,7 @@ class UserClient(WebClient):
         if save_credentials:
             self._cfg.to_file()
 
-        core_config.VALIDATE_INFRA = True
-        # TODO: also add server name and more from server
-        # TODO: maybe move this to webClient
-        super().__init__()
-        self.status()
-        self._auth: dict | None = None
         self.authenticate()
-
-    # ####################################################################
-    # Testbed-Status
-    # ####################################################################
-
-    def status(self) -> None:
-        rsp = requests.get(
-            url=f"{self._cfg.server}/",
-            timeout=3,
-        )
-        if rsp.ok:
-            state = rsp.json()
-            scheduler = state.get("scheduler")
-            if isinstance(scheduler, dict):
-                active = scheduler.get("activated")
-                if active is None:
-                    log.warning("Scheduler not active!")
-            if metadata.version("shepherd-client") != state.get("server_version"):
-                log.warning("Your client version does not match with server -> consider upgrading")
-                log.info(
-                    "client v%s vs server v%s",
-                    metadata.version("shepherd-client"),
-                    state.get("server_version"),
-                )
-            if metadata.version("shepherd-core") != state.get("core_version"):
-                log.warning(
-                    "Your version of shepherd-core does not match with server -> consider upgrading"
-                )
-                log.info(
-                    "shepherd-core on client %s vs %s on server",
-                    metadata.version("shepherd-core"),
-                    state.get("core_version"),
-                )
-        else:
-            log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
 
     # ####################################################################
     # Account
@@ -168,10 +114,11 @@ class UserClient(WebClient):
         else:
             log.warning("User-Deletion failed with: %s", msg(rsp))
 
+    @deprecated("use .delete_account()")
     def delete_user(self) -> None:
-        return self.delete_user()  # TODO: deprecate _user()-fn
+        self.delete_account()
 
-    def get_user_info(self) -> dict:
+    def get_account_info(self) -> dict:
         """Query user info stored on the server."""
         rsp = requests.get(
             url=f"{self._cfg.server}/user",
@@ -186,8 +133,9 @@ class UserClient(WebClient):
             info = {}
         return info
 
-    def get_account_info(self) -> dict:
-        return self.get_user_info()  # TODO: deprecate _user()-fn
+    @deprecated("use .get_account_info()")
+    def get_user_info(self) -> dict:
+        return self.get_account_info()
 
     # ####################################################################
     # Experiments
@@ -207,7 +155,7 @@ class UserClient(WebClient):
         return list(rsp.json().keys())
 
     def create_experiment(self, xp: Experiment) -> UUID | None:
-        """Upload a local experiment to the testbed.
+        """Upload a local experiment to the testbed-server and validate its feasibility.
 
         Will return the new UUID if successful.
         """
@@ -247,7 +195,14 @@ class UserClient(WebClient):
         return rsp.ok
 
     def get_experiment_state(self, xp_id: UUID) -> str | None:
-        """Get state of a specific experiment."""
+        """Get state of a specific experiment.
+
+        - after valid submission: created
+        - after scheduling: scheduled
+        - during experiment: running
+        - after the run: finished or failed
+
+        """
         rsp = requests.get(
             url=f"{self._cfg.server}/experiment/{xp_id}/state",
             headers=self._auth,
@@ -277,7 +232,7 @@ class UserClient(WebClient):
         return rsp.json()
 
     def schedule_experiment(self, xp_id: UUID) -> bool:
-        """Enter the experiment into the queue.
+        """Enter the experiment into the scheduling-queue.
 
         Only possible if they never run before (state is "created").
         """

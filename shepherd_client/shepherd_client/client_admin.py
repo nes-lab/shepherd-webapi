@@ -9,7 +9,7 @@ from pydantic import validate_call
 from shepherd_core.logger import log
 
 from .client_user import UserClient
-from .client_user import msg
+from .client_web import msg
 from .config import PasswordStr
 
 
@@ -30,7 +30,7 @@ class AdminClient(UserClient):
             save_credentials=save_credentials,
             debug=True,
         )
-        if self.get_user_info().get("role") != "admin":
+        if self.get_account_info().get("role") != "admin":
             log.warning("You are not an admin - this client won't work")
         self.commands: list[str] | None = None
 

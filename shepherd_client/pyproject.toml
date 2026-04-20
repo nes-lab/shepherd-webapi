@@ -69,11 +69,6 @@ build-backend = "uv_build"
 module-root = "./"
 platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
 
-[tool.uv.sources]
-shepherd-server = { git = "https://github.com/nes-lab/shepherd-webapi/", branch = "dev", subdirectory = "shepherd_server"}
-# temporary dev-versions of sub-packets
-
-
 [tool.aliases]
 test = "pytest"
 

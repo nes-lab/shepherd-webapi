@@ -1,5 +1,4 @@
 line-length = 100
-target-version = "py313" # client is still 310
 output-format = "concise"
 
 [lint]
@@ -37,8 +36,8 @@ max-complexity = 10
 [lint.isort]
 force-single-line = true
 
-[lint.pyupgrade]
-keep-runtime-typing = true
+[lint.pydocstyle]
+convention = "pep257"
 
 [format] # per default like Black
 docstring-code-format = true

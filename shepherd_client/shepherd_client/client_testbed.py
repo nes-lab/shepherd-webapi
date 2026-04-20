@@ -11,6 +11,7 @@ from requests import Response
 from shepherd_core.config import core_config
 from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
+from shepherd_core.testbed_client import AbcClient
 from typing_extensions import Unpack
 from typing_extensions import deprecated
 
@@ -26,7 +27,7 @@ def msg(rsp: Response) -> str:
         return f"{rsp.reason}"
 
 
-class ContentClient:
+class TestbedClient(AbcClient):
     @validate_call
     def __init__(self, server: HttpUrl | None = None, *, debug: bool = False) -> None:
 
@@ -114,3 +115,26 @@ class ContentClient:
         if rsp is None or not rsp.ok:
             return []
         return rsp.json()
+
+    def list_content_ids(self, model_type: str) -> list[int]:
+        rsp = self.request("get", f"content/{model_type}")
+        if rsp is None or not rsp.ok:
+            return []
+        return rsp.json().keys()
+
+    def list_content_names(self, model_type: str) -> list[str]:
+        rsp = self.request("get", f"content/{model_type}")
+        if rsp is None or not rsp.ok:
+            return []
+        return rsp.json().values()
+
+
+    def get_content_item(
+        self, model_type: str, uid: int | None = None, name: str | None = None
+    ) -> dict:
+        # TODO: divide into by_id and by_name
+        rsp = self.request("get", f"content/{model_type}/{uid if uid is not None else name}")
+        if rsp is None or not rsp.ok:
+            return {}
+        return rsp.json()
+

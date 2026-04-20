@@ -13,12 +13,12 @@ from shepherd_core.data_models import Experiment
 from shepherd_core.logger import log
 from typing_extensions import deprecated
 
-from .client_web import ContentClient
-from .client_web import msg
+from .client_testbed import TestbedClient
+from .client_testbed import msg
 from .config import PasswordStr
 
 
-class UserClient(ContentClient):
+class UserClient(TestbedClient):
     """Client-Class to access a testbed instance over the web.
 
     For online-queries the lib can be connected to the testbed-server.

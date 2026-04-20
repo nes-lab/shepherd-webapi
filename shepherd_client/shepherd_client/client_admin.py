@@ -8,8 +8,8 @@ from pydantic import HttpUrl
 from pydantic import validate_call
 from shepherd_core.logger import log
 
+from .client_testbed import msg
 from .client_user import UserClient
-from .client_web import msg
 from .config import PasswordStr
 
 

@@ -66,12 +66,16 @@ shepherd-server = "shepherd_server.cli:cli"
 [build-system]
 requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
-# ⤷ switched to uv because package is not public
 
 [tool.uv.build-backend]
 module-root = "./"
 source-include = ["shepherd_server/favicon/**"]
 # platforms = ["unix", "linux"]
+
+[tool.uv.sources]
+shepherd-core = { git = "https://github.com/nes-lab/shepherd-tools/", branch = "dev", subdirectory = "shepherd_core"}
+shepherd-herd = { git = "https://github.com/nes-lab/shepherd/", branch = "dev", subdirectory = "software/shepherd-herd"}
+# temporary dev-versions of sub-packets
 
 [tool.pyright]
 root = "./"
@@ -95,11 +99,6 @@ markers = [
 [tool.coverage.run]
 source = ["shepherd_server"]
 # TODO: add something like "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"
-
-[tool.uv.sources]
-shepherd-core = { git = "https://github.com/nes-lab/shepherd-tools/", branch = "dev", subdirectory = "shepherd_core"}
-shepherd-herd = { git = "https://github.com/nes-lab/shepherd/", branch = "dev", subdirectory = "software/shepherd-herd"}
-# temporary dev-versions of sub-packets
 
 [tool.ty.src]
 exclude = [

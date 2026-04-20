@@ -46,6 +46,7 @@ test = [
     #"pytest-dependency",
     #"pytest-timeout",
     "coverage",
+    "shepherd-server",
 ]
 
 all = ["shepherd-client[admin,test,dev]"]
@@ -59,14 +60,16 @@ Source = "https://github.com/nes-lab/shepherd-webapi"
 shepherd-client = "shepherd_client.cli:cli"
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.11.0,<0.12.0"]
+build-backend = "uv_build"
 
-[tool.setuptools]
+[tool.uv.build-backend]
+module-root = "./"
 platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
-package-dir = {"shepherd_client" = "./shepherd_client/"}
-zip-safe = true
-include-package-data = true
+
+[tool.uv.sources]
+shepherd-server = { git = "https://github.com/nes-lab/shepherd-webapi/", branch = "dev", subdirectory = "shepherd_server"}
+# temporary dev-versions of sub-packets
 
 [tool.pyright]
 root = "./"

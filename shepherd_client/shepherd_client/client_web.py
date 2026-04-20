@@ -2,8 +2,6 @@
 
 from collections.abc import Collection
 from importlib import metadata
-from typing_extensions import Unpack
-from typing_extensions import deprecated
 
 import requests
 from pydantic import HttpUrl
@@ -13,6 +11,8 @@ from requests import Response
 from shepherd_core.config import core_config
 from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
+from typing_extensions import Unpack
+from typing_extensions import deprecated
 
 from .config import ClientConfig
 

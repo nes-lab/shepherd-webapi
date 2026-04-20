@@ -3,7 +3,6 @@
 import shutil
 from pathlib import Path
 from uuid import UUID
-from typing_extensions import deprecated
 
 import certifi
 import requests
@@ -12,6 +11,7 @@ from pydantic import HttpUrl
 from pydantic import validate_call
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import log
+from typing_extensions import deprecated
 
 from .client_web import ContentClient
 from .client_web import msg

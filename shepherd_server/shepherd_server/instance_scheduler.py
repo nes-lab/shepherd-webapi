@@ -106,7 +106,7 @@ def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
         raise RuntimeError("Starting Emulation failed")
 
 
-async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:  # noqa: ASYNC109
+async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:
     # this fn can not be wrapped, because it has no fixed timeout
     # TODO: add to main code?
     ts_timeout = local_now() + timeout
@@ -359,7 +359,7 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
         tb = Testbed(name=server_config.testbed_name)
         observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
         observers_offline = set(herd.hostnames.values()) - observers_online
-        for target_id in tb_client.query_ids("Target"):
+        for target_id in tb_client.list_content_ids("Target"):
             observer_name = tb.get_observer(target_id).name
             if observer_name in observers_online:
                 tb_.scheduler.targets_online[target_id].append(observer_name)

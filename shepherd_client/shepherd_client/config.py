@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from typing import Annotated
-from typing_extensions import Self
 
 import ryaml
 from pydantic import BaseModel
@@ -12,6 +11,7 @@ from pydantic import StringConstraints
 from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.base.wrapper import Wrapper
 from shepherd_core.logger import log
+from typing_extensions import Self
 
 PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
 # ⤷ Regex = All Printable ASCII-Characters with Space

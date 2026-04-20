@@ -37,7 +37,7 @@ name2model = {
 async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40) -> dict:
     if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
-    elems = tb_client.query_ids(type_name)
+    elems = tb_client.list_content_ids(type_name)
     return {"message": elems[skip : skip + limit]}
 
 
@@ -45,7 +45,7 @@ async def read_item_ids_list(type_name: str, skip: int = 0, limit: int = 40) -> 
 async def read_item_names_list(type_name: str, skip: int = 0, limit: int = 40) -> dict:
     if type_name not in name2model:
         raise HTTPException(status_code=404, detail="item-name not found")
-    elems = tb_client.query_names(type_name)
+    elems = tb_client.list_content_names(type_name)
     return {"message": list(elems)[skip : skip + limit]}
 
 

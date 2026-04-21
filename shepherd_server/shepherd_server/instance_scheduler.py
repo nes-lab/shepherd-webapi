@@ -359,7 +359,7 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
         tb = Testbed(name=server_config.testbed_name)
         observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
         observers_offline = set(herd.hostnames.values()) - observers_online
-        for target_id in tb_client.list_content_ids("Target"):
+        for target_id in tb_client.list_resource_ids("Target"):
             observer_name = tb.get_observer(target_id).name
             if observer_name in observers_online:
                 tb_.scheduler.targets_online[target_id].append(observer_name)

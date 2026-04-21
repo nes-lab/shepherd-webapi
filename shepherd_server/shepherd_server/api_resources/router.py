@@ -14,7 +14,7 @@ from shepherd_core.data_models.testbed import Target
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import tb_client
 
-router = APIRouter(prefix="/content", tags=["Content"])
+router = APIRouter(prefix="/resources", tags=["Resources"])
 # TODO: rename to resources
 
 content_types = [

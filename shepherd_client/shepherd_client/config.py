@@ -31,12 +31,14 @@ def get_xdg_config() -> Path:
 
 
 path_shp_config = get_xdg_config() / "shepherd/client.yaml"
+server_default = HttpUrl("https://shepherd.cfaed.tu-dresden.de:8000")
 
 
 class ClientConfig(BaseModel):
     __slots__ = ()
 
-    server: HttpUrl = "https://shepherd.cfaed.tu-dresden.de:8000/"
+    server: HttpUrl = server_default
+    """ ⤷ note that '/' at the end is needed and automatically added when casting to HttpUrl."""
     user_email: EmailStr | None = None
     password: PasswordStr | None = Field(default_factory=generate_password)
     timeout: int = 3
@@ -62,6 +64,6 @@ class ClientConfig(BaseModel):
         with path_shp_config.open(encoding="utf-8") as cfg_file:
             cfg_dict = ryaml.load(cfg_file)
         cfg_wrap = Wrapper(**cfg_dict)
-        if cfg_wrap.datatype != cls.__name__:
+        if cfg_wrap.datatype not in {cls.__name__, "Config"}:
             raise ValueError("Data in file does not match the requirement")
         return cls(**cfg_wrap.parameters)

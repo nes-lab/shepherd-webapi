@@ -44,8 +44,8 @@ async def list_content_by_type(content: str) -> dict[int, str]:
     content = content.lower()
     if content not in content_names:
         raise HTTPException(404, "Not Found")
-    data = tb_client.list_content_ids(content)
-    models = [tb_client.get_content_item(content, uid=uid) for uid in data]
+    data = tb_client.list_resource_ids(content)
+    models = [tb_client.get_resource_item(content, uid=uid) for uid in data]
     models = [model for model in models if model.get("deprecated") is None]
     models = [
         model for model in models if model.get("visible2all", True)
@@ -67,11 +67,11 @@ async def get_content_by_type_and_name(content: str, name: str) -> ContentModel:
     if content not in content_names:
         raise HTTPException(404, "Not Found")
     try:
-        data = tb_client.get_content_item(content, name=name)
+        data = tb_client.get_resource_item(content, name=name)
     except ValueError:
         data = None
-    if name.isdecimal() and int(name) in tb_client.list_content_ids(content):
-        data = tb_client.get_content_item(content, uid=int(name))
+    if name.isdecimal() and int(name) in tb_client.list_resource_ids(content):
+        data = tb_client.get_resource_item(content, uid=int(name))
     if data is None:
         raise HTTPException(404, "Not Found")
     return content_types[content_names.index(content)](**data)

@@ -26,7 +26,7 @@ router = APIRouter(prefix="/testbed", tags=["Testbed"])
 @router.get("")
 async def testbed_info() -> Testbed:
     try:
-        data = tb_client.get_content_item("Testbed", name=server_config.testbed_name)
+        data = tb_client.get_resource_item("Testbed", name=server_config.testbed_name)
     except ValueError:
         data = None
     if data is None:
@@ -114,14 +114,14 @@ async def list_observers() -> list[str]:
         tb = Testbed(name=server_config.testbed_name)
         data = [obs.name for obs in tb.observers]
     except ValueError:
-        data = tb_client.list_content_names("Observer")
+        data = tb_client.list_resource_names("Observer")
     return sorted(data)
 
 
 @router.get("/observer/{name}")
 async def get_observer(name: str) -> Observer:
     try:
-        data = tb_client.get_content_item("Observer", name=name)
+        data = tb_client.get_resource_item("Observer", name=name)
     except ValueError:
         data = None
     if data is None:
@@ -135,14 +135,14 @@ async def list_capes() -> list[str]:
         tb = Testbed(name=server_config.testbed_name)
         data = [obs.cape.name for obs in tb.observers if obs.cape is not None]
     except ValueError:
-        data = tb_client.list_content_names("Cape")
+        data = tb_client.list_resource_names("Cape")
     return sorted(data)
 
 
 @router.get("/cape/{name}")
 async def get_cape(name: str) -> Cape:
     try:
-        data = tb_client.get_content_item("Cape", name=name)
+        data = tb_client.get_resource_item("Cape", name=name)
     except ValueError:
         data = None
     if data is None:
@@ -154,7 +154,7 @@ async def get_cape(name: str) -> Cape:
 async def list_targets() -> list[int]:
     try:
         tb = Testbed(name=server_config.testbed_name)
-        tgt_all = tb_client.list_content_ids("Target")
+        tgt_all = tb_client.list_resource_ids("Target")
     except ValueError:
         return []
     data = []
@@ -170,7 +170,7 @@ async def list_targets() -> list[int]:
 @router.get("/target/{uid}")
 async def get_target(uid: int) -> Target:
     try:
-        data = tb_client.get_content_item("Target", uid=uid)
+        data = tb_client.get_resource_item("Target", uid=uid)
     except ValueError:
         data = None
     if data is None:

@@ -136,26 +136,25 @@ class TestbedClient(AbcClient):
     # Content & Component Models
     # ####################################################################
 
-    # TODO: rename to list_resource_types()
-    def list_content_types(self) -> list[str]:
+    def list_resource_types(self) -> list[str]:
         rsp = self.request("get", "content")
         if rsp is None or not rsp.ok:
             return []
         return rsp.json()
 
-    def list_content_ids(self, model_type: str) -> list[int]:
+    def list_resource_ids(self, model_type: str) -> list[int]:
         rsp = self.request("get", f"content/{model_type}")
         if not rsp.ok:
             return []
         return list(rsp.json().keys())
 
-    def list_content_names(self, model_type: str) -> list[str]:
+    def list_resource_names(self, model_type: str) -> list[str]:
         rsp = self.request("get", f"content/{model_type}")
         if not rsp.ok:
             return []
         return list(rsp.json().values())
 
-    def get_content_item(
+    def get_resource_item(
         self, model_type: str, uid: int | None = None, name: str | None = None
     ) -> dict:
         # TODO: divide into by_id and by_name?
@@ -198,16 +197,16 @@ class TestbedClient(AbcClient):
             values = base_dict
 
         # TODO: cleanup and simplify - use fill_mode() and line up with web-interface
-        elif "name" in values and str(values.get("name")).lower() in self.list_content_names(
+        elif "name" in values and str(values.get("name")).lower() in self.list_resource_names(
             model_type
         ):
             fixture_name = str(values.get("name")).lower()
-            fixture_base = copy.copy(self.get_content_item(model_type, name=fixture_name))
+            fixture_base = copy.copy(self.get_resource_item(model_type, name=fixture_name))
             post_process = True
 
-        elif values.get("id") in self.list_content_ids(model_type):
+        elif values.get("id") in self.list_resource_ids(model_type):
             id_ = values["id"]
-            fixture_base = copy.copy(self.get_content_item(model_type, uid=id_))
+            fixture_base = copy.copy(self.get_resource_item(model_type, uid=id_))
             post_process = True
 
         if post_process:

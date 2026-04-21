@@ -8,7 +8,6 @@ from pydantic import HttpUrl
 from pydantic import validate_call
 from shepherd_core.logger import log
 
-from .client_testbed import msg
 from .client_user import UserClient
 from .config import PasswordStr
 
@@ -47,26 +46,18 @@ class AdminClient(UserClient):
 
         This will also send out an email for account verification.
         """
-        rsp = requests.post(
-            url=f"{self._cfg.server}/user/approve",
-            json={"email": user},
-            headers=self._auth,
-            timeout=3,
-        )
+        data = {"email": user}
+        rsp = self.request("post", "user/approve", json=data)
         if not rsp.ok:
-            log.warning("Approval of '%s' failed with: %s", user, msg(rsp))
+            log.warning("Approval of '%s' failed with: %s", user, self._msg(rsp))
         else:
             log.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
 
     def change_account_state(self, user: EmailStr, *, enabled: bool) -> None:
-        rsp = requests.post(
-            url=f"{self._cfg.server}/user/change_state",
-            json={"email": user, "enabled": enabled},
-            headers=self._auth,
-            timeout=3,
-        )
+        data = {"email": user, "enabled": enabled}
+        rsp = self.request("post", "user/change_state", json=data)
         if not rsp.ok:
-            log.warning("User-State-Change of '%s' failed with: %s", user, msg(rsp))
+            log.warning("User-State-Change of '%s' failed with: %s", user, self._msg(rsp))
         else:
             log.info("User-State-Change of '%s' succeeded", user)
 
@@ -81,22 +72,17 @@ class AdminClient(UserClient):
 
         Only non-None fields get set by the API.
         """
-        quota = {
-            "custom_quota_expire_date": expire_date,
-            "custom_quota_duration": duration,
-            "custom_quota_storage": storage,
-        }
-        rsp = requests.patch(
-            url=f"{self._cfg.server}/user/quota",
-            json={
-                "email": user_email,
-                "quota": quota,
+        data = {
+            "email": user_email,
+            "quota": {
+                "custom_quota_expire_date": expire_date,
+                "custom_quota_duration": duration,
+                "custom_quota_storage": storage,
             },
-            headers=self._auth,
-            timeout=3,
-        )
+        }
+        rsp = self.request("patch", "user/quota", json=data)
         if not rsp.ok:
-            log.warning("Extension of Quota failed with: %s", msg(rsp))
+            log.warning("Extension of Quota failed with: %s", self._msg(rsp))
         else:
             log.info("Extension of Quota succeeded with: %s", rsp.json())
 
@@ -104,36 +90,18 @@ class AdminClient(UserClient):
     # Testbed-Handling
     # ####################################################################
 
-    def get_restrictions(self) -> list[str]:
-        rsp = requests.get(
-            url=f"{self._cfg.server}/testbed/restrictions",
-            timeout=3,
-        )
-        if not rsp.ok:
-            log.warning("Query for restrictions failed with: %s", msg(rsp))
-            return []
-        return rsp.json()
-
     def set_restrictions(self, restrictions: list[str]) -> None:
-        rsp = requests.patch(
-            url=f"{self._cfg.server}/testbed/restrictions",
-            json={"value": restrictions},
-            headers=self._auth,
-            timeout=3,
-        )
+        data = {"value": restrictions}
+        rsp = self.request("patch", "testbed/restrictions", json=data)
         if not rsp.ok:
-            log.warning("Updating Restrictions failed with: %s", msg(rsp))
+            log.warning("Updating Restrictions failed with: %s", self._msg(rsp))
         else:
             log.info("Updating Restrictions succeeded with: %s", rsp.reason)
 
     def get_commands(self) -> list[str]:
-        rsp = requests.get(
-            url=f"{self._cfg.server}/testbed/command",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self.request("get", "testbed/command")
         if not rsp.ok:
-            log.warning("Query for commands failed with: %s", msg(rsp))
+            log.warning("Query for commands failed with: %s", self._msg(rsp))
             return []
         return rsp.json()
 
@@ -143,14 +111,21 @@ class AdminClient(UserClient):
         if cmd not in self.commands:
             log.warning("Command is not supported -> won't try")
             return
-        rsp = requests.patch(
-            url=f"{self._cfg.server}/testbed/command",
-            json={"value": cmd},
-            headers=self._auth,
-            timeout=20,
-        )
+        try:
+            rsp = requests.patch(
+                url=f"{self._cfg.server}testbed/command",
+                json={"value": cmd},
+                headers=self._auth,
+                timeout=30,
+            )
+        except requests.Timeout:
+            msg = "Command timed out."
+            raise ConnectionError(msg) from None
+        except requests.ConnectionError:
+            msg = "Command failed."
+            raise ConnectionError(msg) from None
         if not rsp.ok:
-            log.warning("Starting command failed with: %s", msg(rsp))
+            log.warning("Starting command failed with: %s", self._msg(rsp))
         else:
             log.info("Starting command succeeded with: %s", rsp.json())
 
@@ -160,11 +135,7 @@ class AdminClient(UserClient):
 
     def list_all_experiments(self, *, only_finished: bool = False) -> list[UUID]:
         """Query experiment-IDs (from all users, even deleted ones)."""
-        rsp = requests.get(
-            url=f"{self._cfg.server}/experiment/all",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self.request("get", "experiment/all")
         if not rsp.ok:
             return []
         if only_finished:

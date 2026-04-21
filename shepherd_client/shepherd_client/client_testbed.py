@@ -44,48 +44,6 @@ class TestbedClient(AbcClient):
         self.status()
         super().__init__()
 
-    # ####################################################################
-    # Testbed-Status
-    # ####################################################################
-
-    def status(self) -> None:
-        rsp = requests.get(
-            url=f"{self._cfg.server}",
-            timeout=3,
-        )
-        if rsp.ok:
-            state = rsp.json()
-            scheduler = state.get("scheduler")
-            if isinstance(scheduler, dict):
-                active = scheduler.get("activated")
-                if active is None:
-                    log.warning("Scheduler not active!")
-                dry_run = scheduler.get("dry_run")
-                if dry_run:
-                    log.warning("Scheduler is running in demo-mode (dry-run)!")
-                targets_offline = scheduler.get("targets_offline")
-                if isinstance(targets_offline, Collection) and len(targets_offline) > 0:
-                    log.warning("One or more targets seem to be offline: %s", targets_offline)
-                # TODO: could tests for last update being old
-            if metadata.version("shepherd-client") != state.get("server_version"):
-                log.warning("Your client version does not match with server -> consider upgrading")
-                log.info(
-                    "client v%s vs server v%s",
-                    metadata.version("shepherd-client"),
-                    state.get("server_version"),
-                )
-            if metadata.version("shepherd-core") != state.get("core_version"):
-                log.warning(
-                    "Your version of shepherd-core does not match with server -> consider upgrading"
-                )
-                log.info(
-                    "shepherd-core on client %s vs %s on server",
-                    metadata.version("shepherd-core"),
-                    state.get("core_version"),
-                )
-        else:
-            log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
-
     def request(self, method: str, route: str, **kwargs: Unpack[dict]) -> Response:
         """Preconfigured request that handles timeouts, authentication & most common errors."""
         # TODO: add retries?
@@ -102,11 +60,11 @@ class TestbedClient(AbcClient):
             msg = f"Request timed out on {method}({url})"
             raise ConnectionError(msg) from None
         except requests.ConnectionError:
-            msg = f"Request failed to connect for {method}({url})"
+            msg = f"Request failed with {method}({url})"
             raise ConnectionError(msg) from None
 
     @staticmethod
-    def response_msg(rsp: Response) -> str:
+    def _msg(rsp: Response) -> str:
         """"""
         try:
             return f"{rsp.reason} - {rsp.json()['detail']}"
@@ -114,9 +72,71 @@ class TestbedClient(AbcClient):
             return f"{rsp.reason}"
 
     # ####################################################################
-    # Content
+    # Testbed-Status
     # ####################################################################
 
+    def status(self) -> bool:
+        rsp = self.request("get", "")
+
+        if not rsp.ok:
+            log.warning("Failed to fetch status from WebApi: %s", self._msg(rsp))
+            return True
+
+        had_error = False
+        state = rsp.json()
+        scheduler = state.get("scheduler")
+        if isinstance(scheduler, dict):
+            active = scheduler.get("activated")
+            if active is None:
+                log.warning("Scheduler not active!")
+                had_error = True
+            dry_run = scheduler.get("dry_run")
+            if dry_run:
+                log.warning("Scheduler is running in demo-mode (dry-run)!")
+                had_error = True
+            targets_offline = scheduler.get("targets_offline")
+            if isinstance(targets_offline, Collection) and len(targets_offline) > 0:
+                log.warning("One or more targets seem to be offline: %s", targets_offline)
+                had_error = True
+            # TODO: could tests for last update being old
+        if metadata.version("shepherd-client") != state.get("server_version"):
+            log.warning("Your client version does not match with server -> consider upgrading")
+            log.info(
+                "client v%s vs server v%s",
+                metadata.version("shepherd-client"),
+                state.get("server_version"),
+            )
+        if metadata.version("shepherd-core") != state.get("core_version"):
+            log.warning(
+                "Your version of shepherd-core does not match with server -> consider upgrading"
+            )
+            log.info(
+                "shepherd-core on client %s vs %s on server",
+                metadata.version("shepherd-core"),
+                state.get("core_version"),
+            )
+        return had_error
+
+    def testbed(self) -> str:
+        rsp = self.request("get", "testbed")
+        if not rsp.ok:
+            msg = (f"Failed to fetch status from WebApi: {self._msg(rsp)}",)
+            raise ConnectionError(msg)
+        state = rsp.json()
+        return state.get("name")
+
+    def get_restrictions(self) -> list[str]:
+        rsp = self.request("get", "testbed/restrictions")
+        if not rsp.ok:
+            log.warning("Query for restrictions failed with: %s", self._msg(rsp))
+            return []
+        return rsp.json()
+
+    # ####################################################################
+    # Content & Component Models
+    # ####################################################################
+
+    # TODO: rename to list_resource_types()
     def list_content_types(self) -> list[str]:
         rsp = self.request("get", "content")
         if rsp is None or not rsp.ok:

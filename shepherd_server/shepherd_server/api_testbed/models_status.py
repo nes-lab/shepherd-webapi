@@ -28,7 +28,6 @@ class ApiStatus(BaseModel):
 
 
 class TestbedStatus(BaseModel):
-    testbed: str | None = None
     restrictions: list[str] | None = None
 
     timestamp_timezone: str = "UTC"

@@ -17,7 +17,6 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
-from shepherd_core.config import core_config
 from shepherd_core.data_models.base.timezone import local_now
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -105,7 +104,6 @@ async def favicon2() -> FileResponse:
 async def update_status() -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
-    tb_.testbed = core_config.TESTBED
     tb_.webapi.activated = local_now()
     tb_.server_version = metadata.version("shepherd-server")
     tb_.core_version = metadata.version("shepherd-core")
@@ -135,6 +133,6 @@ def run() -> None:
         uvi_args["ssl_keyfile"] = server_config.ssl_keyfile.as_posix()
         uvi_args["ssl_certfile"] = server_config.ssl_certfile.as_posix()
 
-    prepare_fixture_client()  # must run before update_status()
+    prepare_fixture_client()
     asyncio.run(update_status())
     uvicorn.run(**uvi_args)

@@ -12,16 +12,16 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from starlette.responses import FileResponse
 
-from shepherd_server.api_user.models import User
-from shepherd_server.api_user.models import UserRole
-from shepherd_server.api_user.utils_misc import active_user_is_admin
-from shepherd_server.api_user.utils_misc import current_active_user
+from shepherd_server.api_accounts.models import User
+from shepherd_server.api_accounts.models import UserRole
+from shepherd_server.api_accounts.utils_misc import active_user_is_admin
+from shepherd_server.api_accounts.utils_misc import current_active_user
 from shepherd_server.config import server_config
 
 from .models import ExperimentStats
 from .models import WebExperiment
 
-router = APIRouter(prefix="/experiment", tags=["Experiment"])
+router = APIRouter(prefix="/experiments", tags=["Experiments"])
 
 
 @router.post("/")

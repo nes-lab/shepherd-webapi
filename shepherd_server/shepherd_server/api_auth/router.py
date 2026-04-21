@@ -6,8 +6,8 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from shepherd_core.data_models.base.timezone import local_now
 
-from shepherd_server.api_user.models import User
-from shepherd_server.api_user.utils_misc import verify_password_hash
+from shepherd_server.api_accounts.models import User
+from shepherd_server.api_accounts.utils_misc import verify_password_hash
 
 from .models import AccessToken
 from .utils import create_access_token

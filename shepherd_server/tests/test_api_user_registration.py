@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
-from shepherd_server.api_user.utils_mail import MailEngine
-from shepherd_server.api_user.utils_misc import calculate_hash
+from shepherd_server.api_accounts.utils_mail import MailEngine
+from shepherd_server.api_accounts.utils_misc import calculate_hash
 
 from .conftest import UserTestClient
 
@@ -8,7 +8,7 @@ from .conftest import UserTestClient
 def test_user_approves_registration_rejected(client: UserTestClient) -> None:
     with client.authenticate_user_1():
         rsp = client.post(
-            url="/user/approve",
+            url="/accounts/approve",
             json={"email": "some_new_user@test.com"},
         )
         assert rsp.status_code >= 400
@@ -20,7 +20,7 @@ def test_admin_approves_registration(
 ) -> None:
     with client.authenticate_admin():
         rsp = client.post(
-            url="/user/approve",
+            url="/accounts/approve",
             json={"email": "some_new_user@test.com"},
         )
         assert rsp.status_code == 200
@@ -32,7 +32,7 @@ def test_admin_approves_registration(
 
 def test_register_user_without_token(client: TestClient) -> None:
     response = client.post(
-        "/user/register",
+        "/accounts/register",
         json={
             "email": "new@test.com",
             "password": "new_looong_pw",
@@ -43,7 +43,7 @@ def test_register_user_without_token(client: TestClient) -> None:
 
 def test_register_user_with_invalid_token(client: TestClient) -> None:
     response = client.post(
-        "/user/register",
+        "/accounts/register",
         json={
             "email": "new@test.com",
             "password": "new_looong_pw",
@@ -59,7 +59,7 @@ def test_register_user_sends_mail(
 ) -> None:
     with client.authenticate_admin():
         rsp = client.post(
-            url="/user/approve",
+            url="/accounts/approve",
             json={"email": "new@test.com"},
         )
         assert rsp.status_code == 200
@@ -68,7 +68,7 @@ def test_register_user_sends_mail(
 
     with client.regular_joe():
         response = client.post(
-            "/user/register",
+            "/accounts/register",
             json={"email": "new@test.com", "password": "new_looong_pw", "token": token},
         )
         assert response.status_code == 200
@@ -80,7 +80,7 @@ def test_register_user_rejects_existing_account(
     mail_engine_mock: MailEngine,
 ) -> None:
     response = client.post(
-        "/user/register",
+        "/accounts/register",
         json={
             "email": "user@test.com",
             "password": "new_looong_pw",
@@ -95,7 +95,7 @@ def test_register_user_rejects_short_pw(
     client: TestClient,
 ) -> None:
     response = client.post(
-        "/user/register",
+        "/accounts/register",
         json={
             "email": "short@test.com",
             "password": "short_pw",

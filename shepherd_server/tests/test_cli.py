@@ -2,7 +2,7 @@ from signal import signal
 
 import pytest
 from fastapi.testclient import TestClient
-from shepherd_server.api_user.utils_mail import MailEngine
+from shepherd_server.api_accounts.utils_mail import MailEngine
 from shepherd_server.cli import cli
 from typer.testing import CliRunner
 
@@ -90,7 +90,7 @@ def test_cli_create_admin_new(client: TestClient, mail_engine_mock: MailEngine) 
     _, token = mail_engine_mock.send_verification_email.call_args.args
     with client.regular_joe():
         verification_response = client.post(
-            f"/user/verify/{token}",
+            f"/accounts/verify/{token}",
         )
         assert verification_response.status_code == 200
 

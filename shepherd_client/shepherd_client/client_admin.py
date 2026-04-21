@@ -47,7 +47,7 @@ class AdminClient(UserClient):
         This will also send out an email for account verification.
         """
         data = {"email": user}
-        rsp = self.request("post", "user/approve", json=data)
+        rsp = self.request("post", "accounts/approve", json=data)
         if not rsp.ok:
             log.warning("Approval of '%s' failed with: %s", user, self._msg(rsp))
         else:
@@ -55,7 +55,7 @@ class AdminClient(UserClient):
 
     def change_account_state(self, user: EmailStr, *, enabled: bool) -> None:
         data = {"email": user, "enabled": enabled}
-        rsp = self.request("post", "user/change_state", json=data)
+        rsp = self.request("post", "accounts/change_state", json=data)
         if not rsp.ok:
             log.warning("User-State-Change of '%s' failed with: %s", user, self._msg(rsp))
         else:
@@ -80,7 +80,7 @@ class AdminClient(UserClient):
                 "custom_quota_storage": storage,
             },
         }
-        rsp = self.request("patch", "user/quota", json=data)
+        rsp = self.request("patch", "accounts/quota", json=data)
         if not rsp.ok:
             log.warning("Extension of Quota failed with: %s", self._msg(rsp))
         else:
@@ -135,7 +135,7 @@ class AdminClient(UserClient):
 
     def list_all_experiments(self, *, only_finished: bool = False) -> list[UUID]:
         """Query experiment-IDs (from all users, even deleted ones)."""
-        rsp = self.request("get", "experiment/all")
+        rsp = self.request("get", "experiments/all")
         if not rsp.ok:
             return []
         if only_finished:

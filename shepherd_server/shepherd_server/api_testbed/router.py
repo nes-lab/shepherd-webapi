@@ -16,8 +16,8 @@ from shepherd_core.testbed_client import tb_client
 from shepherd_herd import Herd
 
 from shepherd_server.api_testbed.models_status import TestbedDB
-from shepherd_server.api_user.utils_misc import active_user_is_admin
-from shepherd_server.api_user.utils_misc import active_user_is_elevated
+from shepherd_server.api_accounts.utils_misc import active_user_is_admin
+from shepherd_server.api_accounts.utils_misc import active_user_is_elevated
 from shepherd_server.config import server_config
 
 router = APIRouter(prefix="/testbed", tags=["Testbed"])

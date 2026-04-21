@@ -22,11 +22,11 @@ from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.writer import Writer as CoreWriter
-from shepherd_server.api_experiment.models import WebExperiment
-from shepherd_server.api_user.models import User
-from shepherd_server.api_user.models import UserRole
-from shepherd_server.api_user.utils_mail import MailEngine
-from shepherd_server.api_user.utils_misc import calculate_password_hash
+from shepherd_server.api_experiments.models import WebExperiment
+from shepherd_server.api_accounts.models import User
+from shepherd_server.api_accounts.models import UserRole
+from shepherd_server.api_accounts.utils_mail import MailEngine
+from shepherd_server.api_accounts.utils_misc import calculate_password_hash
 from shepherd_server.config import server_config as server_cfg
 from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
@@ -192,7 +192,7 @@ def client(*, database_for_tests: bool) -> Generator[TestClient]:
         yield client
 
 
-# @mock.patch("shepherd_server.api_user.utils_mail.FastMailEngine")
+# @mock.patch("shepherd_server.api_accounts.utils_mail.FastMailEngine")
 class MockMailEngine(MailEngine):
     def __init__(self) -> None:
         self.send_verification_email = AsyncMock()
@@ -203,7 +203,7 @@ class MockMailEngine(MailEngine):
 
 @pytest.fixture
 def mail_engine_mock() -> MailEngine:
-    from shepherd_server.api_user.utils_mail import set_mail_engine
+    from shepherd_server.api_accounts.utils_mail import set_mail_engine
 
     mock_engine = MockMailEngine()
     set_mail_engine(mock_engine)

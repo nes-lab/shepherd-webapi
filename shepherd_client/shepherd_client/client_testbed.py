@@ -137,19 +137,19 @@ class TestbedClient(AbcClient):
     # ####################################################################
 
     def list_resource_types(self) -> list[str]:
-        rsp = self.request("get", "content")
+        rsp = self.request("get", "resources")
         if rsp is None or not rsp.ok:
             return []
         return rsp.json()
 
     def list_resource_ids(self, model_type: str) -> list[int]:
-        rsp = self.request("get", f"content/{model_type}")
+        rsp = self.request("get", f"resources/{model_type}")
         if not rsp.ok:
             return []
         return list(rsp.json().keys())
 
     def list_resource_names(self, model_type: str) -> list[str]:
-        rsp = self.request("get", f"content/{model_type}")
+        rsp = self.request("get", f"resources/{model_type}")
         if not rsp.ok:
             return []
         return list(rsp.json().values())
@@ -158,7 +158,7 @@ class TestbedClient(AbcClient):
         self, model_type: str, uid: int | None = None, name: str | None = None
     ) -> dict:
         # TODO: divide into by_id and by_name?
-        rsp = self.request("get", f"content/{model_type}/{uid if uid is not None else name}")
+        rsp = self.request("get", f"resources/{model_type}/{uid if uid is not None else name}")
         if not rsp.ok:
             return {}
         return rsp.json()

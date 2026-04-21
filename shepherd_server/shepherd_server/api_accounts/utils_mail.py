@@ -8,7 +8,7 @@ from fastapi_mail import MessageSchema
 from fastapi_mail import MessageType
 from pydantic import EmailStr
 
-from shepherd_server.api_experiment.models import WebExperiment
+from shepherd_server.api_experiments.models import WebExperiment
 from shepherd_server.config import server_config
 from shepherd_server.logger import log
 
@@ -74,7 +74,7 @@ class FastMailEngine(MailEngine):
 
     async def send_verification_email(self, email: EmailStr, token: str) -> None:
         """Send user verification email."""
-        _url = f"{server_config.server_url()}/user/verify/{token}"
+        _url = f"{server_config.server_url()}/accounts/verify/{token}"
         log.info("Verification E-Mail was sent to User (Account deactivated by default).")
         if self.mail_srv is not None:
             message = MessageSchema(
@@ -102,7 +102,7 @@ class FastMailEngine(MailEngine):
     async def send_password_reset_email(self, email: EmailStr, token: str) -> None:
         """Send password reset email."""
         # Change this later to public endpoint
-        _url = f"{server_config.server_url()}/user/reset-password/{token}"
+        _url = f"{server_config.server_url()}/accounts/reset-password/{token}"
         log.debug("-> EMAIL RESET POST to %s", _url)
         if self.mail_srv is not None:
             message = MessageSchema(

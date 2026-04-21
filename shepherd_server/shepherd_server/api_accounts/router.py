@@ -8,8 +8,8 @@ from fastapi import Response
 from pydantic import EmailStr
 from shepherd_core.data_models.base.timezone import local_now
 
-from shepherd_server.api_experiment.models import ExperimentStats
-from shepherd_server.api_experiment.models import WebExperiment
+from shepherd_server.api_experiments.models import ExperimentStats
+from shepherd_server.api_experiments.models import WebExperiment
 
 from .models import PasswordStr
 from .models import User
@@ -24,7 +24,7 @@ from .utils_misc import calculate_hash
 from .utils_misc import calculate_password_hash
 from .utils_misc import current_active_user
 
-router = APIRouter(prefix="/user", tags=["User"])
+router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 
 # ###############################################################

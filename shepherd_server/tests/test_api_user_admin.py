@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-from shepherd_server.api_user.utils_mail import MailEngine
+from shepherd_server.api_accounts.utils_mail import MailEngine
 from shepherd_server.instance_db import db_create_admin
 
 from .conftest import UserTestClient
@@ -24,7 +24,7 @@ def test_unverified_admin_cannot_login(
     client: UserTestClient,
     mail_engine_mock: MailEngine,
 ) -> None:
-    # with mock.patch("shepherd_server.api_user.utils_mail.FastMailEngine", new=MockMailEngine):
+    # with mock.patch("shepherd_server.api_accounts.utils_mail.FastMailEngine", new=MockMailEngine):
     asyncio.run(db_create_admin("padmin2@cadmin.de", "1234567890"))
     # mail_engine_mock.send_verification_email("hasn@kanns", "ods")
     mail_engine_mock.send_verification_email.assert_called_once()
@@ -53,7 +53,7 @@ def test_verified_admin_can_login(
     _, token = mail_engine_mock.send_verification_email.call_args.args
 
     verification_response = client.post(
-        f"/user/verify/{token}",
+        f"/accounts/verify/{token}",
     )
     assert verification_response.status_code == 200
 

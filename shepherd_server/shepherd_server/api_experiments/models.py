@@ -23,8 +23,8 @@ from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.reader import Reader as CoreReader
 
-from shepherd_server.api_user.models import User
-from shepherd_server.api_user.models import UserRole
+from shepherd_server.api_accounts.models import User
+from shepherd_server.api_accounts.models import UserRole
 from shepherd_server.config import server_config
 from shepherd_server.logger import log
 

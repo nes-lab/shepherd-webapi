@@ -6,7 +6,7 @@ from types import FrameType
 
 import typer
 
-from .api_user.models import PasswordStr
+from .api_accounts.models import PasswordStr
 from .logger import log
 from .logger import set_verbosity
 

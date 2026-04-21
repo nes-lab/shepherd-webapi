@@ -20,11 +20,11 @@ from shepherd_herd.herd import Herd
 
 from shepherd_server.instance_fixtures import prepare_fixture_client
 
+from .api_accounts.models import User
+from .api_accounts.utils_mail import get_mail_engine
 from .api_experiments.models import ReplyData
 from .api_experiments.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
-from .api_accounts.models import User
-from .api_accounts.utils_mail import get_mail_engine
 from .async_wrapper import async_wrap
 from .config import server_config
 from .instance_db import db_available

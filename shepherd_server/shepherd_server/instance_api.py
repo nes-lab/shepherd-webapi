@@ -22,13 +22,13 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.responses import FileResponse
 
+from .api_accounts.router import router as accounts_router
 from .api_auth.router import router as auth_router
-from .api_resources.router import router as resources_router
 from .api_experiments.router import router as experiments_router
+from .api_resources.router import router as resources_router
 from .api_testbed.models_status import TestbedDB
 from .api_testbed.models_status import TestbedStatus
 from .api_testbed.router import router as testbed_router
-from .api_accounts.router import router as accounts_router
 from .config import server_config
 from .instance_db import db_available
 from .instance_db import db_client

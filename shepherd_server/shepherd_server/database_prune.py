@@ -1,7 +1,7 @@
 from shepherd_core.data_models.base.timezone import local_now
 
-from .api_experiments.models import WebExperiment
 from .api_accounts.models import User
+from .api_experiments.models import WebExperiment
 from .config import server_config
 from .instance_db import db_client
 from .logger import log

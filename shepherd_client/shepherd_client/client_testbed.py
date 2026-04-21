@@ -1,7 +1,9 @@
 """A basic web-client to access testbed-related content without a login."""
 
+import copy
 from collections.abc import Collection
 from importlib import metadata
+from typing import Any
 
 import requests
 from pydantic import HttpUrl
@@ -18,7 +20,7 @@ from typing_extensions import deprecated
 from .config import ClientConfig
 
 
-@deprecated
+@deprecated("use Client.response_msg() instead")
 def msg(rsp: Response) -> str:
     """"""
     try:
@@ -29,17 +31,18 @@ def msg(rsp: Response) -> str:
 
 class TestbedClient(AbcClient):
     @validate_call
-    def __init__(self, server: HttpUrl | None = None, *, debug: bool = False) -> None:
+    def __init__(self, server: HttpUrl | str | None = None, *, debug: bool = False) -> None:
 
         if debug:
             increase_verbose_level(3)
         self._cfg = ClientConfig.from_file()
         if server is not None:
-            self._cfg.server = server
+            self._cfg.server = HttpUrl(server)
         self._auth: dict | None = None
         core_config.VALIDATE_INFRA = True
         # TODO: add server name and more from server
         self.status()
+        super().__init__()
 
     # ####################################################################
     # Testbed-Status
@@ -47,7 +50,7 @@ class TestbedClient(AbcClient):
 
     def status(self) -> None:
         rsp = requests.get(
-            url=f"{self._cfg.server}/",
+            url=f"{self._cfg.server}",
             timeout=3,
         )
         if rsp.ok:
@@ -83,20 +86,24 @@ class TestbedClient(AbcClient):
         else:
             log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
 
-    def request(self, method: str, route: str, **kwargs: Unpack[dict]) -> Response | None:
+    def request(self, method: str, route: str, **kwargs: Unpack[dict]) -> Response:
         """Preconfigured request that handles timeouts, authentication & most common errors."""
+        # TODO: add retries?
+        url = f"{self._cfg.server}{route}"
         try:
-            requests.request(
+            return requests.request(
                 method=method,
-                url=f"{self._cfg.server}{route}",
+                url=url,
                 headers=self._auth,
                 timeout=self._cfg.timeout,
                 **kwargs,
             )
         except requests.Timeout:
-            return None
+            msg = f"Request timed out on {method}({url})"
+            raise ConnectionError(msg) from None
         except requests.ConnectionError:
-            return None
+            msg = f"Request failed to connect for {method}({url})"
+            raise ConnectionError(msg) from None
 
     @staticmethod
     def response_msg(rsp: Response) -> str:
@@ -118,23 +125,83 @@ class TestbedClient(AbcClient):
 
     def list_content_ids(self, model_type: str) -> list[int]:
         rsp = self.request("get", f"content/{model_type}")
-        if rsp is None or not rsp.ok:
+        if not rsp.ok:
             return []
-        return rsp.json().keys()
+        return list(rsp.json().keys())
 
     def list_content_names(self, model_type: str) -> list[str]:
         rsp = self.request("get", f"content/{model_type}")
-        if rsp is None or not rsp.ok:
+        if not rsp.ok:
             return []
-        return rsp.json().values()
-
+        return list(rsp.json().values())
 
     def get_content_item(
         self, model_type: str, uid: int | None = None, name: str | None = None
     ) -> dict:
-        # TODO: divide into by_id and by_name
+        # TODO: divide into by_id and by_name?
         rsp = self.request("get", f"content/{model_type}/{uid if uid is not None else name}")
-        if rsp is None or not rsp.ok:
+        if not rsp.ok:
             return {}
         return rsp.json()
 
+    def _try_inheritance(
+        self, model_type: str, values: dict[str, Any], chain: list[str] | None = None
+    ) -> tuple[dict[str, Any], list[str]]:
+        """Copy of Fixture().inheritance()."""
+        if chain is None:
+            chain: list[str] = []
+        values = copy.copy(values)
+        post_process: bool = False
+        fixture_base: dict = {}
+        if "inherit_from" in values:
+            fixture_name = values.pop("inherit_from")
+            # ⤷ will also remove entry from dict
+            if "name" in values and len(chain) < 1:
+                base_name = str(values.get("name"))
+                if base_name in chain:
+                    msg = f"Inheritance-Circle detected ({base_name} already in {chain})"
+                    raise ValueError(msg)
+                if base_name == fixture_name:
+                    msg = f"Inheritance-Circle detected ({base_name} == {fixture_name})"
+                    raise ValueError(msg)
+                chain.append(base_name)
+            fixture_base = copy.copy(self[fixture_name])
+            log.debug("'%s' will inherit from '%s'", model_type, fixture_name)
+            fixture_base["name"] = fixture_name
+            chain.append(fixture_name)
+            base_dict, chain = self._try_inheritance(
+                model_type=model_type, values=fixture_base, chain=chain
+            )
+            for key, value in values.items():
+                # keep previous entries
+                base_dict[key] = value
+            values = base_dict
+
+        # TODO: cleanup and simplify - use fill_mode() and line up with web-interface
+        elif "name" in values and str(values.get("name")).lower() in self.list_content_names(
+            model_type
+        ):
+            fixture_name = str(values.get("name")).lower()
+            fixture_base = copy.copy(self.get_content_item(model_type, name=fixture_name))
+            post_process = True
+
+        elif values.get("id") in self.list_content_ids(model_type):
+            id_ = values["id"]
+            fixture_base = copy.copy(self.get_content_item(model_type, uid=id_))
+            post_process = True
+
+        if post_process:
+            # last two cases need
+            for key, value in values.items():
+                # keep previous entries
+                fixture_base[key] = value
+            if "inherit_from" in fixture_base:
+                log.error("Inheritance on server-data should not occur!")
+                # TODO: test for that?
+                # as long as this key is present this will act recursively
+                chain.append(fixture_base["name"])
+                values, chain = self._try_inheritance(model_type, values=fixture_base, chain=chain)
+            else:
+                values = fixture_base
+
+        return values, chain

@@ -74,6 +74,7 @@ async def list_experiments(
 
 @router.get("/all", dependencies=[Depends(active_user_is_admin)])
 async def list_all_experiments() -> dict[UUID, str]:
+    # not the most elegant solution, but this is admin-only anyway
     st_states = await ExperimentStats.get_all_states()
     xp_states = await WebExperiment.get_all_states()
     return st_states | xp_states
@@ -209,6 +210,7 @@ async def download_sheep_file(
         raise HTTPException(404, "Not Found")
 
     # TODO: route privacy should be modeled canonically
+    # TODO: allow admin to download data
     if web_experiment.owner.email != user.email:
         raise HTTPException(403, "Forbidden")
 

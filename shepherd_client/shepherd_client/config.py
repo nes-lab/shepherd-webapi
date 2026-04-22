@@ -39,7 +39,7 @@ class ClientConfig(BaseModel):
 
     server: HttpUrl = server_default
     """ ⤷ note that '/' at the end is needed and automatically added when casting to HttpUrl."""
-    user_email: EmailStr | None = None
+    account_email: EmailStr | None = None
     password: PasswordStr | None = Field(default_factory=generate_password)
     timeout: int = 3
 

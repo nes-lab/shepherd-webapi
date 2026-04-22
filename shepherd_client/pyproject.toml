@@ -45,8 +45,9 @@ dev = []
 test = [
     "pytest",
     "pytest-click",
-    #"pytest-dependency",
-    #"pytest-timeout",
+    "pytest-async",
+    "pytest-dependency",
+    "pytest-timeout",
     "coverage",
     "shepherd-server",
 ]

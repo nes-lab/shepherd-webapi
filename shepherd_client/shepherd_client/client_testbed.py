@@ -44,7 +44,7 @@ class TestbedClient(AbcClient):
         self.status()
         super().__init__()
 
-    def request(self, method: str, route: str, **kwargs: Unpack[dict]) -> Response:
+    def _req(self, method: str, route: str, **kwargs: Unpack[dict]) -> Response:
         """Preconfigured request that handles timeouts, authentication & most common errors."""
         # TODO: add retries?
         url = f"{self._cfg.server}{route.lstrip('/')}"
@@ -76,7 +76,7 @@ class TestbedClient(AbcClient):
     # ####################################################################
 
     def status(self) -> bool:
-        rsp = self.request("get", "/")
+        rsp = self._req("get", "/")
 
         if not rsp.ok:
             log.warning("Failed to fetch status from WebApi: %s", self._msg(rsp))
@@ -118,7 +118,7 @@ class TestbedClient(AbcClient):
         return had_error
 
     def testbed(self) -> str:
-        rsp = self.request("get", "/testbed")
+        rsp = self._req("get", "/testbed")
         if not rsp.ok:
             msg = (f"Failed to fetch status from WebApi: {self._msg(rsp)}",)
             raise ConnectionError(msg)
@@ -126,7 +126,7 @@ class TestbedClient(AbcClient):
         return state.get("name")
 
     def get_restrictions(self) -> list[str]:
-        rsp = self.request("get", "/testbed/restrictions")
+        rsp = self._req("get", "/testbed/restrictions")
         if not rsp.ok:
             log.warning("Query for restrictions failed with: %s", self._msg(rsp))
             return []
@@ -137,19 +137,19 @@ class TestbedClient(AbcClient):
     # ####################################################################
 
     def list_resource_types(self) -> list[str]:
-        rsp = self.request("get", "/resources")
+        rsp = self._req("get", "/resources")
         if rsp is None or not rsp.ok:
             return []
         return rsp.json()
 
     def list_resource_ids(self, model_type: str) -> list[int]:
-        rsp = self.request("get", f"/resources/{model_type}")
+        rsp = self._req("get", f"/resources/{model_type}")
         if not rsp.ok:
             return []
         return list(rsp.json().keys())
 
     def list_resource_names(self, model_type: str) -> list[str]:
-        rsp = self.request("get", f"/resources/{model_type}")
+        rsp = self._req("get", f"/resources/{model_type}")
         if not rsp.ok:
             return []
         return list(rsp.json().values())
@@ -158,7 +158,7 @@ class TestbedClient(AbcClient):
         self, model_type: str, uid: int | None = None, name: str | None = None
     ) -> dict:
         # TODO: divide into by_id and by_name?
-        rsp = self.request("get", f"/resources/{model_type}/{uid if uid is not None else name}")
+        rsp = self._req("get", f"/resources/{model_type}/{uid if uid is not None else name}")
         if not rsp.ok:
             return {}
         return rsp.json()

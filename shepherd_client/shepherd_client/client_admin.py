@@ -16,7 +16,7 @@ class AdminClient(UserClient):
     @validate_call
     def __init__(
         self,
-        admin_email: EmailStr | None = None,
+        account_email: EmailStr | None = None,
         password: PasswordStr | None = None,
         server: HttpUrl | None = None,
         *,
@@ -24,7 +24,7 @@ class AdminClient(UserClient):
     ) -> None:
         super().__init__(
             server=server,
-            user_email=admin_email,
+            account_email=account_email,
             password=password,
             save_credentials=save_credentials,
             debug=True,
@@ -47,7 +47,7 @@ class AdminClient(UserClient):
         This will also send out an email for account verification.
         """
         data = {"email": user}
-        rsp = self.request("post", "/accounts/approve", json=data)
+        rsp = self._req("post", "/accounts/approve", json=data)
         if not rsp.ok:
             log.warning("Approval of '%s' failed with: %s", user, self._msg(rsp))
         else:
@@ -55,7 +55,7 @@ class AdminClient(UserClient):
 
     def change_account_state(self, user: EmailStr, *, enabled: bool) -> None:
         data = {"email": user, "enabled": enabled}
-        rsp = self.request("post", "/accounts/change_state", json=data)
+        rsp = self._req("post", "/accounts/change_state", json=data)
         if not rsp.ok:
             log.warning("User-State-Change of '%s' failed with: %s", user, self._msg(rsp))
         else:
@@ -63,7 +63,7 @@ class AdminClient(UserClient):
 
     def extend_quota(
         self,
-        user_email: EmailStr,
+        account_email: EmailStr,
         duration: timedelta | None = None,
         storage: int | None = None,
         expire_date: datetime | None = None,
@@ -73,14 +73,14 @@ class AdminClient(UserClient):
         Only non-None fields get set by the API.
         """
         data = {
-            "email": user_email,
+            "email": account_email,
             "quota": {
                 "custom_quota_expire_date": expire_date,
                 "custom_quota_duration": duration,
                 "custom_quota_storage": storage,
             },
         }
-        rsp = self.request("patch", "/accounts/quota", json=data)
+        rsp = self._req("patch", "/accounts/quota", json=data)
         if not rsp.ok:
             log.warning("Extension of Quota failed with: %s", self._msg(rsp))
         else:
@@ -92,14 +92,14 @@ class AdminClient(UserClient):
 
     def set_restrictions(self, restrictions: list[str]) -> None:
         data = {"value": restrictions}
-        rsp = self.request("patch", "/testbed/restrictions", json=data)
+        rsp = self._req("patch", "/testbed/restrictions", json=data)
         if not rsp.ok:
             log.warning("Updating Restrictions failed with: %s", self._msg(rsp))
         else:
             log.info("Updating Restrictions succeeded with: %s", rsp.reason)
 
     def get_commands(self) -> list[str]:
-        rsp = self.request("get", "/testbed/command")
+        rsp = self._req("get", "/testbed/command")
         if not rsp.ok:
             log.warning("Query for commands failed with: %s", self._msg(rsp))
             return []
@@ -135,7 +135,7 @@ class AdminClient(UserClient):
 
     def list_all_experiments(self, *, only_finished: bool = False) -> list[UUID]:
         """Query experiment-IDs (from all users, even deleted ones)."""
-        rsp = self.request("get", "/experiments/all")
+        rsp = self._req("get", "/experiments/all")
         if not rsp.ok:
             return []
         if only_finished:

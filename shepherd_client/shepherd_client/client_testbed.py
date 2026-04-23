@@ -48,9 +48,11 @@ class TestbedClient(AbcClient):
         super().__init__()
 
     @staticmethod
-    def reset_config() -> None:
+    def reset_config() -> bool:
         """Resets client config if loading from file fails."""
+        backed_up = ClientConfig().backup()
         ClientConfig().to_file()  # overwrites with default
+        return backed_up
 
     def _req(self, method: str, route: str, **kwargs: Unpack[dict]) -> Response:
         """Preconfigured request that handles timeouts, authentication & most common errors."""

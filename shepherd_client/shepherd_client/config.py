@@ -30,7 +30,6 @@ def get_xdg_config() -> Path:
     return Path(_value).resolve()
 
 
-path_shp_config = get_xdg_config() / "shepherd/client.yaml"
 server_default = HttpUrl("https://shepherd.cfaed.tu-dresden.de:8000")
 
 
@@ -50,20 +49,34 @@ class ClientConfig(BaseModel):
             created=local_now(),
             parameters=self.model_dump(exclude_unset=True),
         ).model_dump(exclude_unset=True, exclude_defaults=True)
-        if not path_shp_config.parent.exists():
-            path_shp_config.parent.mkdir(parents=True)
-        with path_shp_config.open("w", encoding="utf-8") as cfg_file:
+        config_path = self.file_path()
+        if not config_path.parent.exists():
+            config_path.parent.mkdir(parents=True)
+        with config_path.open("w", encoding="utf-8") as cfg_file:
             ryaml.dump(cfg_file, model_wrap)
 
     @classmethod
     def from_file(cls) -> Self:
         """Load from YAML."""
-        if not path_shp_config.exists():
+        config_path = cls.file_path()
+        if not config_path.exists():
             log.debug("No config found, will use default")
             return cls()
-        with path_shp_config.open(encoding="utf-8") as cfg_file:
+        with config_path.open(encoding="utf-8") as cfg_file:
             cfg_dict = ryaml.load(cfg_file)
         cfg_wrap = Wrapper(**cfg_dict)
         if cfg_wrap.datatype not in {cls.__name__, "Config"}:
             raise ValueError("Data in file does not match the requirement")
         return cls(**cfg_wrap.parameters)
+
+    @classmethod
+    def file_path(cls) -> Path:
+        return get_xdg_config() / "shepherd/client.yaml"
+
+    @classmethod
+    def backup(cls) -> bool:
+        path_config = cls.file_path()
+        if path_config.exists():
+            path_config.rename(path_config.with_suffix(f".backup_{local_now().isoformat()}"))
+            return True
+        return False

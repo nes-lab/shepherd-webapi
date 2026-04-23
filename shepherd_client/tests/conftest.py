@@ -80,6 +80,7 @@ async def _primed_database(
     unconfirmed_user = user.model_copy(deep=True)
     unconfirmed_user.email = "unconfirmed_mail@test.com"
     unconfirmed_user.email_confirmed_at = None
+    unconfirmed_user.token_verification = "very-secure-token"  # noqa: S105
     await User.insert_one(unconfirmed_user)
 
     disabled_user = user.model_copy(deep=True)
@@ -133,7 +134,7 @@ def testbed_client() -> AbcClient:
 
 
 @pytest.fixture
-def user_client() -> AbcClient:
+def user1_client() -> AbcClient:
     return UserClient(
         account_email="user@test.com",
         password="safe-password",  # noqa: S106
@@ -153,9 +154,22 @@ def user2_client() -> AbcClient:
 
 
 @pytest.fixture
-def user0_client() -> AbcClient:
+def unconfirmed_client() -> AbcClient:
     # TODO: this loads local files, should we fake FS? done in sheep-tests
     return UserClient(
+        account_email="unconfirmed_mail@test.com",
+        password="safe-password",  # noqa: S106
+        server=server_cfg.server_url(),
+        debug=True,
+    )
+
+
+@pytest.fixture
+def disabled_client() -> AbcClient:
+    # TODO: this loads local files, should we fake FS? done in sheep-tests
+    return UserClient(
+        account_email="disabled@test.com",
+        password="safe-password",  # noqa: S106
         server=server_cfg.server_url(),
         debug=True,
     )

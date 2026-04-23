@@ -67,11 +67,17 @@ class AdminClient(UserClient):
         duration: timedelta | None = None,
         storage: int | None = None,
         expire_date: datetime | None = None,
+        *,
+        force: bool = False,
     ) -> None:
         """Extend account limitations of a user-account.
 
-        Only non-None fields get set by the API.
+        Without force, only non-None fields get set by the API.
         """
+        if isinstance(duration, timedelta):
+            duration: float = duration.total_seconds()
+        if isinstance(expire_date, datetime):
+            expire_date: str = expire_date.isoformat()
         data = {
             "email": account_email,
             "quota": {
@@ -79,6 +85,7 @@ class AdminClient(UserClient):
                 "custom_quota_duration": duration,
                 "custom_quota_storage": storage,
             },
+            "force": force,
         }
         rsp = self._req("patch", "/accounts/quota", json=data)
         if not rsp.ok:

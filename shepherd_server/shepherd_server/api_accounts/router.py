@@ -80,15 +80,16 @@ async def delete_user(
 async def update_quota(
     email: Annotated[EmailStr, Body(embed=True)],
     quota: Annotated[UserQuota, Body(embed=True)],
+    force: Annotated[bool, Body(embed=True)],
 ) -> UserQuota:
     _user = await User.by_email(email)
     if _user is None:
         raise HTTPException(status_code=401, detail="Incorrect username")
-    if quota.custom_quota_expire_date is not None:
+    if force or quota.custom_quota_expire_date is not None:
         _user.custom_quota_expire_date = quota.custom_quota_expire_date
-    if quota.custom_quota_duration is not None:
+    if force or quota.custom_quota_duration is not None:
         _user.custom_quota_duration = quota.custom_quota_duration
-    if quota.custom_quota_storage is not None:
+    if force or quota.custom_quota_storage is not None:
         _user.custom_quota_storage = quota.custom_quota_storage
     await _user.save_changes()
     # TODO: inform user about it?

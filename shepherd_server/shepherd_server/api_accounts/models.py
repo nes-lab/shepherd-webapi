@@ -26,12 +26,17 @@ PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pat
 
 
 class UserRole(StrEnum):
-    """Options for roles."""
+    """Options for roles.
+
+    elevated - might get VIP privileges like fast-path for scheduler
+    admin - can register new users, extend quota, control experiments of other users (RW-access)
+
+    # TODO: add group-admin, elevated user (VIP privileges like fast-path for scheduler)
+    """
 
     user = "user"
     elevated = "elevated"
     admin = "admin"
-    # TODO: add group-admin, elevated user (VIP privileges like faster path for scheduler)
 
 
 class UserRegistration(BaseModel):

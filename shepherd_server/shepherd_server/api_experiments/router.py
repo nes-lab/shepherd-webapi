@@ -37,7 +37,8 @@ async def create_experiment(
         )
     if (experiment.duration is None) or (experiment.duration > user.quota_duration):
         raise HTTPException(
-            403, f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)"
+            403,
+            f"xp.duration must be set to value <= {user.quota_duration} s (user-quota)",
         )
 
     tb = Testbed(name=server_config.testbed_name)
@@ -88,10 +89,11 @@ async def get_experiment(
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
-    if web_experiment.owner.email == user.email:
-        return web_experiment.experiment
-    # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
-    raise HTTPException(403, "Forbidden")
+    if (user.role != UserRole.admin) and (web_experiment.owner.email != user.email):
+        # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
+        raise HTTPException(403, "Forbidden")
+
+    return web_experiment.experiment
 
 
 @router.delete("/{experiment_id}")
@@ -102,11 +104,13 @@ async def delete_experiment(
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
-    if web_experiment.owner.email != user.email:
+    if (user.role != UserRole.admin) and (web_experiment.owner.email != user.email):
+        # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
         raise HTTPException(403, "Forbidden")
     if web_experiment.started_at is not None and web_experiment.finished_at is None:
         # TODO: possible race-condition
         raise HTTPException(409, "Experiment is running - cannot delete")
+
     await ExperimentStats.update_with(web_experiment, to_be_deleted=True)
     await web_experiment.delete_content()
     await web_experiment.delete()
@@ -121,7 +125,7 @@ async def schedule_experiment(
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
-    if web_experiment.owner.email != user.email:
+    if (user.role != UserRole.admin) and (web_experiment.owner.email != user.email):
         raise HTTPException(403, "Forbidden")
     if web_experiment.requested_execution_at is not None:
         raise HTTPException(409, "Experiment already scheduled")
@@ -149,13 +153,10 @@ async def get_experiment_state(
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
+    if (user.role != UserRole.admin) and (web_experiment.owner.email != user.email):
+        raise HTTPException(403, "Forbidden")
 
-    # TODO: route privacy should be modeled canonically
-    if user.role == UserRole.admin:
-        return web_experiment.state
-    if web_experiment.owner.email == user.email:
-        return web_experiment.state
-    raise HTTPException(403, "Forbidden")
+    return web_experiment.state
 
 
 @router.get("/{experiment_id}/download")
@@ -166,11 +167,9 @@ async def download(
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
-
-    # TODO: route privacy should be modeled canonically
-    if web_experiment.owner.email != user.email:
+    if (user.role != UserRole.admin) and (web_experiment.owner.email != user.email):
+        # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
         raise HTTPException(403, "Forbidden")
-
     if web_experiment.state != "finished":
         raise HTTPException(409, "Experiment not yet finished")
 
@@ -190,13 +189,10 @@ async def statistics(
         xp = await ExperimentStats.get_by_id(experiment_id)
     if xp is None:
         raise HTTPException(404, "Not Found")
+    if (user.role != UserRole.admin) and (xp.owner != user.email):
+        raise HTTPException(403, "Forbidden")
 
-    # TODO: route privacy should be modeled canonically
-    if user.role == UserRole.admin:
-        return xp
-    if xp.owner == user.email:
-        return xp
-    raise HTTPException(403, "Forbidden")
+    return xp
 
 
 @router.get("/{experiment_id}/download/{observer}")
@@ -208,17 +204,12 @@ async def download_sheep_file(
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
         raise HTTPException(404, "Not Found")
-
-    # TODO: route privacy should be modeled canonically
-    # TODO: allow admin to download data
-    if web_experiment.owner.email != user.email:
+    if (user.role != UserRole.admin) and (web_experiment.owner.email != user.email):
         raise HTTPException(403, "Forbidden")
-
     if observer not in web_experiment.result_paths:
         raise HTTPException(404, "Observer not contained in resulting list of the experiment.")
 
     output_path = web_experiment.result_paths[observer]
-
     if not output_path.exists() or not output_path.is_file():
         raise HTTPException(404, "File not found on server (but it should exist).")
 

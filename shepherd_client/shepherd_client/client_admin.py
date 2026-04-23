@@ -37,29 +37,31 @@ class AdminClient(UserClient):
     # Account Handling
     # ####################################################################
 
-    def register_account(self, token: str) -> None:
+    def register_account(self, token: str) -> bool:
         """Registration not possible."""
         raise NotImplementedError
 
-    def approve_account(self, user: EmailStr) -> None:
+    def approve_account(self, user: EmailStr) -> bool:
         """Approve Account for registration.
 
         This will also send out an email for account verification.
         """
         data = {"email": user}
         rsp = self._req("post", "/accounts/approve", json=data)
-        if not rsp.ok:
-            log.warning("Approval of '%s' failed with: %s", user, self._msg(rsp))
-        else:
+        if rsp.ok:
             log.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
+        else:
+            log.warning("Approval of '%s' failed with: %s", user, self._msg(rsp))
+        return rsp.ok
 
-    def change_account_state(self, user: EmailStr, *, enabled: bool) -> None:
+    def change_account_state(self, user: EmailStr, *, enabled: bool) -> bool:
         data = {"email": user, "enabled": enabled}
         rsp = self._req("post", "/accounts/change_state", json=data)
-        if not rsp.ok:
-            log.warning("User-State-Change of '%s' failed with: %s", user, self._msg(rsp))
-        else:
+        if rsp.ok:
             log.info("User-State-Change of '%s' succeeded", user)
+        else:
+            log.warning("User-State-Change of '%s' failed with: %s", user, self._msg(rsp))
+        return rsp.ok
 
     def extend_quota(
         self,
@@ -69,7 +71,7 @@ class AdminClient(UserClient):
         expire_date: datetime | None = None,
         *,
         force: bool = False,
-    ) -> None:
+    ) -> bool:
         """Extend account limitations of a user-account.
 
         Without force, only non-None fields get set by the API.
@@ -88,22 +90,24 @@ class AdminClient(UserClient):
             "force": force,
         }
         rsp = self._req("patch", "/accounts/quota", json=data)
-        if not rsp.ok:
-            log.warning("Extension of Quota failed with: %s", self._msg(rsp))
-        else:
+        if rsp.ok:
             log.info("Extension of Quota succeeded with: %s", rsp.json())
+        else:
+            log.warning("Extension of Quota failed with: %s", self._msg(rsp))
+        return rsp.ok
 
     # ####################################################################
     # Testbed-Handling
     # ####################################################################
 
-    def set_restrictions(self, restrictions: list[str]) -> None:
+    def set_restrictions(self, restrictions: list[str]) -> bool:
         data = {"value": restrictions}
         rsp = self._req("patch", "/testbed/restrictions", json=data)
         if not rsp.ok:
-            log.warning("Updating Restrictions failed with: %s", self._msg(rsp))
-        else:
             log.info("Updating Restrictions succeeded with: %s", rsp.reason)
+        else:
+            log.warning("Updating Restrictions failed with: %s", self._msg(rsp))
+        return rsp.ok
 
     def get_commands(self) -> list[str]:
         rsp = self._req("get", "/testbed/command")
@@ -112,12 +116,12 @@ class AdminClient(UserClient):
             return []
         return rsp.json()
 
-    def send_command(self, cmd: str) -> None:
+    def send_command(self, cmd: str) -> bool:
         if self.commands is None:
             self.commands = self.get_commands()
         if cmd not in self.commands:
             log.warning("Command is not supported -> won't try")
-            return
+            return False
         try:
             rsp = requests.patch(
                 url=f"{self._cfg.server}testbed/command",
@@ -131,10 +135,11 @@ class AdminClient(UserClient):
         except requests.ConnectionError:
             msg = "Command failed."
             raise ConnectionError(msg) from None
-        if not rsp.ok:
-            log.warning("Starting command failed with: %s", self._msg(rsp))
-        else:
+        if rsp.ok:
             log.info("Starting command succeeded with: %s", rsp.json())
+        else:
+            log.warning("Starting command failed with: %s", self._msg(rsp))
+        return rsp.ok
 
     # ####################################################################
     # Experiments

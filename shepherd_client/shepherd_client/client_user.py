@@ -63,7 +63,7 @@ class UserClient(TestbedClient):
     # Account
     # ####################################################################
 
-    def authenticate(self) -> None:
+    def authenticate(self) -> bool:
         try:
             rsp = requests.post(
                 url=f"{self._cfg.server}auth/token",
@@ -85,8 +85,9 @@ class UserClient(TestbedClient):
             self._auth = {"Authorization": f"Bearer {rsp.json()['access_token']}"}
         else:
             log.warning("Authentication failed with: %s", self._msg(rsp))
+        return rsp.ok
 
-    def register_account(self, token: str) -> None:
+    def register_account(self, token: str) -> bool:
         """Create a user account with a valid token."""
         if self._auth is not None:
             log.error("User already registered and authenticated")
@@ -100,22 +101,24 @@ class UserClient(TestbedClient):
             log.info(f"User {self._cfg.account_email} registered - check mail to verify account.")
         else:
             log.warning("Registration failed with: %s", self._msg(rsp))
+        return rsp.ok
 
     @deprecated("use .register_account()")
-    def register_user(self, token: str) -> None:
+    def register_user(self, token: str) -> bool:
         return self.register_account(token)
 
-    def delete_account(self) -> None:
+    def delete_account(self) -> bool:
         """Remove account and content from server."""
         rsp = self._req("delete", "/accounts")
         if rsp.ok:
             log.info(f"User {self._cfg.account_email} deleted")
         else:
             log.warning("User-Deletion failed with: %s", self._msg(rsp))
+        return rsp.ok
 
     @deprecated("use .delete_account()")
-    def delete_user(self) -> None:
-        self.delete_account()
+    def delete_user(self) -> bool:
+        return self.delete_account()
 
     def get_account_info(self) -> dict:
         """Query user info stored on the server."""

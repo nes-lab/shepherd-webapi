@@ -15,6 +15,7 @@ from shepherd_client import AdminClient
 # LIST
 # ###############################################################################
 
+
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
 def test_list_experiments(user_client: UserClient) -> None:
@@ -30,6 +31,7 @@ def test_list_finished_experiments(user_client: UserClient) -> None:
     assert len(uids_all) > len(uids_fin)
     assert set(uids_all) & set(uids_fin) == set(uids_fin)  # all finished in ALL
 
+
 @pytest.mark.usefixtures("_server_api_up")
 def test_list_experiments_admin_all(admin_client: AdminClient) -> None:
     uids1 = admin_client.list_experiments()
@@ -37,20 +39,24 @@ def test_list_experiments_admin_all(admin_client: AdminClient) -> None:
     assert len(uids2) >= len(uids1)
     assert len(uids2) > 0
 
+
 # ###############################################################################
 # CREATE
 # ###############################################################################
+
 
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
 def test_create_experiment(user_client: UserClient, sample_experiment: Experiment) -> None:
     assert user_client.create_experiment(sample_experiment) is not None
 
+
 @pytest.mark.usefixtures("_server_api_up")
 def test_create_experiment_is_authenticated(
     user0_client: UserClient, sample_experiment: Experiment
 ) -> None:
     assert user0_client.create_experiment(sample_experiment) is None
+
 
 @pytest.mark.usefixtures("_server_api_up")
 def test_create_experiment_as_admin_succeeds(
@@ -90,9 +96,11 @@ def test_create_experiment_duration_with_valid_quota(
     )
     assert user_client.create_experiment(_xp) is not None
 
+
 # ###############################################################################
 # GET
 # ###############################################################################
+
 
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
@@ -101,6 +109,7 @@ def test_get_experiment_by_id(user_client: UserClient) -> None:
     assert len(uids) > 0
     xp = user_client.get_experiment(uids[0])
     assert isinstance(xp, Experiment)
+
 
 @pytest.mark.usefixtures("_server_api_up")
 def test_get_deleted_experiment_fails(user_client: UserClient) -> None:
@@ -125,6 +134,7 @@ def test_get_experiment_is_private(user_client: UserClient, user2_client: UserCl
     assert len(uids) > 0
     assert user2_client.get_experiment(uids[0]) is None
 
+
 @pytest.mark.usefixtures("_server_api_up")
 def test_get_experiments_as_admin(user_client: UserClient, admin_client: AdminClient) -> None:
     uids = user_client.list_experiments()
@@ -132,20 +142,27 @@ def test_get_experiments_as_admin(user_client: UserClient, admin_client: AdminCl
     xp = admin_client.get_experiment(uids[0])
     assert isinstance(xp, Experiment)
 
+
 # ###############################################################################
 # GET STATE
 # ###############################################################################
 
+
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
-def test_state_of_created_experiments(user_client: UserClient, sample_experiment: Experiment) -> None:
+def test_state_of_created_experiments(
+    user_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     state = user_client.get_experiment_state(uid)
     assert state == "created"
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_state_of_scheduled_experiment(user_client: UserClient, sample_experiment: Experiment) -> None:
+def test_state_of_scheduled_experiment(
+    user_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     success = user_client.schedule_experiment(uid)
@@ -153,18 +170,25 @@ def test_state_of_scheduled_experiment(user_client: UserClient, sample_experimen
     state = user_client.get_experiment_state(uid)
     assert state == "scheduled"
 
+
 @pytest.mark.usefixtures("_server_api_up")
 def test_state_of_running_experiment(user_client: UserClient, running_experiment_id: UUID) -> None:
     state = user_client.get_experiment_state(running_experiment_id)
     assert state == "running"
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_state_of_finished_experiment(user_client: UserClient, finished_experiment_id: UUID) -> None:
+def test_state_of_finished_experiment(
+    user_client: UserClient, finished_experiment_id: UUID
+) -> None:
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_state_of_deleted_experiment_fails(user_client: UserClient, finished_experiment_id: UUID) -> None:
+def test_state_of_deleted_experiment_fails(
+    user_client: UserClient, finished_experiment_id: UUID
+) -> None:
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
     success = user_client.delete_experiment(finished_experiment_id)
@@ -172,19 +196,26 @@ def test_state_of_deleted_experiment_fails(user_client: UserClient, finished_exp
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state is None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_state_of_experiment_is_authenticated(user_client: UserClient, user0_client: UserClient, sample_experiment: Experiment) -> None:
+def test_state_of_experiment_is_authenticated(
+    user_client: UserClient, user0_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     state = user0_client.get_experiment_state(uid)
     assert state is None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_state_of_experiment_is_private(user_client: UserClient, sample_experiment: Experiment, user2_client: UserClient) -> None:
+def test_state_of_experiment_is_private(
+    user_client: UserClient, sample_experiment: Experiment, user2_client: UserClient
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     state = user2_client.get_experiment_state(uid)
     assert state is None
+
 
 @pytest.mark.usefixtures("_server_api_up")
 def test_state_of_experiments_as_admin(user_client: UserClient, admin_client: AdminClient) -> None:
@@ -193,20 +224,27 @@ def test_state_of_experiments_as_admin(user_client: UserClient, admin_client: Ad
     state = admin_client.get_experiment_state(uids[0])
     assert state is not None
 
+
 # ###############################################################################
 # GET STATS
 # ###############################################################################
 
+
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_created_experiments(user_client: UserClient, sample_experiment: Experiment) -> None:
+def test_statistics_of_created_experiments(
+    user_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     stats = user_client.get_experiment_statistics(uid)
     assert stats is not None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_scheduled_experiment(user_client: UserClient, sample_experiment: Experiment) -> None:
+def test_statistics_of_scheduled_experiment(
+    user_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     success = user_client.schedule_experiment(uid)
@@ -214,47 +252,67 @@ def test_statistics_of_scheduled_experiment(user_client: UserClient, sample_expe
     stats = user_client.get_experiment_statistics(uid)
     assert stats is not None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_running_experiment(user_client: UserClient, running_experiment_id: UUID) -> None:
+def test_statistics_of_running_experiment(
+    user_client: UserClient, running_experiment_id: UUID
+) -> None:
     stats = user_client.get_experiment_statistics(running_experiment_id)
     assert stats is not None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_finished_experiment(user_client: UserClient, finished_experiment_id: UUID) -> None:
+def test_statistics_of_finished_experiment(
+    user_client: UserClient, finished_experiment_id: UUID
+) -> None:
     stats = user_client.get_experiment_statistics(finished_experiment_id)
     assert stats is not None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_deleted_experiment(user_client: UserClient, finished_experiment_id: UUID) -> None:
+def test_statistics_of_deleted_experiment(
+    user_client: UserClient, finished_experiment_id: UUID
+) -> None:
     success = user_client.delete_experiment(finished_experiment_id)
     assert success
     stats = user_client.get_experiment_statistics(finished_experiment_id)
     assert stats is not None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_experiment_is_authenticated(user_client: UserClient, user0_client: UserClient, sample_experiment: Experiment) -> None:
+def test_statistics_of_experiment_is_authenticated(
+    user_client: UserClient, user0_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     state = user0_client.get_experiment_state(uid)
     assert state is None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_experiment_is_private(user_client: UserClient, sample_experiment: Experiment, user2_client: UserClient) -> None:
+def test_statistics_of_experiment_is_private(
+    user_client: UserClient, sample_experiment: Experiment, user2_client: UserClient
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     state = user2_client.get_experiment_state(uid)
     assert state is None
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_statistics_of_experiments_as_admin(user_client: UserClient, admin_client: AdminClient) -> None:
+def test_statistics_of_experiments_as_admin(
+    user_client: UserClient, admin_client: AdminClient
+) -> None:
     uids = user_client.list_experiments()
     assert len(uids) > 0
     state = admin_client.get_experiment_state(uids[0])
     assert state is not None
 
+
 # ###############################################################################
 # Schedule
 # ###############################################################################
+
 
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
@@ -268,7 +326,9 @@ def test_schedule_experiment(user_client: UserClient, sample_experiment: Experim
 
 
 @pytest.mark.usefixtures("_server_api_up")
-def test_schedule_scheduled_experiment_is_rejected(user_client: UserClient, sample_experiment: Experiment) -> None:
+def test_schedule_scheduled_experiment_is_rejected(
+    user_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     success = user_client.schedule_experiment(uid)
@@ -278,22 +338,31 @@ def test_schedule_scheduled_experiment_is_rejected(user_client: UserClient, samp
     state = user_client.get_experiment_state(uid)
     assert state == "scheduled"
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_schedule_running_experiment_is_rejected(user_client: UserClient, running_experiment_id: UUID) -> None:
+def test_schedule_running_experiment_is_rejected(
+    user_client: UserClient, running_experiment_id: UUID
+) -> None:
     success = user_client.schedule_experiment(running_experiment_id)
     assert not success
     state = user_client.get_experiment_state(running_experiment_id)
     assert state == "running"
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_schedule_finished_experiment_is_rejected(user_client: UserClient, finished_experiment_id: UUID) -> None:
+def test_schedule_finished_experiment_is_rejected(
+    user_client: UserClient, finished_experiment_id: UUID
+) -> None:
     success = user_client.schedule_experiment(finished_experiment_id)
     assert not success
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_schedule_experiment_is_authenticated(user_client: UserClient, sample_experiment: Experiment, user0_client: UserClient) -> None:
+def test_schedule_experiment_is_authenticated(
+    user_client: UserClient, sample_experiment: Experiment, user0_client: UserClient
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     success = user0_client.schedule_experiment(uid)
@@ -301,8 +370,11 @@ def test_schedule_experiment_is_authenticated(user_client: UserClient, sample_ex
     state = user_client.get_experiment_state(uid)
     assert state == "created"
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_schedule_experiment_is_private(user_client: UserClient, sample_experiment: Experiment, user2_client: UserClient) -> None:
+def test_schedule_experiment_is_private(
+    user_client: UserClient, sample_experiment: Experiment, user2_client: UserClient
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     success = user2_client.schedule_experiment(uid)
@@ -310,9 +382,12 @@ def test_schedule_experiment_is_private(user_client: UserClient, sample_experime
     state = user_client.get_experiment_state(uid)
     assert state == "created"
 
+
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
-def test_schedule_experiment_as_admin(user_client: UserClient, sample_experiment: Experiment, admin_client: AdminClient) -> None:
+def test_schedule_experiment_as_admin(
+    user_client: UserClient, sample_experiment: Experiment, admin_client: AdminClient
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid is not None
     success = admin_client.schedule_experiment(uid)
@@ -320,21 +395,27 @@ def test_schedule_experiment_as_admin(user_client: UserClient, sample_experiment
     state = user_client.get_experiment_state(uid)
     assert state == "scheduled"
 
+
 # ###############################################################################
 # Download
 # ###############################################################################
 
+
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_created_experiment_is_rejected(user_client: UserClient, sample_experiment: Experiment, tmp_path: Path) -> None:
+def test_download_created_experiment_is_rejected(
+    user_client: UserClient, sample_experiment: Experiment, tmp_path: Path
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid
     success = user_client.download_experiment(uid, tmp_path)
     assert not success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_scheduled_experiment_is_rejected(user_client: UserClient, sample_experiment: Experiment,
-                                                      running_experiment_id: str, tmp_path: Path) -> None:
+def test_download_scheduled_experiment_is_rejected(
+    user_client: UserClient, sample_experiment: Experiment, tmp_path: Path
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid
     success = user_client.schedule_experiment(uid)
@@ -342,20 +423,29 @@ def test_download_scheduled_experiment_is_rejected(user_client: UserClient, samp
     success = user_client.download_experiment(uid, tmp_path)
     assert not success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_running_experiment_is_rejected(user_client: UserClient, running_experiment_id: UUID, tmp_path: Path) -> None:
+def test_download_running_experiment_is_rejected(
+    user_client: UserClient, running_experiment_id: UUID, tmp_path: Path
+) -> None:
     success = user_client.download_experiment(running_experiment_id, tmp_path)
     assert not success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_finished_experiment(user_client: UserClient, finished_experiment_id: UUID, tmp_path: Path) -> None:
+def test_download_finished_experiment(
+    user_client: UserClient, finished_experiment_id: UUID, tmp_path: Path
+) -> None:
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
     success = user_client.download_experiment(finished_experiment_id, tmp_path)
     assert success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_deleted_experiment(user_client: UserClient, finished_experiment_id: UUID, tmp_path: Path) -> None:
+def test_download_deleted_experiment(
+    user_client: UserClient, finished_experiment_id: UUID, tmp_path: Path
+) -> None:
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
     success = user_client.delete_experiment(finished_experiment_id)
@@ -363,50 +453,62 @@ def test_download_deleted_experiment(user_client: UserClient, finished_experimen
     success = user_client.download_experiment(finished_experiment_id, tmp_path)
     assert not success
 
+
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_finished_experiment_is_authenticated(user_client: UserClient, user0_client: UserClient, finished_experiment_id: UUID, tmp_path: Path) -> None:
+def test_download_finished_experiment_is_authenticated(
+    user_client: UserClient, user0_client: UserClient, finished_experiment_id: UUID, tmp_path: Path
+) -> None:
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
     success = user0_client.download_experiment(finished_experiment_id, tmp_path)
     assert not success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_finished_experiment_is_private_and_authenticated(user_client: UserClient, user2_client: UserClient, finished_experiment_id: UUID, tmp_path: Path) -> None:
+def test_download_finished_experiment_is_private_and_authenticated(
+    user_client: UserClient, user2_client: UserClient, finished_experiment_id: UUID, tmp_path: Path
+) -> None:
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
     success = user2_client.download_experiment(finished_experiment_id, tmp_path)
     assert not success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_download_finished_experiment_as_admin(user_client: UserClient, admin_client: AdminClient, finished_experiment_id: UUID, tmp_path: Path) -> None:
+def test_download_finished_experiment_as_admin(
+    user_client: UserClient, admin_client: AdminClient, finished_experiment_id: UUID, tmp_path: Path
+) -> None:
     state = user_client.get_experiment_state(finished_experiment_id)
     assert state == "finished"
     success = admin_client.download_experiment(finished_experiment_id, tmp_path)
     assert success
 
+
 # ###############################################################################
 # DELETE
 # ###############################################################################
 
+
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
 def test_delete_nonexisting_experiments_is_rejected(user_client: UserClient) -> None:
-    success = user_client.delete_experiment(UUID('{12345678-1234-5678-1234-567812345678}'))
+    success = user_client.delete_experiment(UUID("{12345678-1234-5678-1234-567812345678}"))
     assert not success
 
 
 @pytest.mark.usefixtures("_server_api_up")
-def test_delete_created_experiments(user_client: UserClient, sample_experiment: Experiment
-                                          ) -> None:
+def test_delete_created_experiments(user_client: UserClient, sample_experiment: Experiment) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid
     success = user_client.delete_experiment(uid)
     assert success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_delete_scheduled_experiments(user_client: UserClient, sample_experiment: Experiment
-                                      ) -> None:
+def test_delete_scheduled_experiments(
+    user_client: UserClient, sample_experiment: Experiment
+) -> None:
     uid = user_client.create_experiment(sample_experiment)
     assert uid
     success = user_client.schedule_experiment(uid)
@@ -414,14 +516,17 @@ def test_delete_scheduled_experiments(user_client: UserClient, sample_experiment
     success = user_client.delete_experiment(uid)
     assert success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_delete_running_experiment_is_rejected(user_client: UserClient,running_experiment_id: UUID) -> None:
+def test_delete_running_experiment_is_rejected(
+    user_client: UserClient, running_experiment_id: UUID
+) -> None:
     success = user_client.delete_experiment(running_experiment_id)
     assert not success
 
+
 @pytest.mark.usefixtures("_server_api_up")
-def test_delete_finished_experiments(user_client: UserClient, finished_experiment_id: UUID
-                                      ) -> None:
+def test_delete_finished_experiments(user_client: UserClient, finished_experiment_id: UUID) -> None:
     success = user_client.delete_experiment(finished_experiment_id)
     assert success
 
@@ -438,6 +543,7 @@ def test_delete_experiment_is_authenticated(
     state = user_client.get_experiment_state(uid)
     assert state is not None
 
+
 @pytest.mark.usefixtures("_server_api_up")
 def test_delete_experiment_is_private(
     user_client: UserClient, user2_client: UserClient, sample_experiment: Experiment
@@ -448,6 +554,7 @@ def test_delete_experiment_is_private(
     assert not success
     state = user_client.get_experiment_state(uid)
     assert state is not None
+
 
 @pytest.mark.usefixtures("_server_api_up")
 def test_delete_experiment_as_admin(

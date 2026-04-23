@@ -1,8 +1,6 @@
-import asyncio
 import os
 from collections.abc import Generator
 from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from unittest import mock
@@ -11,8 +9,6 @@ from uuid import UUID
 
 import pytest
 import pytest_asyncio
-from shepherd_core.testbed_client import AbcClient
-
 from shepherd_client.client_user import UserClient
 from shepherd_core import fw_tools
 from shepherd_core.config import core_config
@@ -27,6 +23,7 @@ from shepherd_core.data_models.experiment import UartLogging
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
+from shepherd_core.testbed_client import AbcClient
 from shepherd_core.writer import Writer as CoreWriter
 from shepherd_server.api_accounts.models import User
 from shepherd_server.api_accounts.models import UserRole
@@ -154,6 +151,7 @@ def user2_client() -> AbcClient:
         debug=True,
     )
 
+
 @pytest.fixture
 def user0_client() -> AbcClient:
     # TODO: this loads local files, should we fake FS? done in sheep-tests
@@ -184,10 +182,10 @@ class MockMailEngine(MailEngine):
 @pytest.fixture
 def mock_mail_engine() -> MockMailEngine:
     from shepherd_server.api_accounts.utils_mail import set_mail_engine
+
     mocki = MockMailEngine()
     set_mail_engine(mocki)
     return mocki
-
 
 
 @pytest.fixture
@@ -206,9 +204,11 @@ def cfg_env() -> bool:
 
 
 @pytest.fixture
-def _server_api_up(*, cfg_env: bool, mock_mail_engine: MockMailEngine) -> Generator[None, None, None]:
+def _server_api_up(
+    *, cfg_env: bool, mock_mail_engine: MockMailEngine
+) -> Generator[None, None, None]:
     assert cfg_env
-    assert MockMailEngine
+    assert mock_mail_engine
     # TODO: could just use Process(target=run_api_server) & .start()
     with ProcessPoolExecutor() as pool:
         pool.submit(run_api_server)
@@ -219,7 +219,7 @@ def _server_api_up(*, cfg_env: bool, mock_mail_engine: MockMailEngine) -> Genera
 
 
 @pytest.fixture
-def _server_scheduler_up(cfg_env: bool) -> Generator[None, None, None]:
+def _server_scheduler_up(*, cfg_env: bool) -> Generator[None, None, None]:
     assert cfg_env
     with ProcessPoolExecutor() as pool:
         pool.submit(run_scheduler_server, dry_run=True)

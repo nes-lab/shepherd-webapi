@@ -37,6 +37,18 @@ class MailEngine:
     async def send_herd_reboot_email(herd_composition: Mapping[str, set]) -> None: ...
 
 
+class MockMailEngine(MailEngine):
+    def __init__(self) -> None:
+        from unittest.mock import AsyncMock
+
+        self.send_approval_email = AsyncMock()
+        self.send_verification_email = AsyncMock()
+        self.send_registration_complete_email = AsyncMock()
+        self.send_password_reset_email = AsyncMock()
+        self.send_experiment_finished_email = AsyncMock()
+        self.send_herd_reboot_email = AsyncMock()
+
+
 class FastMailEngine(MailEngine):
     def __init__(self) -> None:
         if server_config.mail_enabled:
@@ -182,7 +194,7 @@ class FastMailEngine(MailEngine):
             await self.mail_srv.send_message(message)
 
 
-_engine = FastMailEngine()
+_engine = FastMailEngine() if server_config.mail_enabled else MockMailEngine()
 
 
 def get_mail_engine() -> MailEngine:

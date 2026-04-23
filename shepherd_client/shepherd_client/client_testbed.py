@@ -30,12 +30,15 @@ def msg(rsp: Response) -> str:
 
 
 class TestbedClient(AbcClient):
+    __test__ = False  # tell pytest this is no unittest
+
     @validate_call
     def __init__(self, server: HttpUrl | str | None = None, *, debug: bool = False) -> None:
 
         if debug:
             increase_verbose_level(3)
         self._cfg = ClientConfig.from_file()
+        # TODO: exception when file is broken -> offer staticmethod to reset
         if server is not None:
             self._cfg.server = HttpUrl(server)
         self._auth: dict | None = None
@@ -43,6 +46,11 @@ class TestbedClient(AbcClient):
         # TODO: add server name and more from server
         self.status()
         super().__init__()
+
+    @staticmethod
+    def reset_config() -> None:
+        """Resets client config if loading from file fails."""
+        ClientConfig().to_file()  # overwrites with default
 
     def _req(self, method: str, route: str, **kwargs: Unpack[dict]) -> Response:
         """Preconfigured request that handles timeouts, authentication & most common errors."""
@@ -117,7 +125,7 @@ class TestbedClient(AbcClient):
             )
         return had_error
 
-    def testbed(self) -> str:
+    def testbed_name(self) -> str:
         rsp = self._req("get", "/testbed")
         if not rsp.ok:
             msg = (f"Failed to fetch status from WebApi: {self._msg(rsp)}",)

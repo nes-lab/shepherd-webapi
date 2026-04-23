@@ -132,6 +132,28 @@ class UserClient(TestbedClient):
     def get_user_info(self) -> dict:
         return self.get_account_info()
 
+    def request_password_reset(self) -> bool:
+        data = {"email": self._cfg.account_email}
+        rsp = self._req("post", "/accounts/forgot-password", json=data)
+        if rsp.ok:
+            log.info("Request successful - you will shortly receive an email with a reset-token.")
+        else:
+            log.error("Reset request was NOT successful.")
+        return rsp.ok
+
+    @validate_call
+    def reset_password(self, token: str, password: str) -> bool:
+        data = {
+            "token": token,
+            "password": password,
+        }
+        rsp = self._req("post", "/accounts/reset-password", json=data)
+        if rsp.ok:
+            log.info("Password was reset successfully.")
+        else:
+            log.error("Password reset was NOT successful.")
+        return rsp.ok
+
     # ####################################################################
     # Experiments
     # ####################################################################

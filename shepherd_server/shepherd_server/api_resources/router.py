@@ -17,13 +17,14 @@ from shepherd_core.testbed_client import tb_client
 router = APIRouter(prefix="/resources", tags=["Resources"])
 # TODO: rename to resources
 
-content_types = [
+resource_types = [
+    # content
     EnergyEnvironment,
     VirtualHarvesterConfig,
     VirtualSourceConfig,
     VirtualStorageConfig,
     Firmware,
-    # TODO: added tb-components - temp fix to replace fixture client
+    # tb-components
     Cape,
     GPIO,
     MCU,
@@ -31,21 +32,21 @@ content_types = [
     Target,
     Testbed,
 ]
-content_names = [content.__name__.lower() for content in content_types]
+resource_names = [content.__name__.lower() for content in resource_types]
 
 
 @router.get("")
 async def list_content_types() -> list[str]:
-    return sorted(content.__name__ for content in content_types)
+    return sorted(resource.__name__ for resource in resource_types)
 
 
-@router.get("/{content}")
-async def list_content_by_type(content: str) -> dict[int, str]:
-    content = content.lower()
-    if content not in content_names:
+@router.get("/{resource}")
+async def list_resource_by_type(resource: str) -> dict[int, str]:
+    resource = resource.lower()
+    if resource not in resource_names:
         raise HTTPException(404, "Not Found")
-    data = tb_client.list_resource_ids(content)
-    models = [tb_client.get_resource_item(content, uid=uid) for uid in data]
+    data = tb_client.list_resource_names(resource)
+    models = [tb_client.get_resource_item(resource, name=name) for name in data]
     models = [model for model in models if model.get("deprecated") is None]
     models = [
         model for model in models if model.get("visible2all", True)
@@ -61,17 +62,17 @@ async def list_content_by_type(content: str) -> dict[int, str]:
     # TODO: add modifiers-endpoint
 
 
-@router.get("/{content}/{name}")
-async def get_content_by_type_and_name(content: str, name: str) -> ContentModel:
-    content = content.lower()
-    if content not in content_names:
+@router.get("/{resource}/{name}")
+async def get_resource_by_type_and_name(resource: str, name: str) -> ContentModel:
+    resource = resource.lower()
+    if resource not in resource_names:
         raise HTTPException(404, "Not Found")
     try:
-        data = tb_client.get_resource_item(content, name=name)
+        data = tb_client.get_resource_item(resource, name=name)
     except ValueError:
         data = None
-    if name.isdecimal() and int(name) in tb_client.list_resource_ids(content):
-        data = tb_client.get_resource_item(content, uid=int(name))
+    if name.isdecimal() and int(name) in tb_client.list_resource_ids(resource):
+        data = tb_client.get_resource_item(resource, uid=int(name))
     if data is None:
         raise HTTPException(404, "Not Found")
-    return content_types[content_names.index(content)](**data)
+    return resource_types[resource_names.index(resource)](**data)

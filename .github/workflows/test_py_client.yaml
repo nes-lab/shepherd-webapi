@@ -1,4 +1,4 @@
-name: Client - Build, install & [pytest]
+name: Client - Build, install & pytest
 
 on:
   workflow_call:
@@ -25,6 +25,14 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v6
 
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.1
+        with:
+          mongodb-version: 8 # latest
+          # beanie supports v7 & 8
+          # https://beanie-odm.dev/changelog/
+          mongodb-port: 27017  # default (taken from instance_db.py)
+
       - name: Install uv 🔧 & set up Python 🐍
         uses: astral-sh/setup-uv@v7
         with:
@@ -32,12 +40,18 @@ jobs:
           enable-cache: true
           activate-environment: true
 
-      - name: Test-Build Package 🧱
+      - name: Install Server-Package 🧱
+        run: uv pip install .[all]
+        working-directory: "./shepherd_server"
+
+      - name: Test-Build Client-Package 🧱
         run: uv build --clear
         working-directory: "./shepherd_client"
 
-      - name: Install package via uv 🧱
+      - name: Install Client-package 🧱
         run: uv pip install .[all]
         working-directory: "./shepherd_client"
 
-      # TODO: pytest, needs server
+      - name: Unittest Client
+        run: pytest
+        working-directory: "./shepherd_client"

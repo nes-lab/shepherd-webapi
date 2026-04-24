@@ -40,14 +40,14 @@ jobs:
           enable-cache: true
           activate-environment: true
 
-      - name: Build package 🧱
+      - name: Build Server-Package 🧱
         run: uv build --clear
         working-directory: "./shepherd_server"
 
-      - name: Install Package 🧱
+      - name: Install Server-Package 🧱
         run: uv pip install .[all]
         working-directory: "./shepherd_server"
 
-      - name: Unittests
+      - name: Unittests Server
         run: pytest
         working-directory: "./shepherd_server"

@@ -37,8 +37,13 @@ class TestbedClient(AbcClient):
 
         if debug:
             increase_verbose_level(3)
-        self._cfg = ClientConfig.from_file()
-        # TODO: exception when file is broken -> offer staticmethod to reset
+        try:
+            self._cfg = ClientConfig.from_file()
+        except ValueError:
+            raise ValueError(
+                "ClientConfig file is corrupted - "
+                "please backup and replace with client.reset_config()"
+            ) from None
         if server is not None:
             self._cfg.server = HttpUrl(server)
         self._auth: dict | None = None
@@ -86,11 +91,15 @@ class TestbedClient(AbcClient):
     # ####################################################################
 
     def testbed_status(self) -> bool:
+        """Prints status of testbed-server and returns True is state is fine.
+
+        Possible restrictions and warnings are explained in log.
+        """
         rsp = self._req("get", "/")
 
         if not rsp.ok:
             log.warning("Failed to fetch status from WebApi: %s", self._msg(rsp))
-            return True
+            return False
 
         had_error = False
         state = rsp.json()
@@ -110,7 +119,10 @@ class TestbedClient(AbcClient):
                 had_error = True
             # TODO: could tests for last update being old
         if metadata.version("shepherd-client") != state.get("server_version"):
-            log.warning("Your client version does not match with server -> consider upgrading")
+            log.warning(
+                "Your client version does not match with server -> "
+                "consider matching to avoid errors"
+            )
             log.info(
                 "client v%s vs server v%s",
                 metadata.version("shepherd-client"),
@@ -118,14 +130,20 @@ class TestbedClient(AbcClient):
             )
         if metadata.version("shepherd-core") != state.get("core_version"):
             log.warning(
-                "Your version of shepherd-core does not match with server -> consider upgrading"
+                "Your version of shepherd-core does not match with server -> "
+                "consider matching to avoid errors"
             )
             log.info(
                 "shepherd-core on client %s vs %s on server",
                 metadata.version("shepherd-core"),
                 state.get("core_version"),
             )
-        return had_error
+        restrictions = state.get("restrictions")
+        if restrictions is None:
+            restrictions = []
+        for restriction in restrictions:
+            log.warning("Active testbed-restriction: %s", restriction)
+        return not had_error
 
     def testbed_name(self) -> str:
         rsp = self._req("get", "/testbed")
@@ -156,6 +174,7 @@ class TestbedClient(AbcClient):
         return rsp.json()
 
     def list_resource_ids(self, model_type: str) -> list[int]:
+        """Note that testbed-components have no ID."""
         rsp = self._req("get", f"/resources/{model_type}")
         if not rsp.ok:
             return []

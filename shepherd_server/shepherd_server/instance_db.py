@@ -43,7 +43,7 @@ def db_available(timeout: float = 2) -> bool:
 
 
 @asynccontextmanager
-async def db_context(app: FastAPI) -> AsyncGenerator[None]:
+async def db_context(app: FastAPI) -> AsyncGenerator[None, None, None]:
     """Initialize application services."""
     app.db = await db_client()
     log.info("FastAPI DB-Client connected")
@@ -57,16 +57,16 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
 
     user = await User.by_email(email)
     if user is not None:
-        log.error("User with that email already exists")
+        log.error("Account with that email already exists")
         return
-    token_verification = calculate_hash(email + str(local_now()))[-12:]
-    await get_mail_engine().send_verification_email(email, token_verification)
+    token_unstable = calculate_hash(email + str(local_now()))[-12:]
+    await get_mail_engine().send_verification_email(email, token_unstable)
     admin = User(
         email=email,
         password_hash=calculate_password_hash(password),
         role="admin",
         group_confirmed_at=local_now(),
-        token_verification=token_verification,
+        token_verification=token_unstable,
         disabled=server_config.mail_enabled,
         email_confirmed_at=None if server_config.mail_enabled else local_now(),
     )
@@ -74,10 +74,10 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
     log.info("Admin user added to DB")
 
 
-async def db_delete_all_users() -> None:
+async def db_delete_all_accounts() -> None:
     await db_client()
     await User.delete_all()
-    log.info("Users deleted from DB")
+    log.info("Account deleted from DB")
 
 
 async def db_delete_all_experiments() -> None:

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 import shepherd_core.data_models as sdm
 from fastapi.testclient import TestClient
+from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.testbed import MCU
 from shepherd_server.api_accounts.models import UserQuota
@@ -93,7 +94,7 @@ def test_create_experiment_duration_with_expired_quota(
         json_dict = {
             "email": "user@test.com",
             "quota": UserQuota(
-                custom_quota_expire_date=datetime.now(tz=local_tz()) - timedelta(minutes=5),
+                custom_quota_expire_date=local_now() - timedelta(minutes=5),
                 custom_quota_duration=timedelta(hours=60),
             ).model_dump(exclude_defaults=True, mode="json"),
         }
@@ -121,7 +122,7 @@ def test_create_experiment_duration_with_valid_quota(
         json_dict = {
             "email": "user@test.com",
             "quota": UserQuota(
-                custom_quota_expire_date=datetime.now(tz=local_tz()) + timedelta(minutes=5),
+                custom_quota_expire_date=local_now() + timedelta(minutes=5),
                 custom_quota_duration=timedelta(hours=60),
             ).model_dump(exclude_defaults=True, mode="json"),
         }

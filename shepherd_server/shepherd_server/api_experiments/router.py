@@ -14,8 +14,8 @@ from starlette.responses import FileResponse
 
 from shepherd_server.api_accounts.models import User
 from shepherd_server.api_accounts.models import UserRole
-from shepherd_server.api_accounts.utils_misc import active_user_is_admin
-from shepherd_server.api_accounts.utils_misc import current_active_user
+from shepherd_server.api_accounts.utils_misc import active_admin_user
+from shepherd_server.api_accounts.utils_misc import active_user
 from shepherd_server.config import server_config
 
 from .models import ExperimentStats
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/experiments", tags=["Experiments"])
 @router.post("/")
 async def create_experiment(
     experiment: Experiment,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> UUID:
     if experiment.time_start is not None:
         raise HTTPException(
@@ -68,12 +68,12 @@ async def create_experiment(
 
 @router.get("/")
 async def list_experiments(
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> dict[UUID, str]:
     return await WebExperiment.get_all_states(user=user)
 
 
-@router.get("/all", dependencies=[Depends(active_user_is_admin)])
+@router.get("/all", dependencies=[Depends(active_admin_user)])
 async def list_all_experiments() -> dict[UUID, str]:
     # not the most elegant solution, but this is admin-only anyway
     st_states = await ExperimentStats.get_all_states()
@@ -84,7 +84,7 @@ async def list_all_experiments() -> dict[UUID, str]:
 @router.get("/{experiment_id}")
 async def get_experiment(
     experiment_id: UUID,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> Experiment:
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
@@ -99,7 +99,7 @@ async def get_experiment(
 @router.delete("/{experiment_id}")
 async def delete_experiment(
     experiment_id: UUID,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> Response:
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
@@ -120,7 +120,7 @@ async def delete_experiment(
 @router.post("/{experiment_id}/schedule")
 async def schedule_experiment(
     experiment_id: UUID,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> Response:
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
@@ -148,7 +148,7 @@ async def schedule_experiment(
 @router.get("/{experiment_id}/state")
 async def get_experiment_state(
     experiment_id: UUID,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> str:
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
@@ -162,7 +162,7 @@ async def get_experiment_state(
 @router.get("/{experiment_id}/download")
 async def download(
     experiment_id: UUID,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> list[str]:
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:
@@ -179,7 +179,7 @@ async def download(
 @router.get("/{experiment_id}/statistics")
 async def statistics(
     experiment_id: UUID,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> ExperimentStats:
     """Trigger and fetch stat-update for all existing WebExperiments."""
     xp = await WebExperiment.get_by_id(experiment_id)
@@ -199,7 +199,7 @@ async def statistics(
 async def download_sheep_file(
     experiment_id: UUID,
     observer: str,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(active_user)],
 ) -> FileResponse:
     web_experiment = await WebExperiment.get_by_id(experiment_id)
     if web_experiment is None:

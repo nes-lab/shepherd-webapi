@@ -15,8 +15,8 @@ from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import tb_client
 from shepherd_herd import Herd
 
-from shepherd_server.api_accounts.utils_misc import active_user_is_admin
-from shepherd_server.api_accounts.utils_misc import active_user_is_elevated
+from shepherd_server.api_accounts.utils_misc import active_admin_user
+from shepherd_server.api_accounts.utils_misc import active_elevated_user
 from shepherd_server.api_testbed.models_status import TestbedDB
 from shepherd_server.config import server_config
 
@@ -40,7 +40,7 @@ async def get_restrictions() -> list[str] | None:
     return tb_.restrictions
 
 
-@router.patch("/restrictions", dependencies=[Depends(active_user_is_admin)])
+@router.patch("/restrictions", dependencies=[Depends(active_admin_user)])
 async def set_restrictions(value: Annotated[list[str], Body(embed=True)]) -> Response:
     tb_ = await TestbedDB.get_one()
     tb_.restrictions = value
@@ -52,7 +52,7 @@ herd_cmds = {"restart", "resync", "inventorize", "stop-measurement", "min-space"
 server_cmds = {"start-scheduler", "stop-scheduler"}
 
 
-@router.get("/command", dependencies=[Depends(active_user_is_elevated)])
+@router.get("/command", dependencies=[Depends(active_elevated_user)])
 async def get_command() -> list[str]:
     return list(herd_cmds | server_cmds)
 
@@ -98,7 +98,7 @@ def run_command_syn(cmd: str) -> Response:
     return Response(status_code=400, content="Command failed on at least one Host")
 
 
-@router.patch("/command", dependencies=[Depends(active_user_is_elevated)])
+@router.patch("/command", dependencies=[Depends(active_elevated_user)])
 async def run_command(value: Annotated[str, Body(embed=True)]) -> Response:
     return await asyncio.to_thread(run_command_syn, value)
 

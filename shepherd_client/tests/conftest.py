@@ -79,14 +79,15 @@ async def _primed_database(
 
     unconfirmed_user = user.model_copy(deep=True)
     unconfirmed_user.email = "unconfirmed_mail@test.com"
+    unconfirmed_user.password_hash = ""
     unconfirmed_user.email_confirmed_at = None
     unconfirmed_user.token_verification = "very-secure-token"
     await User.insert_one(unconfirmed_user)
 
-    disabled_user = user.model_copy(deep=True)
-    disabled_user.email = "disabled@test.com"
-    disabled_user.disabled = True
-    await User.insert_one(disabled_user)
+    deactivated_user = user.model_copy(deep=True)
+    deactivated_user.email = "deactivated_mail@test.com"
+    deactivated_user.disabled = True
+    await User.insert_one(deactivated_user)
 
     scheduled_web_experiment = WebExperiment(
         id=scheduled_experiment_id,
@@ -155,8 +156,18 @@ def user2_client() -> AbcClient:
 
 
 @pytest.fixture
-def unconfirmed_client() -> AbcClient:
+def unknown_client() -> AbcClient:
     # TODO: this loads local files, should we fake FS? done in sheep-tests
+    return UserClient(
+        account_email="unknown_mail@test.com",
+        password="safe-password",
+        server=server_cfg.server_url(),
+        debug=True,
+    )
+
+
+@pytest.fixture
+def unconfirmed_client() -> AbcClient:
     return UserClient(
         account_email="unconfirmed_mail@test.com",
         password="safe-password",
@@ -166,10 +177,9 @@ def unconfirmed_client() -> AbcClient:
 
 
 @pytest.fixture
-def disabled_client() -> AbcClient:
-    # TODO: this loads local files, should we fake FS? done in sheep-tests
+def deactivated_client() -> AbcClient:
     return UserClient(
-        account_email="disabled@test.com",
+        account_email="deactivated_mail@test.com",
         password="safe-password",
         server=server_cfg.server_url(),
         debug=True,

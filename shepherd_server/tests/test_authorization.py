@@ -67,11 +67,11 @@ def test_login_rejects_if_mail_is_unconfirmed(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-def test_login_rejects_disabled_user(client: TestClient) -> None:
+def test_login_rejects_deactivated_user(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
-            "username": "disabled@test.com",
+            "username": "deactivated_mail@test.com",
             "password": "safe-password",
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},

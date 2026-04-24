@@ -38,7 +38,10 @@ class AdminClient(UserClient):
     # ####################################################################
 
     def register_account(self, token: str) -> bool:
-        """Registration for your own account is not possible - it can only be created directly on server."""
+        """Registration for your own account is not possible.
+
+        This can only be created directly on server.
+        """
         raise NotImplementedError
 
     def approve_account(self, account: EmailStr) -> bool:

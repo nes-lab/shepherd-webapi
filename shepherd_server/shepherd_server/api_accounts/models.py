@@ -93,7 +93,7 @@ class UserQuota(BaseModel):
 class UserOut(UserQuota, UserUpdate):
     """User fields returned to the client."""
 
-    disabled: bool = True
+    disabled: bool = True  # TODO: should be renamed to deactivated
     email: Annotated[EmailStr, Indexed(unique=True)]
     group: str = ""  # TODO: will come later
     role: UserRole = UserRole.user

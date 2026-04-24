@@ -19,10 +19,11 @@ from .models import UserRegistration
 from .models import UserRole
 from .models import UserUpdate
 from .utils_mail import get_mail_engine
-from .utils_misc import active_user_is_admin
+from .utils_misc import active_admin_user
+from .utils_misc import active_user
 from .utils_misc import calculate_hash
 from .utils_misc import calculate_password_hash
-from .utils_misc import current_active_user
+from .utils_misc import current_user
 
 router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
@@ -33,16 +34,15 @@ router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 
 @router.get("")
-async def user_info(user: Annotated[User, Depends(current_active_user)]) -> UserOut:
+async def user_info(user: Annotated[User, Depends(current_user)]) -> UserOut:
+    """Get info of current user (even deactivated & unconfirmed)."""
     user.storage_available = user.quota_storage - await WebExperiment.get_storage(user)
     await user.save_changes()
     return user
 
 
 @router.patch("")
-async def update_user(
-    update: UserUpdate, user: Annotated[User, Depends(current_active_user)]
-) -> UserOut:
+async def update_user(update: UserUpdate, user: Annotated[User, Depends(active_user)]) -> UserOut:
     """Update allowed user fields."""
     fields = update.model_dump(exclude_unset=True)
     new_email = fields.pop("email", None)
@@ -58,9 +58,9 @@ async def update_user(
 
 @router.delete("")
 async def delete_user(
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(current_user)],
 ) -> Response:
-    """Delete current user and its experiments & content."""
+    """Delete current user (even deactivated & unconfirmed) and its experiments & content."""
     xp_states = await WebExperiment.get_all_states(user)
     for xp_id in xp_states:
         xp = await WebExperiment.get_by_id(xp_id)
@@ -81,7 +81,7 @@ async def delete_user(
 # ###############################################################
 
 
-@router.patch("/quota", dependencies=[Depends(active_user_is_admin)])
+@router.patch("/quota", dependencies=[Depends(active_admin_user)])
 async def update_quota(
     email: Annotated[EmailStr, Body(embed=True)],
     quota: Annotated[UserQuota, Body(embed=True)],
@@ -142,7 +142,7 @@ async def reset_password(
 # ###############################################################
 
 
-@router.post("/approve", dependencies=[Depends(active_user_is_admin)])
+@router.post("/approve", dependencies=[Depends(active_admin_user)])
 async def approve(
     email: Annotated[EmailStr, Body(embed=True)],
 ) -> Response:
@@ -212,7 +212,7 @@ async def verify_email(
     return Response(status_code=200, content="Verification successful")
 
 
-@router.post("/change_state", dependencies=[Depends(active_user_is_admin)])
+@router.post("/change_state", dependencies=[Depends(active_admin_user)])
 async def change_state(
     email: Annotated[EmailStr, Body(embed=True)],
     enabled: Annotated[bool, Body(embed=True)],

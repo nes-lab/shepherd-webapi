@@ -162,13 +162,13 @@ def test_forgot_password_endpoint_returns_success_for_invalid_email(
     assert response.status_code == 200
 
 
-def test_forgot_password_endpoint_returns_success_for_disabled_account(
+def test_forgot_password_endpoint_returns_success_for_deactivated_account(
     client: TestClient,
 ) -> None:
     """Regression test motivated by previously existing issue."""
     response = client.post(
         "/accounts/forgot-password",
-        json={"email": "disabled@test.com"},
+        json={"email": "deactivated_mail@test.com"},
     )
     assert response.status_code == 200
 

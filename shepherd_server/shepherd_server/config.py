@@ -74,7 +74,7 @@ class ServerConfigDefault(BaseModel):
         if _avail:
             log.info("SSL available, as keys & certs were found")
         else:
-            log.warning("SSL disabled!")
+            log.warning("SSL is deactivated!")
             for _file in _files:
                 if not isinstance(_file, Path):
                     log.warning("At least one SSL-Path was not specified")

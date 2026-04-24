@@ -43,6 +43,7 @@ async def query_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> Us
 
 
 async def current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User:
+    # allows basic functionality: login, get account info, delete account
     _user = await query_user(token)
     if not _user:
         raise HTTPException(
@@ -53,21 +54,21 @@ async def current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> 
     return _user
 
 
-async def current_active_user(user: Annotated[User, Depends(current_user)]) -> User:
+async def active_user(user: Annotated[User, Depends(current_user)]) -> User:
     if user.disabled:
-        raise HTTPException(status_code=403, detail="Deactivated user")
+        raise HTTPException(status_code=403, detail="Account is currently deactivated")
+    if user.email_confirmed_at is None:
+        raise HTTPException(status_code=401, detail="Email is not yet verified")
     return user
 
 
-async def active_user_is_elevated(user: Annotated[User, Depends(current_user)]) -> None:
-    if user.disabled:
-        raise HTTPException(status_code=403, detail="Deactivated user")
+async def active_elevated_user(user: Annotated[User, Depends(active_user)]) -> User:
     if user.role not in (UserRole.admin, UserRole.elevated):
         raise HTTPException(status_code=403, detail="Forbidden")
+    return user
 
 
-async def active_user_is_admin(user: Annotated[User, Depends(current_user)]) -> None:
-    if user.disabled:
-        raise HTTPException(status_code=403, detail="Deactivated user")
+async def active_admin_user(user: Annotated[User, Depends(active_user)]) -> User:
     if user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Forbidden")
+    return User

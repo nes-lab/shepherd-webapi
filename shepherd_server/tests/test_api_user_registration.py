@@ -5,7 +5,7 @@ from shepherd_server.api_accounts.utils_misc import calculate_hash
 from .conftest import UserTestClient
 
 
-def test_user_approves_registration_rejected(client: UserTestClient) -> None:
+def test_account_approves_registration_rejected(client: UserTestClient) -> None:
     with client.authenticate_user_1():
         rsp = client.post(
             url="/accounts/approve",
@@ -30,7 +30,7 @@ def test_admin_approves_registration(
     assert token1 == token2
 
 
-def test_register_user_without_token(client: TestClient) -> None:
+def test_register_account_without_token(client: TestClient) -> None:
     response = client.post(
         "/accounts/register",
         json={
@@ -41,7 +41,7 @@ def test_register_user_without_token(client: TestClient) -> None:
     assert response.status_code == 422
 
 
-def test_register_user_with_invalid_token(client: TestClient) -> None:
+def test_register_account_with_invalid_token(client: TestClient) -> None:
     response = client.post(
         "/accounts/register",
         json={
@@ -53,7 +53,7 @@ def test_register_user_with_invalid_token(client: TestClient) -> None:
     assert response.status_code == 404
 
 
-def test_register_user_sends_mail(
+def test_register_account_sends_mail(
     client: UserTestClient,
     mail_engine_mock: MailEngine,
 ) -> None:
@@ -75,7 +75,7 @@ def test_register_user_sends_mail(
         mail_engine_mock.send_registration_complete_email.assert_called_once()
 
 
-def test_register_user_rejects_existing_account(
+def test_register_account_rejects_existing_account(
     client: TestClient,
     mail_engine_mock: MailEngine,
 ) -> None:
@@ -91,7 +91,7 @@ def test_register_user_rejects_existing_account(
     mail_engine_mock.send_verification_email.assert_not_called()
 
 
-def test_register_user_rejects_short_pw(
+def test_register_account_rejects_short_pw(
     client: TestClient,
 ) -> None:
     response = client.post(

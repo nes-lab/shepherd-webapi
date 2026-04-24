@@ -40,7 +40,7 @@ class ServerConfigDefault(BaseModel):
     # -> this can and should contain the cert and the full chain
     #    if missing visit API in browser - view cert - download `PEM (chain)`
 
-    # user auth
+    # account auth
     auth_salt: bytes = dcoup_cfg("AUTH_SALT").encode("UTF-8")
     secret_key: str = dcoup_cfg("SECRET_KEY", default="replace me")
     # will raise if missing default, TODO: remove default
@@ -57,14 +57,14 @@ class ServerConfigDefault(BaseModel):
     mail_sender: str = dcoup_cfg("MAIL_SENDER", default="")
     mail_sender_name: str = dcoup_cfg("MAIL_SENDER_NAME", default="Shepherd Testbed")
 
-    # Quotas for users
+    # Quotas for accounts
     quota_default_duration: timedelta = timedelta(minutes=60)
     quota_default_storage: PositiveInt = 200 * (10**9)
     # 20 nodes @  4 h are ~  290 GB
     # 30 nodes @ 10 h are ~ 1080 GB
 
     # Lifetime of Objects
-    age_max_user: timedelta = timedelta(days=18 * 31)
+    age_max_account: timedelta = timedelta(days=18 * 31)
     age_max_experiment: timedelta = timedelta(days=6 * 31)
     age_min_experiment: timedelta = timedelta(days=15)
 

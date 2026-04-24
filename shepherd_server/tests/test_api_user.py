@@ -11,7 +11,7 @@ from shepherd_server.api_accounts.utils_mail import MailEngine
 from .conftest import UserTestClient
 
 
-def test_user_can_query_account_data(client: UserTestClient) -> None:
+def test_account_can_query_account_data(client: UserTestClient) -> None:
     with client.authenticate_user_1():
         response = client.get("/accounts")
     assert response.status_code == 200
@@ -21,7 +21,7 @@ def test_user_can_query_account_data(client: UserTestClient) -> None:
     assert user.last_name == "last name"
 
 
-def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None:
+def test_account_account_data_endpoint_is_authenticated(client: TestClient) -> None:
     response = client.get("/accounts")
     assert response.status_code == 401
 
@@ -30,7 +30,7 @@ def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None
 
 
 @pytest.mark.dependency
-def test_user_can_query_quota_data(client: UserTestClient) -> None:
+def test_account_can_query_quota_data(client: UserTestClient) -> None:
     with client.authenticate_user_1():
         response = client.get("/accounts")
     assert response.status_code == 200

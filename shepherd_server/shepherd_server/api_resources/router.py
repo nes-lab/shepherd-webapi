@@ -49,13 +49,13 @@ async def list_content_by_type(content: str) -> dict[int, str]:
     models = [model for model in models if model.get("deprecated") is None]
     models = [
         model for model in models if model.get("visible2all", True)
-    ]  # TODO: or user identical
+    ]  # TODO: or account identical
     return {int(model.get("id", 0)): str(model.get("name")) for model in models}
     # -> moved from sorted dict[ID,name] (that was resorted by fastapi) to
     #      - just list of names (was hardly usable by TestbedClient)
     #      - unsorted dict[ID, name]
     # TODO: replace fixture-endpoints by database-endpoints
-    # TODO: include data of user/group
+    # TODO: include data of account/group
 
     # TODO: add setter-endpoint
     # TODO: add modifiers-endpoint

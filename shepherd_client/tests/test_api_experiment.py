@@ -32,14 +32,6 @@ def test_list_finished_experiments(user1_client: UserClient) -> None:
     assert set(uids_all) & set(uids_fin) == set(uids_fin)  # all finished in ALL
 
 
-@pytest.mark.usefixtures("_server_api_up")
-def test_list_experiments_admin_all(admin_client: AdminClient) -> None:
-    uids1 = admin_client.list_experiments()
-    uids2 = admin_client.list_all_experiments()
-    assert len(uids2) >= len(uids1)
-    assert len(uids2) > 0
-
-
 # ###############################################################################
 # CREATE
 # ###############################################################################
@@ -85,7 +77,7 @@ def test_create_experiment_duration_with_valid_quota(
     sample_target_config: TargetConfig,
 ) -> None:
     admin_client.extend_quota(
-        account=user1_client._cfg.account_email,  # noqa: SLF001
+        account_email=user1_client._cfg.account_email,  # noqa: SLF001
         duration=timedelta(hours=60),
         expire_date=local_now() + timedelta(minutes=5),
     )

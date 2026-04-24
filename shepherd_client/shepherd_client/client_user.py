@@ -88,9 +88,9 @@ class UserClient(TestbedClient):
         return rsp.ok
 
     def register_account(self, token: str) -> bool:
-        """Create a user account with a valid token."""
+        """Create an account with a valid token."""
         if self._auth is not None:
-            log.error("User already registered and authenticated")
+            log.error("Account already registered and authenticated")
         data = {
             "email": self._cfg.account_email,
             "password": self._cfg.password,
@@ -98,7 +98,7 @@ class UserClient(TestbedClient):
         }
         rsp = self._req("post", "/accounts/register", json=data)
         if rsp.ok:
-            log.info(f"User {self._cfg.account_email} registered - check mail to verify account.")
+            log.info(f"Account {self._cfg.account_email} registered - check mail to verify.")
         else:
             log.warning("Registration failed with: %s", self._msg(rsp))
         return rsp.ok
@@ -111,9 +111,9 @@ class UserClient(TestbedClient):
         """Remove account and content from server."""
         rsp = self._req("delete", "/accounts")
         if rsp.ok:
-            log.info(f"User {self._cfg.account_email} deleted")
+            log.info(f"Account {self._cfg.account_email} deleted")
         else:
-            log.warning("User-Deletion failed with: %s", self._msg(rsp))
+            log.warning("Account-Deletion failed with: %s", self._msg(rsp))
         return rsp.ok
 
     @deprecated("use .delete_account()")
@@ -121,13 +121,13 @@ class UserClient(TestbedClient):
         return self.delete_account()
 
     def get_account_info(self) -> dict:
-        """Query user info stored on the server."""
+        """Query account info stored on the server."""
         rsp = self._req("get", "/accounts")
         if rsp.ok:
             info = rsp.json()
-            log.debug("User-Info: %s", info)
+            log.debug("Account-Info: %s", info)
         else:
-            log.warning("Query for User-Info failed with: %s", self._msg(rsp))
+            log.warning("Query for Account-Info failed with: %s", self._msg(rsp))
             info = {}
         return info
 

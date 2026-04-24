@@ -101,9 +101,9 @@ def test_cli_reset_nothing() -> None:
 
 
 @pytest.mark.timeout(1)
-def test_cli_reset_users_fail() -> None:
+def test_cli_reset_accounts_fail() -> None:
     # each expects user-confirmation before doing anything!
-    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--users"])
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--accounts"])
     assert res.exit_code > 0
 
 
@@ -126,8 +126,8 @@ def test_cli_reset_testbed_fail() -> None:
 
 
 @pytest.mark.timeout(1)
-def test_cli_reset_users() -> None:
-    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--users", "--yes"])
+def test_cli_reset_accounts() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--accounts", "--yes"])
     assert res.exit_code == 0
 
 

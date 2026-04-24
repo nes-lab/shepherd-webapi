@@ -44,7 +44,7 @@ class TestbedClient(AbcClient):
         self._auth: dict | None = None
         core_config.VALIDATE_INFRA = True
         # TODO: add server name and more from server
-        self.status()
+        self.testbed_status()
         super().__init__()
 
     @staticmethod
@@ -85,7 +85,7 @@ class TestbedClient(AbcClient):
     # Testbed-Status
     # ####################################################################
 
-    def status(self) -> bool:
+    def testbed_status(self) -> bool:
         rsp = self._req("get", "/")
 
         if not rsp.ok:
@@ -135,10 +135,13 @@ class TestbedClient(AbcClient):
         state = rsp.json()
         return state.get("name")
 
-    def get_restrictions(self) -> list[str]:
+    def testbed_restrictions(self) -> list[str]:
         rsp = self._req("get", "/testbed/restrictions")
         if not rsp.ok:
             log.warning("Query for restrictions failed with: %s", self._msg(rsp))
+            return []
+        data = rsp.json()
+        if data is None:
             return []
         return rsp.json()
 

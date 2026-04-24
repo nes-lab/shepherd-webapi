@@ -44,31 +44,35 @@ class AdminClient(UserClient):
         """
         raise NotImplementedError
 
-    def approve_account(self, account: EmailStr) -> bool:
+    def approve_account(self, account_email: EmailStr) -> str | None:
         """Approve Account for registration.
 
         This will also send out an email for account verification.
         """
-        data = {"email": account}
+        data = {"email": account_email}
         rsp = self._req("post", "/accounts/approve", json=data)
         if rsp.ok:
-            log.info("Approval of '%s' succeeded, token: %s", account, rsp.content.decode())
-        else:
-            log.warning("Approval of '%s' failed with: %s", account, self._msg(rsp))
-        return rsp.ok
+            token = rsp.content.decode()
+            log.info("Approval of '%s' succeeded, token: %s", account_email, token)
+            return token
 
-    def change_account_state(self, account: EmailStr, *, enabled: bool) -> bool:
-        data = {"email": account, "enabled": enabled}
+        log.warning("Approval of '%s' failed with: %s", account_email, self._msg(rsp))
+        return None
+
+    def change_account_state(self, account_email: EmailStr, *, enabled: bool) -> bool:
+        data = {"email": account_email, "enabled": enabled}
         rsp = self._req("post", "/accounts/change_state", json=data)
         if rsp.ok:
-            log.info("User-State-Change of '%s' succeeded", account)
+            log.info("Account-State-Change of '%s' succeeded", account_email)
         else:
-            log.warning("User-State-Change of '%s' failed with: %s", account, self._msg(rsp))
+            log.warning(
+                "Account-State-Change of '%s' failed with: %s", account_email, self._msg(rsp)
+            )
         return rsp.ok
 
     def extend_quota(
         self,
-        account: EmailStr,
+        account_email: EmailStr,
         duration: timedelta | None = None,
         storage: int | None = None,
         expire_date: datetime | None = None,
@@ -84,7 +88,7 @@ class AdminClient(UserClient):
         if isinstance(expire_date, datetime):
             expire_date: str = expire_date.isoformat()
         data = {
-            "email": account,
+            "email": account_email,
             "quota": {
                 "custom_quota_expire_date": expire_date,
                 "custom_quota_duration": duration,
@@ -145,7 +149,7 @@ class AdminClient(UserClient):
         return rsp.ok
 
     # ####################################################################
-    # Experiments
+    # Admin Lists for Experiments & Accounts
     # ####################################################################
 
     def list_all_experiments(self, *, only_finished: bool = False) -> list[UUID]:
@@ -156,3 +160,10 @@ class AdminClient(UserClient):
         if only_finished:
             return [key for key, value in rsp.json().items() if value == "finished"]
         return list(rsp.json().keys())
+
+    def list_all_accounts(self) -> list[dict]:
+        """Query non-critical account data from user-DB."""
+        rsp = self._req("get", "/accounts/all")
+        if not rsp.ok:
+            return []
+        return list(rsp.json())

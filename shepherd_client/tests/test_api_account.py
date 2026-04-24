@@ -120,9 +120,11 @@ def test_get_account_info_quota(user1_client: UserClient) -> None:
 
 
 @pytest.mark.usefixtures("_server_api_up")
-def test_get_account_info_quota_date(user1_client: UserClient, admin_client: AdminClient) -> None:
+def test_get_account_info_admin_updated_quota_date(
+    user1_client: UserClient, admin_client: AdminClient
+) -> None:
     admin_client.extend_quota(
-        account="user@test.com",
+        account_email="user@test.com",
         expire_date=local_now() + timedelta(minutes=5),
         duration=None,
         storage=None,
@@ -139,7 +141,7 @@ def test_get_account_info_admin_updated_quota_duration(
     user1_client: UserClient, admin_client: AdminClient
 ) -> None:
     admin_client.extend_quota(
-        account="user@test.com",
+        account_email="user@test.com",
         expire_date=None,
         duration=timedelta(hours=10),
         storage=None,
@@ -156,7 +158,7 @@ def test_get_account_info_admin_updated_quota_storage(
     user1_client: UserClient, admin_client: AdminClient
 ) -> None:
     admin_client.extend_quota(
-        account="user@test.com",
+        account_email="user@test.com",
         expire_date=None,
         duration=None,
         storage=500 * 10**9,
@@ -174,7 +176,7 @@ def test_get_account_info_admin_updated_quota_unforced(
     user1_client: UserClient, admin_client: AdminClient
 ) -> None:
     admin_client.extend_quota(
-        account="user@test.com",
+        account_email="user@test.com",
         storage=500 * 10**9,
     )
     data = user1_client.get_account_info()
@@ -183,7 +185,7 @@ def test_get_account_info_admin_updated_quota_unforced(
     assert data["custom_quota_storage"] is not None
 
     admin_client.extend_quota(
-        account="user@test.com",
+        account_email="user@test.com",
         duration=timedelta(hours=10),
     )
     data = user1_client.get_account_info()

@@ -119,7 +119,7 @@ def run(inventory: Path | None = None, *, dry_run: bool = False) -> None:
 def create_admin(email: str, password: PasswordStr) -> None:
     """Bootstrap database and add an admin.
 
-    User will have to verify if mail-service is activated."""
+    Account will have to verify if mail-service is activated."""
     from . import instance_db as db
 
     asyncio.run(db.db_create_admin(email, password))
@@ -136,7 +136,7 @@ def prune(*, delete: bool = False) -> None:
 @cli.command()
 def reset(
     *,
-    users: bool = False,
+    accounts: bool = False,
     experiments: bool = False,
     stats: bool = False,
     testbed: bool = False,
@@ -145,7 +145,7 @@ def reset(
     """Delete structures in database - mainly to help to recover after major refactorings."""
     from . import instance_db as db
 
-    if any([users, experiments, stats, testbed]):
+    if any([accounts, experiments, stats, testbed]):
         log.warning("You are about to delete actual data from the DB! Do you have backups?")
         if not yes:
             # ask for permission
@@ -153,8 +153,8 @@ def reset(
             if response.lower() != "y":
                 log.info("Process interrupted by user")
                 sys.exit(0)
-    if users:
-        asyncio.run(db.db_delete_all_users())
+    if accounts:
+        asyncio.run(db.db_delete_all_accounts())
     if experiments:
         asyncio.run(db.db_delete_all_experiments())
     if stats:

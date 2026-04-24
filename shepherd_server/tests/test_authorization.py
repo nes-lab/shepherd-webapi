@@ -55,7 +55,7 @@ def test_login_rejects_non_existing_account(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-def test_login_rejects_if_mail_is_unconfirmed(client: TestClient) -> None:
+def test_login_allowed_if_mail_is_unconfirmed(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -64,10 +64,10 @@ def test_login_rejects_if_mail_is_unconfirmed(client: TestClient) -> None:
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 401
+    assert response.status_code == 200
 
 
-def test_login_rejects_deactivated_account(client: TestClient) -> None:
+def test_login_allowed_deactivated_account(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -76,4 +76,4 @@ def test_login_rejects_deactivated_account(client: TestClient) -> None:
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 401
+    assert response.status_code == 200

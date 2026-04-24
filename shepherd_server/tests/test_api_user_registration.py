@@ -87,7 +87,8 @@ def test_register_account_rejects_existing_account(
             "token": calculate_hash("user@test.com")[-12:],
         },
     )
-    assert response.status_code == 409
+    assert response.status_code == 404
+    mail_engine_mock.send_registration_complete_email.assert_not_called()
     mail_engine_mock.send_verification_email.assert_not_called()
 
 

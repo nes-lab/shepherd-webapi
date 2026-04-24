@@ -85,7 +85,8 @@ async def delete_user(
 async def update_quota(
     email: Annotated[EmailStr, Body(embed=True)],
     quota: Annotated[UserQuota, Body(embed=True)],
-    force: Annotated[bool, Body(embed=True)],
+    *,
+    force: Annotated[bool, Body(embed=True)] = False,
 ) -> UserQuota:
     _user = await User.by_email(email)
     if _user is None:
@@ -178,7 +179,7 @@ async def user_registration(
     if (user is None) or (user.token_verification != user_reg.token):
         raise HTTPException(404, "Invalid account registration")
     if user.email_confirmed_at is not None:
-        raise HTTPException(404, "Invalid user registration - account is already confirmed")
+        raise HTTPException(409, "Invalid user registration - account is already confirmed")
     user.password_hash = calculate_password_hash(user_reg.password)
     user.disabled = False
     user.email_confirmed_at = local_now()

@@ -294,9 +294,11 @@ def test_get_experiment_is_private_to_user(
         response = client.get(f"/experiments/{experiment_id}")
         assert response.status_code >= 400
 
+    # TODO: add elevated user
+
     with client.authenticate_admin():
         response = client.get(f"/experiments/{experiment_id}")
-        assert response.status_code >= 400
+        assert response.status_code == 200  # has access
 
 
 @pytest.mark.dependency(depends=["test_create_experiment_succeeds"])

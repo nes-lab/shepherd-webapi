@@ -30,6 +30,7 @@ from shepherd_server.api_accounts.models import UserRole
 from shepherd_server.api_accounts.utils_mail import MailEngine
 from shepherd_server.api_accounts.utils_misc import calculate_password_hash
 from shepherd_server.api_experiments.models import WebExperiment
+from shepherd_server.api_testbed.models_status import TestbedDB
 from shepherd_server.config import server_config as server_cfg
 from shepherd_server.instance_api import run as run_api_server
 from shepherd_server.instance_db import db_client
@@ -55,6 +56,7 @@ async def _primed_database(
 
     await User.delete_all()
     await WebExperiment.delete_all()
+    await TestbedDB.delete_all()
 
     user = User(
         email="user@test.com",

@@ -1,0 +1,65 @@
+import time
+
+import pytest
+from shepherd_client.client_user import UserClient
+
+from shepherd_client import AdminClient
+from shepherd_client import TestbedClient
+
+# ###############################################################################
+# Status
+# ###############################################################################
+
+
+@pytest.mark.usefixtures("_primed_database")
+@pytest.mark.usefixtures("_server_api_up")
+def test_testbed_status_fails(testbed_client: TestbedClient) -> None:
+    state = testbed_client.testbed_status()
+    assert not state
+
+
+@pytest.mark.usefixtures("_primed_database")
+@pytest.mark.usefixtures("_server_api_up")
+@pytest.mark.usefixtures("_server_scheduler_up")
+def test_testbed_status_with_scheduler(testbed_client: TestbedClient) -> None:
+    time.sleep(3)
+    state = testbed_client.testbed_status()
+    assert state
+
+
+# ###############################################################################
+# Name
+# ###############################################################################
+
+
+@pytest.mark.usefixtures("_server_api_up")
+@pytest.mark.usefixtures("_server_scheduler_up")
+def test_testbed_name(testbed_client: TestbedClient) -> None:
+    name = testbed_client.testbed_name()
+    assert isinstance(name, str)
+    assert len(name) > 1
+    assert name == "unit_testing_testbed"
+
+
+# ###############################################################################
+# Restrictions
+# ###############################################################################
+
+
+@pytest.mark.usefixtures("_primed_database")
+@pytest.mark.usefixtures("_server_api_up")
+def test_admin_adds_restrictions(user1_client: UserClient, admin_client: AdminClient) -> None:
+    data = user1_client.testbed_restrictions()
+    assert len(data) == 0
+    success = admin_client.set_restrictions(["something is up"])
+    assert success
+    data = user1_client.testbed_restrictions()
+    assert len(data) > 0
+
+
+@pytest.mark.usefixtures("_server_api_up")
+def test_admin_removes_restrictions(user1_client: UserClient, admin_client: AdminClient) -> None:
+    success = admin_client.set_restrictions([])
+    assert success
+    data = user1_client.testbed_restrictions()
+    assert len(data) == 0

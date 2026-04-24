@@ -80,7 +80,7 @@ async def _primed_database(
     unconfirmed_user = user.model_copy(deep=True)
     unconfirmed_user.email = "unconfirmed_mail@test.com"
     unconfirmed_user.email_confirmed_at = None
-    unconfirmed_user.token_verification = "very-secure-token"  # noqa: S105
+    unconfirmed_user.token_verification = "very-secure-token"
     await User.insert_one(unconfirmed_user)
 
     disabled_user = user.model_copy(deep=True)
@@ -135,9 +135,10 @@ def testbed_client() -> AbcClient:
 
 @pytest.fixture
 def user1_client() -> AbcClient:
+    # TODO: transform these into generators that add and clear these to DB
     return UserClient(
         account_email="user@test.com",
-        password="safe-password",  # noqa: S106
+        password="safe-password",
         server=server_cfg.server_url(),
         debug=True,
     )
@@ -147,7 +148,7 @@ def user1_client() -> AbcClient:
 def user2_client() -> AbcClient:
     return UserClient(
         account_email="user2@test.com",
-        password="safe-password",  # noqa: S106
+        password="safe-password",
         server=server_cfg.server_url(),
         debug=True,
     )
@@ -158,7 +159,7 @@ def unconfirmed_client() -> AbcClient:
     # TODO: this loads local files, should we fake FS? done in sheep-tests
     return UserClient(
         account_email="unconfirmed_mail@test.com",
-        password="safe-password",  # noqa: S106
+        password="safe-password",
         server=server_cfg.server_url(),
         debug=True,
     )
@@ -169,7 +170,7 @@ def disabled_client() -> AbcClient:
     # TODO: this loads local files, should we fake FS? done in sheep-tests
     return UserClient(
         account_email="disabled@test.com",
-        password="safe-password",  # noqa: S106
+        password="safe-password",
         server=server_cfg.server_url(),
         debug=True,
     )
@@ -179,7 +180,7 @@ def disabled_client() -> AbcClient:
 def admin_client() -> AbcClient:
     return AdminClient(
         account_email="admin@test.com",
-        password="safe-password",  # noqa: S106
+        password="safe-password",
         server=server_cfg.server_url(),
     )
 
@@ -193,7 +194,7 @@ class MockMailEngine(MailEngine):
         self.send_registration_complete_email = AsyncMock()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def mock_mail_engine() -> MockMailEngine:
     from shepherd_server.api_accounts.utils_mail import set_mail_engine
 
@@ -209,7 +210,7 @@ def mail_engine() -> MailEngine:
     return get_mail_engine()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def cfg_env() -> bool:
     os.environ["MAIL_ENABLED"] = "False"
     os.environ["AUTH_SALT"] = "salty_business"
@@ -217,7 +218,7 @@ def cfg_env() -> bool:
     return True
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")  # restarts once per module
 def _server_api_up(
     *, cfg_env: bool, mock_mail_engine: MockMailEngine
 ) -> Generator[None, None, None]:
@@ -275,6 +276,7 @@ def sample_experiment(sample_target_config: TargetConfig) -> Experiment:
 
 @pytest.fixture
 def scheduled_experiment_id() -> UUID:
+    # TODO: transform these into generators that add and clear these to DB
     return UUID("00000000-0000-0000-0000-123400000001")
 
 

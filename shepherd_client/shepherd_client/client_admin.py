@@ -38,34 +38,34 @@ class AdminClient(UserClient):
     # ####################################################################
 
     def register_account(self, token: str) -> bool:
-        """Registration not possible."""
+        """Registration for your own account is not possible - it can only be created directly on server."""
         raise NotImplementedError
 
-    def approve_account(self, user: EmailStr) -> bool:
+    def approve_account(self, account: EmailStr) -> bool:
         """Approve Account for registration.
 
         This will also send out an email for account verification.
         """
-        data = {"email": user}
+        data = {"email": account}
         rsp = self._req("post", "/accounts/approve", json=data)
         if rsp.ok:
-            log.info("Approval of '%s' succeeded, token: %s", user, rsp.content.decode())
+            log.info("Approval of '%s' succeeded, token: %s", account, rsp.content.decode())
         else:
-            log.warning("Approval of '%s' failed with: %s", user, self._msg(rsp))
+            log.warning("Approval of '%s' failed with: %s", account, self._msg(rsp))
         return rsp.ok
 
-    def change_account_state(self, user: EmailStr, *, enabled: bool) -> bool:
-        data = {"email": user, "enabled": enabled}
+    def change_account_state(self, account: EmailStr, *, enabled: bool) -> bool:
+        data = {"email": account, "enabled": enabled}
         rsp = self._req("post", "/accounts/change_state", json=data)
         if rsp.ok:
-            log.info("User-State-Change of '%s' succeeded", user)
+            log.info("User-State-Change of '%s' succeeded", account)
         else:
-            log.warning("User-State-Change of '%s' failed with: %s", user, self._msg(rsp))
+            log.warning("User-State-Change of '%s' failed with: %s", account, self._msg(rsp))
         return rsp.ok
 
     def extend_quota(
         self,
-        account_email: EmailStr,
+        account: EmailStr,
         duration: timedelta | None = None,
         storage: int | None = None,
         expire_date: datetime | None = None,
@@ -81,7 +81,7 @@ class AdminClient(UserClient):
         if isinstance(expire_date, datetime):
             expire_date: str = expire_date.isoformat()
         data = {
-            "email": account_email,
+            "email": account,
             "quota": {
                 "custom_quota_expire_date": expire_date,
                 "custom_quota_duration": duration,

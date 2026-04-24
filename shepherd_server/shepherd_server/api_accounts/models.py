@@ -151,14 +151,16 @@ class User(Document, UserOut):
 
     @classmethod
     async def by_verification_token(cls, token: str) -> Optional["User"]:
+        if token is None:
+            return None
         return await cls.find_one(cls.token_verification == token)
 
     @classmethod
     async def by_reset_token(cls, token: str) -> Optional["User"]:
         return await cls.find_one(cls.token_pw_reset == token)
 
-    def update_email(self, new_email: EmailStr) -> None:
+    async def update_email(self, new_email: EmailStr) -> None:
         """Update email logging and replace."""
         # Add any pre-checks here
         self.email = new_email
-        self.save_changes()
+        await self.save_changes()

@@ -85,7 +85,7 @@ def test_create_experiment_duration_with_valid_quota(
     sample_target_config: TargetConfig,
 ) -> None:
     admin_client.extend_quota(
-        account_email=user1_client._cfg.account_email,  # noqa: SLF001
+        account=user1_client._cfg.account_email,  # noqa: SLF001
         duration=timedelta(hours=60),
         expire_date=local_now() + timedelta(minutes=5),
     )

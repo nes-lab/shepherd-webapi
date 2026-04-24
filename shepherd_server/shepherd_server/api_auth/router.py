@@ -27,7 +27,7 @@ async def login_for_access_token(
     if _user.email_confirmed_at is None:
         raise HTTPException(status_code=401, detail="Email is not yet verified")
     if _user.disabled:
-        raise HTTPException(status_code=401, detail="Account is disabled")
+        raise HTTPException(status_code=401, detail="Account is currently disabled")
     _user.last_active_at = local_now()
     await _user.save_changes()
     return create_access_token(_user.email)

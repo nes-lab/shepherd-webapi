@@ -86,7 +86,7 @@ class UserClient(TestbedClient):
     def authenticate(self) -> bool:
         try:
             rsp = requests.post(
-                url=f"{self._cfg.server}auth/token",
+                url=f"{self._server}auth/token",
                 data={
                     "username": self._cfg.account_email,
                     "password": self._cfg.password,

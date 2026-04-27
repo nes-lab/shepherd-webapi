@@ -131,7 +131,7 @@ class AdminClient(UserClient):
             return False
         try:
             rsp = requests.patch(
-                url=f"{self._cfg.server}testbed/command",
+                url=f"{self._server}testbed/command",
                 json={"value": cmd},
                 headers=self._auth,
                 timeout=30,

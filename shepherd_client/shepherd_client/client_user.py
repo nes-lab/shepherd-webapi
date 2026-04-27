@@ -35,6 +35,7 @@ class UserClient(TestbedClient):
         account_email: EmailStr | None = None,
         password: PasswordStr | None = None,
         server: HttpUrl | None = None,
+        timeout: int | None = None,
         *,
         save_credentials: bool = False,
         debug: bool = False,
@@ -47,8 +48,6 @@ class UserClient(TestbedClient):
         save_credentials: your inputs will be saved to your account (XDG-path or user/.config/),
                           -> you won't need to enter them again
         """
-        # TODO: no password and wanting to save should be disallowed, as the password would be lost
-
         try:
             self._cfg = ClientConfig.from_file()
         except ValueError:
@@ -56,6 +55,19 @@ class UserClient(TestbedClient):
                 "ClientConfig file is corrupted - "
                 "please backup and replace with client.reset_config()"
             ) from None
+
+        if self._cfg is None:
+            log.debug("No config found, will use default")
+            self._cfg = ClientConfig()
+            if password is None and not save_credentials:
+                raise ValueError(
+                    "It seems you try registering an account "
+                    "without setting a custom password without saving your credentials. "
+                    "The client can set you a secure password, but the login would be lost!"
+                )
+
+        if timeout is not None:
+            self._cfg.timeout = timeout
 
         super().__init__(
             server=server if server is not None else self._cfg.server,

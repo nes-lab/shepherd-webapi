@@ -10,7 +10,6 @@ from pydantic import HttpUrl
 from pydantic import StringConstraints
 from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.base.wrapper import Wrapper
-from shepherd_core.logger import log
 from typing_extensions import Self
 
 PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
@@ -57,12 +56,11 @@ class ClientConfig(BaseModel):
             ryaml.dump(cfg_file, model_wrap)
 
     @classmethod
-    def from_file(cls) -> Self:
+    def from_file(cls) -> Self | None:
         """Load from YAML."""
         config_path = cls.file_path()
         if not config_path.exists():
-            log.debug("No config found, will use default")
-            return cls()
+            return None
         with config_path.open(encoding="utf-8") as cfg_file:
             cfg_dict = ryaml.load(cfg_file)
         cfg_wrap = Wrapper(**cfg_dict)

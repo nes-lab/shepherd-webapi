@@ -34,7 +34,7 @@ jobs:
         run: uv build --clear
         working-directory: "./shepherd_client"
       - name: Install Client-package 🧱
-        run: uv pip install .[all]
+        run: uv pip install .
         working-directory: "./shepherd_client"
       # no unittests due to missing MongoDB on OS != Linux
 

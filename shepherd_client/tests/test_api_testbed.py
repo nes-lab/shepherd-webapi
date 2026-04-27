@@ -21,9 +21,12 @@ def test_testbed_status_fails(testbed_client: TestbedClient) -> None:
 @pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
 @pytest.mark.usefixtures("_server_scheduler_up")
+@pytest.mark.timeout(30)
 def test_testbed_status_with_scheduler(testbed_client: TestbedClient) -> None:
-    time.sleep(3)
-    state = testbed_client.testbed_status()
+    state = False
+    while not state:
+        time.sleep(1)  # dynamically retry
+        state = testbed_client.testbed_status()
     assert state
 
 

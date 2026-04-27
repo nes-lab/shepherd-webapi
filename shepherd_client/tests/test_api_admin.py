@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 
 import pytest
@@ -176,9 +177,17 @@ def test_admin_get_commands(admin_client: AdminClient) -> None:
     assert len(data) > 0
 
 
+@pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
+@pytest.mark.usefixtures("_server_scheduler_up")
+@pytest.mark.timeout(60)
 def test_admin_send_command_space(admin_client: AdminClient) -> None:
+    state = False
+    while not state:
+        time.sleep(1)  # dynamically retry
+        state = admin_client.testbed_status()
     data = admin_client.get_commands()
+    print(data)
     assert len(data) > 0
     assert "min-space" in data
     success = admin_client.send_command("min-space")

@@ -234,6 +234,8 @@ def cfg_env() -> bool:
 def _server_api_up(
     *, cfg_env: bool, mock_mail_engine: MockMailEngine
 ) -> Generator[None, None, None]:
+    # TODO: check if server is already running (ping with client),
+    # TODO: make sure the DB is connectable
     assert cfg_env
     assert mock_mail_engine
     # TODO: could just use Process(target=run_api_server) & .start()

@@ -231,6 +231,9 @@ async def change_state(
     return Response(status_code=200, content="State-Change successful")
 
 
+# TODO: allow elevating users & add this to Client
+
+
 @router.get("/all", dependencies=[Depends(active_admin_user)])
 async def list_all_users() -> list[UserOut]:
     # not the most elegant solution, but this is admin-only anyway

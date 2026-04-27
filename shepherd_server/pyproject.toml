@@ -39,7 +39,7 @@ dependencies = [
     "python-jose[cryptography]",
     "shepherd-core==2026.4.2",
     "python-decouple",
-    "shepherd-herd>=2026.2.1",
+    "shepherd-herd>=2026.4.2",
     "typing-extensions",
     # TODO: python-multipart
 ]

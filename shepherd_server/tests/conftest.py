@@ -32,7 +32,7 @@ from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
 
 # switch core-lib to another fixture
-core_config.TESTBED = "unit_testing_testbed"
+core_config.testbed_name = "unit_testing_testbed"
 server_cfg.mail_enabled = False
 
 

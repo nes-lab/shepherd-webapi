@@ -31,6 +31,7 @@ def get_xdg_config() -> Path:
 
 
 server_default = HttpUrl("https://shepherd.cfaed.tu-dresden.de:8000")
+# TODO: pull directly from coreConfig
 
 
 class ClientConfig(BaseModel):

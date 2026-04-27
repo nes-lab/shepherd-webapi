@@ -11,9 +11,10 @@ from pydantic import HttpUrl
 from pydantic import validate_call
 from shepherd_core.data_models import Experiment
 from shepherd_core.logger import log
+from shepherd_core.testbed_client.client_testbed import TestbedClient
 from typing_extensions import deprecated
 
-from .client_testbed import TestbedClient
+from .config import ClientConfig
 from .config import PasswordStr
 
 
@@ -46,10 +47,22 @@ class UserClient(TestbedClient):
         save_credentials: your inputs will be saved to your account (XDG-path or user/.config/),
                           -> you won't need to enter them again
         """
-
         # TODO: no password and wanting to save should be disallowed, as the password would be lost
 
-        super().__init__(server=server, debug=debug)
+        try:
+            self._cfg = ClientConfig.from_file()
+        except ValueError:
+            raise ValueError(
+                "ClientConfig file is corrupted - "
+                "please backup and replace with client.reset_config()"
+            ) from None
+
+        super().__init__(
+            server=server if server is not None else self._cfg.server,
+            timeout=self._cfg.timeout,
+            debug=debug,
+        )
+
         if account_email is not None:
             self._cfg.account_email = account_email
         if password is not None:
@@ -58,6 +71,13 @@ class UserClient(TestbedClient):
             self._cfg.to_file()
 
         self.authenticate()
+
+    @staticmethod
+    def reset_config() -> bool:
+        """Resets client config if loading from file fails."""
+        backed_up = ClientConfig().backup()
+        ClientConfig().to_file()  # overwrites with default
+        return backed_up
 
     # ####################################################################
     # Account

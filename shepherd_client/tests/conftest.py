@@ -40,7 +40,7 @@ from shepherd_client import AdminClient
 from shepherd_client import TestbedClient
 
 # switch core-lib to another fixture
-core_config.TESTBED = "unit_testing_testbed"
+core_config.testbed_name = "unit_testing_testbed"
 server_cfg.mail_enabled = False
 
 

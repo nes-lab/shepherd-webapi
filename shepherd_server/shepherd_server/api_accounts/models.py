@@ -1,9 +1,9 @@
 """User models."""
 
-from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from enum import StrEnum
+from datetime import timezone
+from enum import Enum
 from typing import Annotated
 from typing import Any
 from typing import Optional
@@ -24,8 +24,10 @@ from shepherd_server.config import server_config
 PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
 # ⤷ Regex = All Printable ASCII-Characters with Space
 
+UTC = timezone.utc
 
-class UserRole(StrEnum):
+
+class UserRole(str, Enum):
     """Options for roles.
 
     elevated - might get VIP privileges like fast-path for scheduler

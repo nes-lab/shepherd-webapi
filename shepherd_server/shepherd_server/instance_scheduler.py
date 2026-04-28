@@ -365,9 +365,9 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
             except ValueError:
                 continue
             if observer_name in observers_online:
-                tb_.scheduler.targets_online[target_id].append(observer_name)
+                tb_.scheduler.targets_online[target_id] = observer_name
             elif observer_name in observers_offline:
-                tb_.scheduler.targets_offline[target_id].append(observer_name)
+                tb_.scheduler.targets_offline[target_id] = observer_name
             else:
                 log.warning(
                     f"Observer {observer_name} of Target {target_id} "

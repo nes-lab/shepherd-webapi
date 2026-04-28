@@ -45,7 +45,7 @@ jobs:
         working-directory: "./shepherd_server"
 
       - name: Install Server-Package 🧱
-        run: uv pip install .[all]
+        run: uv pip install .[all] -U
         working-directory: "./shepherd_server"
 
       - name: Unittests Server

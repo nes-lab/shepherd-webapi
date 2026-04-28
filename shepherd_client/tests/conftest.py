@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from collections.abc import Generator
 from concurrent.futures import ProcessPoolExecutor
@@ -238,6 +239,7 @@ def cfg_env() -> bool:
     os.environ["MAIL_ENABLED"] = "False"
     os.environ["AUTH_SALT"] = "salty_business"
     os.environ["ROOT_URL"] = "127.0.0.1"
+    os.environ["ROOT_PORT"] = str(8000 + sys.version_info.minor)  # separate GH-actions
     return True
 
 

@@ -170,7 +170,7 @@ async def download(
     if (user.role != UserRole.admin) and (web_experiment.owner.email != user.email):
         # TODO: maybe also emit 404 to leak less data - but since UUID is used its min hit-rate
         raise HTTPException(403, "Forbidden")
-    if web_experiment.state != "finished":
+    if web_experiment.state not in {"finished", "failed"}:
         raise HTTPException(409, "Experiment not yet finished")
 
     return list(web_experiment.result_paths.keys())

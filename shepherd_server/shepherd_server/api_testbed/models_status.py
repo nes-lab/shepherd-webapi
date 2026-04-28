@@ -12,7 +12,7 @@ class SchedulerStatus(BaseModel):
     last_update: datetime | None = None
     observer_count: int = 0
     targets_note: str = (
-        "Mapping below is the target_ID (as integers) & their observer (i.e. sheep02)."
+        "Mapping below is target_ID (as integer) & their respective observer (i.e. sheep02)."
     )
     targets_online: dict[int, str] = {}
     targets_offline: dict[int, str] = {}

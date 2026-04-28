@@ -1,5 +1,13 @@
 import os
 import sys
+
+# disarm & configure server
+# NOTE: this has to be done before the imports
+os.environ["MAIL_ENABLED"] = "False"
+os.environ["AUTH_SALT"] = "salty_business"
+os.environ["ROOT_URL"] = "127.0.0.1"
+os.environ["ROOT_PORT"] = str(8000 + sys.version_info.minor)  # separate GH-actions
+
 import time
 from collections.abc import Generator
 from concurrent.futures import ProcessPoolExecutor
@@ -234,15 +242,6 @@ def mail_engine() -> MailEngine:
     return get_mail_engine()
 
 
-@pytest.fixture(scope="module")
-def cfg_env() -> bool:
-    os.environ["MAIL_ENABLED"] = "False"
-    os.environ["AUTH_SALT"] = "salty_business"
-    os.environ["ROOT_URL"] = "127.0.0.1"
-    os.environ["ROOT_PORT"] = str(8000 + sys.version_info.minor)  # separate GH-actions
-    return True
-
-
 def api_is_up() -> bool:
     # TODO: next core-lib release has client.is_connected()
     try:
@@ -254,12 +253,10 @@ def api_is_up() -> bool:
 
 
 @pytest.fixture(scope="module")  # restarts once per module
-def _server_api_up(
-    *, cfg_env: bool, mock_mail_engine: MockMailEngine
-) -> Generator[bool, None, None]:
-    assert cfg_env
+def _server_api_up(*, mock_mail_engine: MockMailEngine) -> Generator[bool, None, None]:
     assert mock_mail_engine
     assert db_available(timeout=2)
+    print(server_cfg.server_url())
     assert not api_is_up()  # Test if another API is running that will interfere
     # TODO: could just use Process(target=run_api_server) & .start()
     with ProcessPoolExecutor() as pool:
@@ -274,19 +271,18 @@ def _server_api_up(
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: pool.shutdown() does not work on infinite tasks
             proc.terminate()
-        pool.shutdown(wait=False, cancel_futures=True)
+        # pool.shutdown(wait=False, cancel_futures=True)
 
 
 @pytest.fixture
-def _server_scheduler_up(*, cfg_env: bool) -> Generator[bool, None, None]:
-    assert cfg_env
+def _server_scheduler_up() -> Generator[bool, None, None]:
     with ProcessPoolExecutor() as pool:
         pool.submit(run_scheduler_server, dry_run=True)
         yield True
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: pool.shutdown() does not work on infinite tasks
             proc.terminate()
-        pool.shutdown(wait=False, cancel_futures=True)
+        # pool.shutdown(wait=False, cancel_futures=True)
 
 
 def herd_present() -> bool:

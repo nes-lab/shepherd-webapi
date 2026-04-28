@@ -23,7 +23,7 @@ class ServerConfigDefault(BaseModel):
     __slots__ = ()
     # web related
     root_url: str = dcoup_cfg("ROOT_URL", default="127.0.0.1")
-    root_port: int = 8000
+    root_port: int = dcoup_cfg("ROOT_PORT", default=8000, cast=int)
     testbed_name: str = dcoup_cfg("TESTBED_NAME", default="unit_testing_testbed")
 
     contact: dict = {

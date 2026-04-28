@@ -398,7 +398,7 @@ async def scheduler(
         if dry_run:
             temp_dir = TemporaryDirectory(suffix="srv_scheduler_")
             stack.enter_context(temp_dir)
-            temp_path: Path = Path(temp_dir)
+            temp_path: Path = Path(temp_dir.name)
             log.debug("Temp path: %s", temp_path.resolve())
             log.warning("Dry run mode - not executing tasks!")
             herd = None

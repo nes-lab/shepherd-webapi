@@ -289,7 +289,6 @@ def _cleanup() -> Generator[None, None, None]:
         print("Terminating", child)
         child.terminate()
         time.sleep(0.5)
-    raise KeyboardInterrupt
 
 
 @pytest.fixture

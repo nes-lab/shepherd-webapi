@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.hash import pbkdf2_sha512
 
 from shepherd_server.api_auth.utils import decode_access_token
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 
 from .models import User
 from .models import UserRole
@@ -18,21 +18,21 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")  # Url = full route
 
 def calculate_password_hash(pw: str) -> str:
     """Automatically salts & hashes a password"""
-    if not config.auth_salt:
+    if not server_config.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
-    return pbkdf2_sha512.using(salt=config.auth_salt).hash(pw)
+    return pbkdf2_sha512.using(salt=server_config.auth_salt).hash(pw)
 
 
 def verify_password_hash(pw_plain: str, pw_hash: str) -> bool:
-    if not config.auth_salt:
+    if not server_config.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
-    return pbkdf2_sha512.using(salt=config.auth_salt).verify(pw_plain, pw_hash)
+    return pbkdf2_sha512.using(salt=server_config.auth_salt).verify(pw_plain, pw_hash)
 
 
 def calculate_hash(text: str) -> str:
-    if not config.auth_salt:
+    if not server_config.auth_salt:
         raise OSError("[AUTH-HASH] No auth salt configured")
-    return sha3_512(config.auth_salt + text.encode("UTF-8")).hexdigest()
+    return sha3_512(server_config.auth_salt + text.encode("UTF-8")).hexdigest()
 
 
 async def query_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User | None:
@@ -43,6 +43,7 @@ async def query_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> Us
 
 
 async def current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User:
+    # allows basic functionality: login, get account info, delete account
     _user = await query_user(token)
     if not _user:
         raise HTTPException(
@@ -53,21 +54,21 @@ async def current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> 
     return _user
 
 
-async def current_active_user(user: Annotated[User, Depends(current_user)]) -> User:
+async def active_user(user: Annotated[User, Depends(current_user)]) -> User:
     if user.disabled:
-        raise HTTPException(status_code=403, detail="Deactivated user")
+        raise HTTPException(status_code=403, detail="Account is currently deactivated")
+    if user.email_confirmed_at is None:
+        raise HTTPException(status_code=401, detail="Email is not yet verified")
     return user
 
 
-async def active_user_is_elevated(user: Annotated[User, Depends(current_user)]) -> None:
-    if user.disabled:
-        raise HTTPException(status_code=403, detail="Deactivated user")
+async def active_elevated_user(user: Annotated[User, Depends(active_user)]) -> User:
     if user.role not in (UserRole.admin, UserRole.elevated):
         raise HTTPException(status_code=403, detail="Forbidden")
+    return user
 
 
-async def active_user_is_admin(user: Annotated[User, Depends(current_user)]) -> None:
-    if user.disabled:
-        raise HTTPException(status_code=403, detail="Deactivated user")
+async def active_admin_user(user: Annotated[User, Depends(active_user)]) -> User:
     if user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Forbidden")
+    return User

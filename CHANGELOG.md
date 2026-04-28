@@ -1,14 +1,51 @@
 # History of Changes
 
-## v2026.04.1 - unreleased
+## v2026.04.2 - unreleased
+
+**Breaking Changes:** The whole shepherd-software-stack will have to be updated.
+
+### Client
 
 - add admin-flavor for webclient (`install .[admin]`)
+- add testbed-flavor for webclient (usable without login) to query testbed status and resources -> moved to core-lib
+- client FNs return success-state if no actual data was returned before
+- all accounts can log in, pull their info and delete the account (even disabled ones)
+- improve error-messages for timeouts or other connection-issues
 - extend statistics about the testbed (only for admin)
+- adapt to new behavior of core-lib & fixture-client
+- make clients testable via pytest
+- now fully tested via GH-actions
+- replace setuptools with uv-build (faster and modern)
+
+### Server
+
+
+- add target-ids to list of online observers in root-API
+- rename endpoints to match common CRUD-style (user=>accounts, experiment=>experiments, content=>resources)
 - improve mails to user
-- server - build-script makes DB backup beforehand
-- server - fix failed ExperimentStats-updates
+- content-route -> only serve non-deprecated and visible2all entries for now
+- adapt to new behavior of core-lib & fixture-client
+- build-script makes DB backup beforehand
+- fix failed ExperimentStats-updates
+- remove integrated backup-function (there are mongodb-commands for that)
+- add granular CLI to reset / delete parts of the database
+- mail-system can now be disabled by config-switch (will be mocked otherwise)
+- admin is now able to access more data (easier debugging)
+- allow checking for content-files via CLI-command
+- now tested via GH-actions
+- lower python min-version to 3.10 as it is needed for unittesting the client in GH-actions
+
+
+### Misc
+
 - fix deprecated httpx-usage (`.post(data=model.model_dump_json())` is replaced by `.post(json=model.model_dump(mode="json"))`)
+- replace PyYAML with rYaml
 - replace pre-commit with prek
+- add zizmor to find vulnerabilities in GH actions
+  - explicitly clear permissions of GH-actions and reduce elevation-surface
+- avoid importing from root shepherd_core and core.data_models
+- rename integrated configs to `ClientConfig` and `ServerConfig` to avoid confusing it with core-config (which is now called `CoreConfig`)
+- remove dead code and old dependencies
 
 ## v2026.02.2
 

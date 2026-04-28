@@ -15,10 +15,10 @@ from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import tb_client
 from shepherd_herd import Herd
 
+from shepherd_server.api_accounts.utils_misc import active_admin_user
+from shepherd_server.api_accounts.utils_misc import active_elevated_user
 from shepherd_server.api_testbed.models_status import TestbedDB
-from shepherd_server.api_user.utils_misc import active_user_is_admin
-from shepherd_server.api_user.utils_misc import active_user_is_elevated
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 
 router = APIRouter(prefix="/testbed", tags=["Testbed"])
 
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/testbed", tags=["Testbed"])
 @router.get("")
 async def testbed_info() -> Testbed:
     try:
-        data = tb_client.query_item("Testbed", name=config.testbed_name)
+        data = tb_client.get_resource_item("Testbed", name=server_config.testbed_name)
     except ValueError:
         data = None
     if data is None:
@@ -40,7 +40,7 @@ async def get_restrictions() -> list[str] | None:
     return tb_.restrictions
 
 
-@router.patch("/restrictions", dependencies=[Depends(active_user_is_admin)])
+@router.patch("/restrictions", dependencies=[Depends(active_admin_user)])
 async def set_restrictions(value: Annotated[list[str], Body(embed=True)]) -> Response:
     tb_ = await TestbedDB.get_one()
     tb_.restrictions = value
@@ -52,7 +52,7 @@ herd_cmds = {"restart", "resync", "inventorize", "stop-measurement", "min-space"
 server_cmds = {"start-scheduler", "stop-scheduler"}
 
 
-@router.get("/command", dependencies=[Depends(active_user_is_elevated)])
+@router.get("/command", dependencies=[Depends(active_elevated_user)])
 async def get_command() -> list[str]:
     return list(herd_cmds | server_cmds)
 
@@ -98,7 +98,7 @@ def run_command_syn(cmd: str) -> Response:
     return Response(status_code=400, content="Command failed on at least one Host")
 
 
-@router.patch("/command", dependencies=[Depends(active_user_is_elevated)])
+@router.patch("/command", dependencies=[Depends(active_elevated_user)])
 async def run_command(value: Annotated[str, Body(embed=True)]) -> Response:
     return await asyncio.to_thread(run_command_syn, value)
 
@@ -109,19 +109,19 @@ async def run_command(value: Annotated[str, Body(embed=True)]) -> Response:
 
 
 @router.get("/observer")
-async def list_observers() -> list[int]:
+async def list_observers() -> list[str]:
     try:
-        tb = Testbed(name=config.testbed_name)
-        data = [obs.id for obs in tb.observers]
+        tb = Testbed(name=server_config.testbed_name)
+        data = [obs.name for obs in tb.observers]
     except ValueError:
-        data = tb_client.query_ids("Observer")
+        data = tb_client.list_resource_names("Observer")
     return sorted(data)
 
 
-@router.get("/observer/{uid}")
-async def get_observer(uid: int) -> Observer:
+@router.get("/observer/{name}")
+async def get_observer(name: str) -> Observer:
     try:
-        data = tb_client.query_item("Observer", uid=uid)
+        data = tb_client.get_resource_item("Observer", name=name)
     except ValueError:
         data = None
     if data is None:
@@ -130,19 +130,19 @@ async def get_observer(uid: int) -> Observer:
 
 
 @router.get("/cape")
-async def list_capes() -> list[int]:
+async def list_capes() -> list[str]:
     try:
-        tb = Testbed(name=config.testbed_name)
-        data = [obs.cape.id for obs in tb.observers if obs.cape is not None]
+        tb = Testbed(name=server_config.testbed_name)
+        data = [obs.cape.name for obs in tb.observers if obs.cape is not None]
     except ValueError:
-        data = tb_client.query_ids("Cape")
+        data = tb_client.list_resource_names("Cape")
     return sorted(data)
 
 
-@router.get("/cape/{uid}")
-async def get_cape(uid: int) -> Cape:
+@router.get("/cape/{name}")
+async def get_cape(name: str) -> Cape:
     try:
-        data = tb_client.query_item("Cape", uid=uid)
+        data = tb_client.get_resource_item("Cape", name=name)
     except ValueError:
         data = None
     if data is None:
@@ -153,8 +153,8 @@ async def get_cape(uid: int) -> Cape:
 @router.get("/target")
 async def list_targets() -> list[int]:
     try:
-        tb = Testbed(name=config.testbed_name)
-        tgt_all = tb_client.query_ids("Target")
+        tb = Testbed(name=server_config.testbed_name)
+        tgt_all = tb_client.list_resource_ids("Target")
     except ValueError:
         return []
     data = []
@@ -162,7 +162,7 @@ async def list_targets() -> list[int]:
         try:
             if tb.get_observer(uid):
                 data.append(uid)
-        except ValueError:
+        except ValueError:  # noqa: PERF203
             pass
     return sorted(data)
 
@@ -170,7 +170,7 @@ async def list_targets() -> list[int]:
 @router.get("/target/{uid}")
 async def get_target(uid: int) -> Target:
     try:
-        data = tb_client.query_item("Target", uid=uid)
+        data = tb_client.get_resource_item("Target", uid=uid)
     except ValueError:
         data = None
     if data is None:

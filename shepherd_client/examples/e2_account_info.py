@@ -2,7 +2,7 @@
 
 With saved credentials the login/authentication is simplified to a one-liner.
 
-User-info informs you about:
+Account-info informs you about:
 
 - custom quota (can be modified by an admin)
 - current quota boundaries

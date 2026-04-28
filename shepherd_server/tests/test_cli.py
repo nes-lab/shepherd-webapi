@@ -2,7 +2,7 @@ from signal import signal
 
 import pytest
 from fastapi.testclient import TestClient
-from shepherd_server.api_user.utils_mail import MailEngine
+from shepherd_server.api_accounts.utils_mail import MailEngine
 from shepherd_server.cli import cli
 from typer.testing import CliRunner
 
@@ -90,24 +90,62 @@ def test_cli_create_admin_new(client: TestClient, mail_engine_mock: MailEngine) 
     _, token = mail_engine_mock.send_verification_email.call_args.args
     with client.regular_joe():
         verification_response = client.post(
-            f"/user/verify/{token}",
+            f"/accounts/verify/{token}",
         )
         assert verification_response.status_code == 200
 
 
-def test_cli_init_short() -> None:
-    res = CliRunner().invoke(
-        app=cli,
-        args=["-v", "init"],
-    )
+def test_cli_reset_nothing() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset"])
     assert res.exit_code == 0
 
 
-def test_cli_backup_short() -> None:
-    res = CliRunner().invoke(
-        app=cli,
-        args=["-v", "backup", "."],
-    )
+@pytest.mark.timeout(1)
+def test_cli_reset_accounts_fail() -> None:
+    # each expects user-confirmation before doing anything!
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--accounts"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_experiments_fail() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--experiments"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_stats_fail() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--stats"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_testbed_fail() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--testbed"])
+    assert res.exit_code > 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_accounts() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--accounts", "--yes"])
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_experiments() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--experiments", "--yes"])
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_stats() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--stats", "--yes"])
+    assert res.exit_code == 0
+
+
+@pytest.mark.timeout(1)
+def test_cli_reset_testbed() -> None:
+    res = CliRunner().invoke(app=cli, args=["-v", "reset", "--testbed", "--yes"])
     assert res.exit_code == 0
 
 

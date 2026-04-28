@@ -1,9 +1,9 @@
 import datetime
 
-from shepherd_core import local_tz
+from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.experiment import Experiment
-from shepherd_server.api_experiment.models import WebExperiment
-from shepherd_server.api_user.models import User
+from shepherd_server.api_accounts.models import User
+from shepherd_server.api_experiments.models import WebExperiment
 
 
 async def test_get_next_scheduling(

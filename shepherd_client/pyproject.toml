@@ -6,7 +6,7 @@ keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "
 authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
-version = "2026.04.1"
+version = "2026.04.2"
 
 readme = {file = "README.md", content-type = "text/markdown"}
 
@@ -29,13 +29,14 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-    "shepherd-core>=2026.4.1",
+    "shepherd-core==2026.4.2",
     "requests",
     "pydantic[email]>=2.11.5",
     "exrex",  # for automatic password creation
-    "pyaml",
     "typer",
     "certifi>=2025.6.15",
+    "ryaml",
+    "typing-extensions",
 ]
 
 [project.optional-dependencies]
@@ -44,9 +45,11 @@ dev = []
 test = [
     "pytest",
     "pytest-click",
-    #"pytest-dependency",
-    #"pytest-timeout",
+    "pytest-async",
+    "pytest-dependency",
+    "pytest-timeout",
     "coverage",
+    "shepherd-server",
 ]
 
 all = ["shepherd-client[admin,test,dev]"]
@@ -60,33 +63,25 @@ Source = "https://github.com/nes-lab/shepherd-webapi"
 shepherd-client = "shepherd_client.cli:cli"
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.11.0,<0.12.0"]
+build-backend = "uv_build"
 
-[tool.setuptools]
+[tool.uv.build-backend]
+module-root = "./"
 platforms = ["unix", "linux", "osx", "cygwin", "win32", "win64"]
-package-dir = {"shepherd_client" = "./shepherd_client/"}
-zip-safe = true
-include-package-data = true
-
-[tool.pyright]
-root = "./"
-include = []
-pythonVersion = "3.10"
-pythonPlatform = "All"
-reportMissingParameterType = true
 
 [tool.aliases]
 test = "pytest"
 
 [tool.pytest.ini_options]
-addopts = ["-vvv"]
+addopts = ["-vvv", "--stepwise"]
 asyncio_mode = "auto"
 testpaths = ["tests", ]
 norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv', '.venv']
 markers = [
     "timeout: limit for individual test to finish",
 ]
+timeout = 60
 
 [tool.coverage.run]
 source = ["shepherd_client"]

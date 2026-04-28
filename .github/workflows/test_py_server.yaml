@@ -3,16 +3,19 @@ name: Server - Build, install & [pytest]
 on:
   workflow_call:
 
+permissions: {}
+
 jobs:
   test_server:
 
     strategy:
       matrix:
-        python-version: ["3.14", "3.13"] # managed by uv
+        python-version: ["3.14", "3.13"]
 
     runs-on: ubuntu-latest
     env:
       UV_PYTHON: ${{ matrix.python-version }}
+      AUTH_SALT: salty_business
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}-server
@@ -22,6 +25,14 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v6
 
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.1
+        with:
+          mongodb-version: 8 # latest
+          # beanie supports v7 & 8
+          # https://beanie-odm.dev/changelog/
+          mongodb-port: 27017  # default (taken from instance_db.py)
+
       - name: Install uv 🔧 & set up Python 🐍
         uses: astral-sh/setup-uv@v7
         with:
@@ -29,12 +40,14 @@ jobs:
           enable-cache: true
           activate-environment: true
 
-      - name: Build package 🧱
+      - name: Build Server-Package 🧱
         run: uv build --clear
         working-directory: "./shepherd_server"
 
-      - name: Install Package 🧱
-        run: uv pip install .[all]
+      - name: Install Server-Package 🧱
+        run: uv pip install .[all] -U
         working-directory: "./shepherd_server"
 
-      # TODO: pytest (needs database)
+      - name: Unittests Server
+        run: pytest
+        working-directory: "./shepherd_server"

@@ -38,7 +38,6 @@ def cli_callback(*, verbose: bool = verbose_opt_t) -> None:
 @cli.command()
 def version() -> None:
     """Prints version-infos (combinable with -v)"""
-
     log.info("shepherd-client v%s", metadata.version("shepherd-client"))
     log.debug("Python v%s", sys.version)
 

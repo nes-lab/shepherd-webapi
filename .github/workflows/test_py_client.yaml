@@ -1,20 +1,56 @@
-name: Client - Build, install & [pytest]
+name: Client - Build, install & pytest
 
 on:
   workflow_call:
 
+permissions: {}
+
 jobs:
-  test_client:
+
+  install_client:
 
     strategy:
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"] # 4 version / years
+        os: [ "ubuntu-latest", "macos-latest", "windows-latest" ]
+        python-version: [ "3.14", "3.13", "3.12", "3.11", "3.10" ] # 4 version / years
 
     runs-on: ${{ matrix.os }}
     env:
       UV_PYTHON: ${{ matrix.python-version }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.python-version }}-iclient
+      cancel-in-progress: true
 
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v6
+      - name: Install uv 🔧 & set up Python 🐍
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          activate-environment: true
+      - name: Test-Build Client-Package 🧱
+        run: uv build --clear
+        working-directory: "./shepherd_client"
+      - name: Install Client-package 🧱
+        run: uv pip install .
+        working-directory: "./shepherd_client"
+      # no unittests due to missing MongoDB on OS != Linux
+
+
+  test_client:
+
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"]
+        # python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"] # 4 version / years
+        python-version: ["3.13"] # # something is different in actions
+
+    runs-on: ${{ matrix.os }}
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+      AUTH_SALT: salty_business
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.python-version }}-client
       cancel-in-progress: true
@@ -23,6 +59,14 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v6
 
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.1
+        with:
+          mongodb-version: 8 # latest
+          # beanie supports v7 & 8
+          # https://beanie-odm.dev/changelog/
+          mongodb-port: 27017  # default (taken from instance_db.py)
+
       - name: Install uv 🔧 & set up Python 🐍
         uses: astral-sh/setup-uv@v7
         with:
@@ -30,12 +74,18 @@ jobs:
           enable-cache: true
           activate-environment: true
 
-      - name: Test-Build Package 🧱
+      - name: Install Server-Package 🧱
+        run: uv pip install .[test] -U
+        working-directory: "./shepherd_server"
+
+      - name: Test-Build Client-Package 🧱
         run: uv build --clear
         working-directory: "./shepherd_client"
 
-      - name: Install package via uv 🧱
-        run: uv pip install .[all]
+      - name: Install Client-package 🧱
+        run: uv pip install .[test] -U
         working-directory: "./shepherd_client"
 
-      # TODO: pytest, needs server
+      - name: Unittest Client
+        run: pytest
+        working-directory: "./shepherd_client"

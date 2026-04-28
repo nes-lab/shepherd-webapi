@@ -19,11 +19,11 @@ def _get_xdg_path(variable_name: str, default: str) -> Path:
 PATH_XDG_CONFIG = _get_xdg_path("XDG_CONFIG_HOME", ".config/")
 
 
-class ConfigDefault(BaseModel):
+class ServerConfigDefault(BaseModel):
     __slots__ = ()
     # web related
     root_url: str = dcoup_cfg("ROOT_URL", default="127.0.0.1")
-    root_port: int = 8000
+    root_port: int = dcoup_cfg("ROOT_PORT", default=8000, cast=int)
     testbed_name: str = dcoup_cfg("TESTBED_NAME", default="unit_testing_testbed")
 
     contact: dict = {
@@ -40,7 +40,7 @@ class ConfigDefault(BaseModel):
     # -> this can and should contain the cert and the full chain
     #    if missing visit API in browser - view cert - download `PEM (chain)`
 
-    # user auth
+    # account auth
     auth_salt: bytes = dcoup_cfg("AUTH_SALT").encode("UTF-8")
     secret_key: str = dcoup_cfg("SECRET_KEY", default="replace me")
     # will raise if missing default, TODO: remove default
@@ -57,14 +57,14 @@ class ConfigDefault(BaseModel):
     mail_sender: str = dcoup_cfg("MAIL_SENDER", default="")
     mail_sender_name: str = dcoup_cfg("MAIL_SENDER_NAME", default="Shepherd Testbed")
 
-    # Quotas for users
+    # Quotas for accounts
     quota_default_duration: timedelta = timedelta(minutes=60)
     quota_default_storage: PositiveInt = 200 * (10**9)
     # 20 nodes @  4 h are ~  290 GB
     # 30 nodes @ 10 h are ~ 1080 GB
 
     # Lifetime of Objects
-    age_max_user: timedelta = timedelta(days=18 * 31)
+    age_max_account: timedelta = timedelta(days=18 * 31)
     age_max_experiment: timedelta = timedelta(days=6 * 31)
     age_min_experiment: timedelta = timedelta(days=15)
 
@@ -74,7 +74,7 @@ class ConfigDefault(BaseModel):
         if _avail:
             log.info("SSL available, as keys & certs were found")
         else:
-            log.warning("SSL disabled!")
+            log.warning("SSL is deactivated!")
             for _file in _files:
                 if not isinstance(_file, Path):
                     log.warning("At least one SSL-Path was not specified")
@@ -86,4 +86,4 @@ class ConfigDefault(BaseModel):
         return f"http{'s' if self.ssl_available() else ''}://{self.root_url}:{self.root_port}"
 
 
-config = ConfigDefault()
+server_config = ServerConfigDefault()

@@ -3,7 +3,7 @@
 # uv pip install .
 [project]
 name = "Shepherd-WebAPI"
-version = "2026.04.1"
+version = "2026.04.2"
 description = "Interface between the Testbed Instance and the User"
 readme = "README.md"
 dependencies = [
@@ -12,10 +12,12 @@ dependencies = [
     # dev
     "prek",  # pre-commit replacement
     "bump2version",
-    "pyright",
     "ty",
+    # forced dev versions:
+    "shepherd-core",
+    "shepherd-herd",
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 
 [tool.uv]
 package = false
@@ -23,9 +25,16 @@ package = false
 [tool.uv.sources]
 shepherd-server = { path = "./shepherd_server", editable = true}
 shepherd-client = { path = "./shepherd_client", editable = true}
-
-[tool.setuptools]
-packages = ["shepherd_server", "shepherd_client"]
+shepherd-core = { git = "https://github.com/nes-lab/shepherd-tools/", branch = "dev", subdirectory = "shepherd_core"}
+shepherd-herd = { git = "https://github.com/nes-lab/shepherd/", branch = "dev", subdirectory = "software/shepherd-herd"}
+# temporary dev-versions of sub-packets
 
 [tool.ty.terminal]
 output-format = "concise"
+
+[tool.codespell]
+builtin = "clear,rare,informal,usage,code,en-GB_to_en-US"
+skip = "*.svg,*.css,*.js,flocklab_template.xml"
+ignore-words-list = "jupyter,fram,ws,astroid,ro"
+check-filenames = true
+check-hidden = true

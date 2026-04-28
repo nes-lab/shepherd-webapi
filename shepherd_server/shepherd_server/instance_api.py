@@ -17,22 +17,23 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.responses import FileResponse
 
+from .api_accounts.router import router as accounts_router
 from .api_auth.router import router as auth_router
-from .api_content.router import router as content_router
-from .api_experiment.router import router as experiment_router
+from .api_experiments.router import router as experiments_router
+from .api_resources.router import router as resources_router
 from .api_testbed.models_status import TestbedDB
 from .api_testbed.models_status import TestbedStatus
 from .api_testbed.router import router as testbed_router
-from .api_user.router import router as user_router
-from .config import config
+from .config import server_config
 from .instance_db import db_available
 from .instance_db import db_client
 from .instance_db import db_context
+from .instance_fixtures import prepare_fixture_client
 from .logger import log
 
 # run with: uvicorn shepherd_server.webapi:app --reload
@@ -76,10 +77,10 @@ app.add_middleware(
 
 
 app.include_router(auth_router)
-app.include_router(user_router)
-app.include_router(experiment_router)
+app.include_router(accounts_router)
+app.include_router(experiments_router)
 app.include_router(testbed_router)
-app.include_router(content_router)
+app.include_router(resources_router)
 
 # TODO: add health-endpoint that accumulates internal states
 
@@ -111,7 +112,7 @@ async def update_status() -> None:
 
 
 def run() -> None:
-    ssl_enabled = config.ssl_available()
+    ssl_enabled = server_config.ssl_available()
     if ssl_enabled:
         app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -124,12 +125,14 @@ def run() -> None:
     uvi_args = {
         "app": f"{run.__module__}:app",
         "reload": False,
-        "port": config.root_port,
-        "host": config.root_url,
+        "port": server_config.root_port,
+        "host": server_config.root_url,
         # TODO: add resource limits - https://www.uvicorn.org/settings/#resource-limits
     }
     if ssl_enabled:
-        uvi_args["ssl_keyfile"] = config.ssl_keyfile.as_posix()
-        uvi_args["ssl_certfile"] = config.ssl_certfile.as_posix()
+        uvi_args["ssl_keyfile"] = server_config.ssl_keyfile.as_posix()
+        uvi_args["ssl_certfile"] = server_config.ssl_certfile.as_posix()
+
+    prepare_fixture_client()
     asyncio.run(update_status())
     uvicorn.run(**uvi_args)

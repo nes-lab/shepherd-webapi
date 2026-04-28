@@ -1,9 +1,9 @@
 """User models."""
 
-from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from enum import StrEnum
+from datetime import timezone
+from enum import Enum
 from typing import Annotated
 from typing import Any
 from typing import Optional
@@ -16,22 +16,29 @@ from pydantic import Field
 from pydantic import PositiveInt
 from pydantic import StringConstraints
 from pydantic import computed_field
-from shepherd_core import local_now
-from shepherd_core import local_tz
+from shepherd_core.data_models.base.timezone import local_now
+from shepherd_core.data_models.base.timezone import local_tz
 
-from shepherd_server.config import config
+from shepherd_server.config import server_config
 
 PasswordStr = Annotated[str, StringConstraints(min_length=10, max_length=64, pattern=r"^[ -~]+$")]
 # ⤷ Regex = All Printable ASCII-Characters with Space
 
+UTC = timezone.utc
 
-class UserRole(StrEnum):
-    """Options for roles."""
+
+class UserRole(str, Enum):
+    """Options for roles.
+
+    elevated - might get VIP privileges like fast-path for scheduler
+    admin - can register new users, extend quota, control experiments of other users (RW-access)
+
+    # TODO: add group-admin, elevated user (VIP privileges like fast-path for scheduler)
+    """
 
     user = "user"
     elevated = "elevated"
     admin = "admin"
-    # TODO: add group-admin, elevated user (VIP privileges like faster path for scheduler)
 
 
 class UserRegistration(BaseModel):
@@ -76,19 +83,19 @@ class UserQuota(BaseModel):
     @property
     def quota_duration(self) -> timedelta:
         _custom = self.custom_quota_active and (self.custom_quota_duration is not None)
-        return self.custom_quota_duration if _custom else config.quota_default_duration
+        return self.custom_quota_duration if _custom else server_config.quota_default_duration
 
     @computed_field
     @property
     def quota_storage(self) -> PositiveInt:
         _custom = self.custom_quota_active and (self.custom_quota_storage is not None)
-        return self.custom_quota_storage if _custom else config.quota_default_storage
+        return self.custom_quota_storage if _custom else server_config.quota_default_storage
 
 
 class UserOut(UserQuota, UserUpdate):
     """User fields returned to the client."""
 
-    disabled: bool = True
+    disabled: bool = True  # TODO: should be renamed to deactivated
     email: Annotated[EmailStr, Indexed(unique=True)]
     group: str = ""  # TODO: will come later
     role: UserRole = UserRole.user
@@ -146,14 +153,16 @@ class User(Document, UserOut):
 
     @classmethod
     async def by_verification_token(cls, token: str) -> Optional["User"]:
+        if token is None:
+            return None
         return await cls.find_one(cls.token_verification == token)
 
     @classmethod
     async def by_reset_token(cls, token: str) -> Optional["User"]:
         return await cls.find_one(cls.token_pw_reset == token)
 
-    def update_email(self, new_email: EmailStr) -> None:
+    async def update_email(self, new_email: EmailStr) -> None:
         """Update email logging and replace."""
         # Add any pre-checks here
         self.email = new_email
-        self.save_changes()
+        await self.save_changes()

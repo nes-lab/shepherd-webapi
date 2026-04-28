@@ -8,32 +8,31 @@ from uuid import UUID
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from shepherd_core import Writer as CoreWriter
 from shepherd_core import fw_tools
-from shepherd_core import local_tz
-from shepherd_core.config import config as core_cfg
-from shepherd_core.data_models import FirmwareDType
-from shepherd_core.data_models import GpioTracing
-from shepherd_core.data_models import UartLogging
+from shepherd_core.config import core_config
+from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
+from shepherd_core.data_models.content.enum_datatypes import FirmwareDType
 from shepherd_core.data_models.experiment import Experiment
+from shepherd_core.data_models.experiment import GpioTracing
 from shepherd_core.data_models.experiment import TargetConfig
+from shepherd_core.data_models.experiment import UartLogging
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
-from shepherd_server.api_experiment.models import WebExperiment
-from shepherd_server.api_user.models import User
-from shepherd_server.api_user.models import UserRole
-from shepherd_server.api_user.utils_mail import MailEngine
-from shepherd_server.api_user.utils_mail import mail_engine
-from shepherd_server.api_user.utils_misc import calculate_password_hash
-from shepherd_server.config import config as server_cfg
+from shepherd_core.writer import Writer as CoreWriter
+from shepherd_server.api_accounts.models import User
+from shepherd_server.api_accounts.models import UserRole
+from shepherd_server.api_accounts.utils_mail import MailEngine
+from shepherd_server.api_accounts.utils_misc import calculate_password_hash
+from shepherd_server.api_experiments.models import WebExperiment
+from shepherd_server.config import server_config as server_cfg
 from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
 
 # switch core-lib to another fixture
-core_cfg.TESTBED = "unit_testing_testbed"
+core_config.testbed_name = "unit_testing_testbed"
 server_cfg.mail_enabled = False
 
 
@@ -76,10 +75,10 @@ async def database_for_tests(
     unconfirmed_user.email_confirmed_at = None
     await User.insert_one(unconfirmed_user)
 
-    disabled_user = user.model_copy(deep=True)
-    disabled_user.email = "disabled@test.com"
-    disabled_user.disabled = True
-    await User.insert_one(disabled_user)
+    deactivated_user = user.model_copy(deep=True)
+    deactivated_user.email = "deactivated_mail@test.com"
+    deactivated_user.disabled = True
+    await User.insert_one(deactivated_user)
 
     scheduled_web_experiment = WebExperiment(
         id=UUID(scheduled_experiment_id),
@@ -136,7 +135,7 @@ class UserTestClient(TestClient):
     """
 
     @contextmanager
-    def authenticate_admin(self) -> Generator[TestClient]:
+    def authenticate_admin(self) -> Generator[TestClient, None, None]:
         response = self.post(
             "/auth/token",
             data={
@@ -151,7 +150,7 @@ class UserTestClient(TestClient):
         self.headers["Authorization"] = ""
 
     @contextmanager
-    def authenticate_user_1(self) -> Generator[TestClient]:
+    def authenticate_user_1(self) -> Generator[TestClient, None, None]:
         response = self.post(
             "/auth/token",
             data={
@@ -166,7 +165,7 @@ class UserTestClient(TestClient):
         self.headers["Authorization"] = ""
 
     @contextmanager
-    def authenticate_user_2(self) -> Generator[TestClient]:
+    def authenticate_user_2(self) -> Generator[TestClient, None, None]:
         response = self.post(
             "/auth/token",
             data={
@@ -181,19 +180,19 @@ class UserTestClient(TestClient):
         self.headers["Authorization"] = ""
 
     @contextmanager
-    def regular_joe(self) -> Generator[TestClient]:
+    def regular_joe(self) -> Generator[TestClient, None, None]:
         self.headers["Authorization"] = ""
         yield self
 
 
 @pytest.fixture
-def client(*, database_for_tests: bool) -> Generator[TestClient]:
+def client(*, database_for_tests: bool) -> Generator[TestClient, None, None]:
     assert database_for_tests
     with UserTestClient(app) as client:
         yield client
 
 
-# @mock.patch("shepherd_server.api_user.utils_mail.FastMailEngine")
+# @mock.patch("shepherd_server.api_accounts.utils_mail.FastMailEngine")
 class MockMailEngine(MailEngine):
     def __init__(self) -> None:
         self.send_verification_email = AsyncMock()
@@ -204,8 +203,10 @@ class MockMailEngine(MailEngine):
 
 @pytest.fixture
 def mail_engine_mock() -> MailEngine:
+    from shepherd_server.api_accounts.utils_mail import set_mail_engine
+
     mock_engine = MockMailEngine()
-    app.dependency_overrides[mail_engine] = lambda: mock_engine
+    set_mail_engine(mock_engine)
     return mock_engine
 
 

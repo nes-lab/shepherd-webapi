@@ -5,16 +5,17 @@ from pathlib import Path
 import pytest
 import shepherd_core.data_models as sdm
 from fastapi.testclient import TestClient
-from shepherd_core import local_tz
+from shepherd_core.data_models.base.timezone import local_now
+from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.testbed import MCU
-from shepherd_server.api_user.models import UserQuota
-from shepherd_server.config import config
+from shepherd_server.api_accounts.models import UserQuota
+from shepherd_server.config import server_config
 
 from .conftest import UserTestClient
 
 
 def test_create_experiment_is_authenticated(client: TestClient) -> None:
-    response = client.post("/experiment")
+    response = client.post("/experiments")
     assert response.status_code == 401
 
 
@@ -25,7 +26,7 @@ def test_create_experiment_succeeds(
 ) -> None:
     with client.authenticate_user_1():
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
         assert response.status_code == 200
@@ -37,17 +38,17 @@ def test_create_experiment_as_admin_succeeds(
     sample_experiment: sdm.Experiment,
 ) -> None:
     with client.authenticate_admin():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         assert response.status_code == 200
         assert len(response.json()) == 0
 
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
         assert response.status_code == 200
 
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         assert response.status_code == 200
         assert len(response.json()) == 1
 
@@ -62,7 +63,7 @@ def test_create_experiment_needs_duration(
     )
     with client.authenticate_user_1():
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=_xp.model_dump(mode="json"),
         )
         assert response.status_code >= 400
@@ -74,12 +75,12 @@ def test_create_experiment_duration_has_quota(
 ) -> None:
     _xp = sdm.Experiment(
         name="test-experiment",
-        duration=config.quota_default_duration + timedelta(seconds=5),
+        duration=server_config.quota_default_duration + timedelta(seconds=5),
         target_configs=[sample_target_config],
     )
     with client.authenticate_user_1():
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=_xp.model_dump(mode="json"),
         )
         assert response.status_code >= 400
@@ -93,21 +94,21 @@ def test_create_experiment_duration_with_expired_quota(
         json_dict = {
             "email": "user@test.com",
             "quota": UserQuota(
-                custom_quota_expire_date=datetime.now(tz=local_tz()) - timedelta(minutes=5),
+                custom_quota_expire_date=local_now() - timedelta(minutes=5),
                 custom_quota_duration=timedelta(hours=60),
             ).model_dump(exclude_defaults=True, mode="json"),
         }
-        response = client.patch("/user/quota", json=json_dict)
+        response = client.patch("/accounts/quota", json=json_dict)
         assert response.status_code == 200
 
     with client.authenticate_user_1():
         _xp = sdm.Experiment(
             name="test-experiment",
-            duration=config.quota_default_duration + timedelta(seconds=5),
+            duration=server_config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
         )
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=_xp.model_dump(exclude_defaults=True, mode="json"),
         )
         assert response.status_code >= 400
@@ -121,21 +122,21 @@ def test_create_experiment_duration_with_valid_quota(
         json_dict = {
             "email": "user@test.com",
             "quota": UserQuota(
-                custom_quota_expire_date=datetime.now(tz=local_tz()) + timedelta(minutes=5),
+                custom_quota_expire_date=local_now() + timedelta(minutes=5),
                 custom_quota_duration=timedelta(hours=60),
             ).model_dump(exclude_defaults=True, mode="json"),
         }
-        response = client.patch("/user/quota", json=json_dict)
+        response = client.patch("/accounts/quota", json=json_dict)
         assert response.status_code == 200
 
     with client.authenticate_user_1():
         xp = sdm.Experiment(
             name="test-experiment",
-            duration=config.quota_default_duration + timedelta(seconds=5),
+            duration=server_config.quota_default_duration + timedelta(seconds=5),
             target_configs=[sample_target_config],
         )
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=xp.model_dump(exclude_defaults=True, mode="json"),
         )
         assert response.status_code == 200
@@ -153,7 +154,7 @@ def test_create_experiment_only_fifo_scheduler(
     )
     with client.authenticate_user_1():
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=xp.model_dump(mode="json"),
         )
         assert response.status_code >= 400
@@ -183,7 +184,7 @@ def test_create_experiment_with_unconstrained_path(
     )
     with client.authenticate_user_1():
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=xp.model_dump(mode="json"),
         )
         print(response.status_code)
@@ -193,7 +194,7 @@ def test_create_experiment_with_unconstrained_path(
 
 
 def test_list_experiments_is_authenticated(client: TestClient) -> None:
-    response = client.get("/experiment")
+    response = client.get("/experiments")
     assert response.status_code == 401
 
 
@@ -203,7 +204,7 @@ def test_list_experiments(
     created_experiment_id: str,
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
     assert response.status_code == 200
     assert len(response.json()) == 4
     assert response.json()[created_experiment_id] is not None
@@ -215,23 +216,23 @@ def test_experiments_are_private_to_user(
     sample_experiment: sdm.Experiment,
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         assert response.status_code == 200
         assert len(response.json()) == 3
 
     with client.authenticate_admin():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         assert response.status_code == 200
         assert len(response.json()) == 0
 
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
         assert response.status_code == 200
 
     with client.authenticate_user_1():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         assert response.status_code == 200
         assert len(response.json()) == 3
 
@@ -243,7 +244,7 @@ def created_experiment_id(
 ) -> str:
     with client.authenticate_user_1():
         response = client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
     assert response.status_code == 200
@@ -256,7 +257,7 @@ def test_get_experiment_by_id(
     created_experiment_id: str,
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{created_experiment_id}")
+        response = client.get(f"/experiments/{created_experiment_id}")
     assert response.status_code == 200
     assert response.json()["name"] == "test-experiment"
 
@@ -265,12 +266,12 @@ def test_get_experiment_returns_not_found_for_invalid_id(
     client: UserTestClient,
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
+        response = client.get("/experiments/ab89cb3f-50c1-402a-aa28-078697387029")
     assert response.status_code == 404
 
 
 def test_get_experiment_is_authenticated(client: UserTestClient) -> None:
-    response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
+    response = client.get("/experiments/ab89cb3f-50c1-402a-aa28-078697387029")
     assert response.status_code == 401
 
 
@@ -281,21 +282,23 @@ def test_get_experiment_is_private_to_user(
 ) -> None:
     with client.authenticate_user_1():
         client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         experiment_id = next(iter(response.json().keys()))
-        response = client.get(f"/experiment/{experiment_id}")
+        response = client.get(f"/experiments/{experiment_id}")
         assert response.status_code == 200
 
     with client.authenticate_user_2():
-        response = client.get(f"/experiment/{experiment_id}")
+        response = client.get(f"/experiments/{experiment_id}")
         assert response.status_code >= 400
 
+    # TODO: add elevated user
+
     with client.authenticate_admin():
-        response = client.get(f"/experiment/{experiment_id}")
-        assert response.status_code >= 400
+        response = client.get(f"/experiments/{experiment_id}")
+        assert response.status_code == 200  # has access
 
 
 @pytest.mark.dependency(depends=["test_create_experiment_succeeds"])
@@ -303,12 +306,12 @@ def test_get_all_experiments_is_admin_only(
     client: UserTestClient,
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get("/experiment/all")
+        response = client.get("/experiments/all")
         assert response.status_code == 403
 
     with client.authenticate_admin():
         # Admins are allowed
-        response = client.get("/experiment/all")
+        response = client.get("/experiments/all")
         assert response.status_code == 200
 
 
@@ -319,22 +322,22 @@ def test_get_all_experiments_shows_all(
 ) -> None:
     with client.authenticate_user_1():
         client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
 
     with client.authenticate_user_1():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         len_u1 = len(response.json().keys())
 
     with client.authenticate_user_2():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         len_u2 = len(response.json().keys())
 
     with client.authenticate_admin():
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         len_a1 = len(response.json().keys())
-        response = client.get("/experiment/all")
+        response = client.get("/experiments/all")
         len_a2 = len(response.json().keys())
 
     print(f"user1={len_u1}, user2={len_u2}, admin={len_a1}, all={len_a2}")
@@ -350,9 +353,9 @@ def test_get_all_experiments_shows_all(
 
 def test_schedule_experiment(client: UserTestClient, created_experiment_id: str) -> None:
     with client.authenticate_user_1():
-        response = client.post(f"/experiment/{created_experiment_id}/schedule")
+        response = client.post(f"/experiments/{created_experiment_id}/schedule")
         assert response.status_code == 204
-        response = client.get(f"/experiment/{created_experiment_id}/state")
+        response = client.get(f"/experiments/{created_experiment_id}/state")
         assert response.json() == "scheduled"
 
 
@@ -361,7 +364,7 @@ def test_schedule_experiment(client: UserTestClient, created_experiment_id: str)
 
 def test_state_of_fresh_experiments(client: UserTestClient, created_experiment_id: str) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{created_experiment_id}/state")
+        response = client.get(f"/experiments/{created_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "created"
 
@@ -370,12 +373,12 @@ def test_experiment_state_not_found(
     client: UserTestClient,
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029/state")
+        response = client.get("/experiments/ab89cb3f-50c1-402a-aa28-078697387029/state")
     assert response.status_code == 404
 
 
 def test_experiment_state_requires_authentication(client: UserTestClient) -> None:
-    response = client.get("/experiment/ab89cb3f-50c1-402a-aa28-078697387029")
+    response = client.get("/experiments/ab89cb3f-50c1-402a-aa28-078697387029")
     assert response.status_code == 401
 
 
@@ -385,20 +388,20 @@ def test_experiment_state_is_private_to_owner(
 ) -> None:
     with client.authenticate_user_1():
         client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         experiment_id = next(iter(response.json().keys()))
-        response = client.get(f"/experiment/{experiment_id}/state")
+        response = client.get(f"/experiments/{experiment_id}/state")
         assert response.status_code == 200
 
     with client.authenticate_user_2():
-        response = client.get(f"/experiment/{experiment_id}/state")
+        response = client.get(f"/experiments/{experiment_id}/state")
         assert response.status_code == 403
 
     with client.authenticate_admin():
-        response = client.get(f"/experiment/{experiment_id}/state")
+        response = client.get(f"/experiments/{experiment_id}/state")
         assert response.status_code == 200
 
 
@@ -408,40 +411,40 @@ def test_experiment_statistics_is_private_to_owner(
 ) -> None:
     with client.authenticate_user_1():
         client.post(
-            "/experiment",
+            "/experiments",
             json=sample_experiment.model_dump(mode="json"),
         )
-        response = client.get("/experiment")
+        response = client.get("/experiments")
         experiment_id = next(iter(response.json().keys()))
-        response = client.get(f"/experiment/{experiment_id}/statistics")
+        response = client.get(f"/experiments/{experiment_id}/statistics")
         assert response.status_code == 200
 
     with client.authenticate_user_2():
-        response = client.get(f"/experiment/{experiment_id}/statistics")
+        response = client.get(f"/experiments/{experiment_id}/statistics")
         assert response.status_code >= 400
 
     with client.authenticate_admin():
-        response = client.get(f"/experiment/{experiment_id}/statistics")
+        response = client.get(f"/experiments/{experiment_id}/statistics")
         assert response.status_code == 200
 
 
 def test_experiment_state_scheduled(client: UserTestClient, scheduled_experiment_id: str) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{scheduled_experiment_id}/state")
+        response = client.get(f"/experiments/{scheduled_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "scheduled"
 
 
 def test_experiment_state_running(client: UserTestClient, running_experiment_id: str) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{running_experiment_id}/state")
+        response = client.get(f"/experiments/{running_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "running"
 
 
 def test_experiment_state_finished(client: UserTestClient, finished_experiment_id: str) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{finished_experiment_id}/state")
+        response = client.get(f"/experiments/{finished_experiment_id}/state")
     assert response.status_code == 200
     assert response.json() == "finished"
 
@@ -450,16 +453,16 @@ def test_download_rejected_for_unfinished_experiments(
     client: UserTestClient, scheduled_experiment_id: str, running_experiment_id: str
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{scheduled_experiment_id}/download")
+        response = client.get(f"/experiments/{scheduled_experiment_id}/download")
         assert response.status_code == 409
 
-        response = client.get(f"/experiment/{running_experiment_id}/download")
+        response = client.get(f"/experiments/{running_experiment_id}/download")
         assert response.status_code == 409
 
 
 def test_download_lists_sheep_files(client: UserTestClient, finished_experiment_id: str) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{finished_experiment_id}/download")
+        response = client.get(f"/experiments/{finished_experiment_id}/download")
     assert response.status_code == 200
     assert response.json() == ["unit_testing_sheep"]
 
@@ -468,13 +471,13 @@ def test_download_rejects_incorrect_sheeps(
     client: UserTestClient, finished_experiment_id: str
 ) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{finished_experiment_id}/download/invalid_sheep")
+        response = client.get(f"/experiments/{finished_experiment_id}/download/invalid_sheep")
     assert response.status_code == 404
 
 
 def test_download_sheep_sends_file(client: UserTestClient, finished_experiment_id: str) -> None:
     with client.authenticate_user_1():
-        response = client.get(f"/experiment/{finished_experiment_id}/download/unit_testing_sheep")
+        response = client.get(f"/experiments/{finished_experiment_id}/download/unit_testing_sheep")
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/x-hdf5"
     assert int(response.headers["content-length"]) > 100

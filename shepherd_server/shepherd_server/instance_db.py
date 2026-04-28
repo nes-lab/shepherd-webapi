@@ -8,21 +8,18 @@ from pydantic import EmailStr
 from pydantic import validate_call
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
-from shepherd_core import local_now
-from shepherd_core.config import config as core_cfg
+from shepherd_core.data_models.base.timezone import local_now
 
-from .api_experiment.models import ExperimentStats
-from .api_experiment.models import WebExperiment
+from .api_accounts.models import PasswordStr
+from .api_accounts.models import User
+from .api_accounts.utils_mail import get_mail_engine
+from .api_accounts.utils_misc import calculate_hash
+from .api_accounts.utils_misc import calculate_password_hash
+from .api_experiments.models import ExperimentStats
+from .api_experiments.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
-from .api_user.models import PasswordStr
-from .api_user.models import User
-from .api_user.utils_mail import mail_engine
-from .api_user.utils_misc import calculate_hash
-from .api_user.utils_misc import calculate_password_hash
-from .config import config
+from .config import server_config
 from .logger import log
-
-core_cfg.TESTBED = config.testbed_name
 
 
 async def db_client() -> AsyncDatabase:
@@ -46,7 +43,7 @@ def db_available(timeout: float = 2) -> bool:
 
 
 @asynccontextmanager
-async def db_context(app: FastAPI) -> AsyncGenerator[None]:
+async def db_context(app: FastAPI) -> AsyncGenerator[None, None, None]:
     """Initialize application services."""
     app.db = await db_client()
     log.info("FastAPI DB-Client connected")
@@ -60,24 +57,42 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
 
     user = await User.by_email(email)
     if user is not None:
-        log.error("User with that email already exists")
+        log.error("Account with that email already exists")
         return
-    token_verification = calculate_hash(email + str(local_now()))[-12:]
-    await mail_engine().send_verification_email(email, token_verification)
+    token_unstable = calculate_hash(email + str(local_now()))[-12:]
+    await get_mail_engine().send_verification_email(email, token_unstable)
     admin = User(
         email=email,
         password_hash=calculate_password_hash(password),
         role="admin",
         group_confirmed_at=local_now(),
-        token_verification=token_verification,
-        disabled=config.mail_enabled,
-        email_confirmed_at=None if config.mail_enabled else local_now(),
+        token_verification=token_unstable,
+        disabled=server_config.mail_enabled,
+        email_confirmed_at=None if server_config.mail_enabled else local_now(),
     )
     await User.insert_one(admin)
     log.info("Admin user added to DB")
 
 
+async def db_delete_all_accounts() -> None:
+    await db_client()
+    await User.delete_all()
+    log.info("Account deleted from DB")
+
+
 async def db_delete_all_experiments() -> None:
     await db_client()
     await WebExperiment.delete_all()
+    log.info("Experiments deleted from DB")
+
+
+async def db_delete_all_experiment_stats() -> None:
+    await db_client()
+    await ExperimentStats.delete_all()
+    log.info("Experiment-Stats deleted from DB")
+
+
+async def db_delete_testbed() -> None:
+    await db_client()
     await TestbedDB.delete_all()
+    log.info("Testbed deleted from DB")

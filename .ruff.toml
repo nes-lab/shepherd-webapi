@@ -1,5 +1,4 @@
 line-length = 100
-target-version = "py313" # client is still 310
 output-format = "concise"
 
 [lint]
@@ -25,7 +24,7 @@ ignore = [
     ]
 
 [lint.per-file-ignores]
-"*/tests/**" = ["S101", "T201"]  # usage of assert, print
+"*/tests/**" = ["S", "T201", "D103"]  # usage of assert, print
 "*/examples/**" = ["S106", "T201", "INP001", "E402"]  # hardcoded passwords, print, no namespace
 "*/examples_admin/**" = ["S106", "T201", "INP001"]  # hardcoded passwords, print, no namespace
 "playground/**" = ["ALL"]  # no production code
@@ -37,8 +36,8 @@ max-complexity = 10
 [lint.isort]
 force-single-line = true
 
-[lint.pyupgrade]
-keep-runtime-typing = true
+[lint.pydocstyle]
+convention = "pep257"
 
 [format] # per default like Black
 docstring-code-format = true

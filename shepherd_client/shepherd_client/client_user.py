@@ -1,7 +1,6 @@
-"""Client-Class to access a testbed instance over the web."""
+"""Client-Class to access the server of a testbed instance over the internet."""
 
 import shutil
-from importlib import metadata
 from pathlib import Path
 from uuid import UUID
 
@@ -10,25 +9,16 @@ import requests
 from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import validate_call
-from requests import JSONDecodeError
-from requests import Response
 from shepherd_core.data_models import Experiment
-from shepherd_core.logger import increase_verbose_level
 from shepherd_core.logger import log
+from shepherd_core.testbed_client.client_testbed import TestbedClient
+from typing_extensions import deprecated
 
-from .client_web import WebClient
-from .config import Config
+from .config import ClientConfig
 from .config import PasswordStr
 
 
-def msg(rsp: Response) -> str:
-    try:
-        return f"{rsp.reason} - {rsp.json()['detail']}"
-    except JSONDecodeError:
-        return f"{rsp.reason}"
-
-
-class UserClient(WebClient):
+class UserClient(TestbedClient):
     """Client-Class to access a testbed instance over the web.
 
     For online-queries the lib can be connected to the testbed-server.
@@ -42,147 +32,162 @@ class UserClient(WebClient):
     @validate_call
     def __init__(
         self,
-        user_email: EmailStr | None = None,
+        account_email: EmailStr | None = None,
         password: PasswordStr | None = None,
         server: HttpUrl | None = None,
+        timeout: int | None = None,
         *,
         save_credentials: bool = False,
         debug: bool = False,
     ) -> None:
         """Connect to Testbed-Server with optional account-credentials.
 
-        user_email: your account name - used to send status updates
+        account_email: your account name - used to send status updates
         password: your account safety - can be omitted and token is automatically created
         server: optional address to testbed-server-endpoint
         save_credentials: your inputs will be saved to your account (XDG-path or user/.config/),
                           -> you won't need to enter them again
         """
-        if debug:
-            increase_verbose_level(3)
-        # TODO: no password and wanting to save should be disallowed, as the password would be lost
-        self._cfg = Config.from_file()
-        if server is not None:
-            self._cfg.server = server
-        if user_email is not None:
-            self._cfg.user_email = user_email
+        try:
+            self._cfg = ClientConfig.from_file()
+        except ValueError:
+            raise ValueError(
+                "ClientConfig file is corrupted - "
+                "please backup and replace with client.reset_config()"
+            ) from None
+
+        if self._cfg is None:
+            log.debug("No config found, will use default")
+            self._cfg = ClientConfig()
+            if password is None and not save_credentials:
+                raise ValueError(
+                    "It seems you try registering an account "
+                    "without setting a custom password without saving your credentials. "
+                    "The client can set you a secure password, but the login would be lost!"
+                )
+
+        if timeout is not None:
+            self._cfg.timeout = timeout
+
+        super().__init__(
+            server=server if server is not None else self._cfg.server,
+            timeout=self._cfg.timeout,
+            debug=debug,
+        )
+
+        if account_email is not None:
+            self._cfg.account_email = account_email
         if password is not None:
             self._cfg.password = password
         if save_credentials:
             self._cfg.to_file()
-        super().__init__()
-        self.status()
-        self._auth: dict | None = None
+
         self.authenticate()
 
-    # ####################################################################
-    # Testbed-Status
-    # ####################################################################
-
-    def status(self) -> None:
-        rsp = requests.get(
-            url=f"{self._cfg.server}/",
-            timeout=3,
-        )
-        if rsp.ok:
-            state = rsp.json()
-            scheduler = state.get("scheduler")
-            if isinstance(scheduler, dict):
-                active = scheduler.get("activated")
-                if active is None:
-                    log.warning("Scheduler not active!")
-            if metadata.version("shepherd-client") != state.get("server_version"):
-                log.warning("Your client version does not match with server -> consider upgrading")
-                log.info(
-                    "client v%s vs server v%s",
-                    metadata.version("shepherd-client"),
-                    state.get("server_version"),
-                )
-            if metadata.version("shepherd-core") != state.get("core_version"):
-                log.warning(
-                    "Your version of shepherd-core does not match with server -> consider upgrading"
-                )
-                log.info(
-                    "shepherd-core on client %s vs %s on server",
-                    metadata.version("shepherd-core"),
-                    state.get("core_version"),
-                )
-        else:
-            log.warning("Failed to fetch status from WebApi: %s", msg(rsp))
+    @staticmethod
+    def reset_config() -> bool:
+        """Resets client config if loading from file fails."""
+        backed_up = ClientConfig().backup()
+        ClientConfig().to_file()  # overwrites with default
+        return backed_up
 
     # ####################################################################
     # Account
     # ####################################################################
 
-    def authenticate(self) -> None:
-        rsp = requests.post(
-            url=f"{self._cfg.server}/auth/token",
-            data={
-                "username": self._cfg.user_email,
-                "password": self._cfg.password,
-            },
-            headers={"Content-Type": "application/x-www-form-urlencoded"},  # TODO: needed?
-            timeout=3,
-            verify=certifi.where(),  # optional
-        )
+    def authenticate(self) -> bool:
+        try:
+            rsp = requests.post(
+                url=f"{self._server}auth/token",
+                data={
+                    "username": self._cfg.account_email,
+                    "password": self._cfg.password,
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},  # TODO: needed?
+                timeout=3,
+                verify=certifi.where(),  # optional
+            )
+        except requests.Timeout:
+            msg = "Authentication timed out."
+            raise ConnectionError(msg) from None
+        except requests.ConnectionError:
+            msg = "Authentication failed."
+            raise ConnectionError(msg) from None
         if rsp.ok:
             self._auth = {"Authorization": f"Bearer {rsp.json()['access_token']}"}
         else:
-            log.warning("Authentication failed with: %s", msg(rsp))
+            log.warning("Authentication failed with: %s", self._msg(rsp))
+        return rsp.ok
 
-    def register_account(self, token: str) -> None:
-        """Create a user account with a valid token."""
+    def register_account(self, token: str) -> bool:
+        """Create an account with a valid token."""
         if self._auth is not None:
-            log.error("User already registered and authenticated")
-        rsp = requests.post(
-            url=f"{self._cfg.server}/user/register",
-            json={
-                "email": self._cfg.user_email,
-                "password": self._cfg.password,
-                "token": token,
-            },
-            headers=self._auth,
-            timeout=3,
-        )
+            log.error("Account already registered and authenticated")
+        data = {
+            "email": self._cfg.account_email,
+            "password": self._cfg.password,
+            "token": token,
+        }
+        rsp = self._req("post", "/accounts/register", json=data)
         if rsp.ok:
-            log.info(f"User {self._cfg.user_email} registered - check mail to verify account.")
+            log.info(f"Account {self._cfg.account_email} registered - check mail to verify.")
         else:
-            log.warning("Registration failed with: %s", msg(rsp))
+            log.warning("Registration failed with: %s", self._msg(rsp))
+        return rsp.ok
 
-    def register_user(self, token: str) -> None:
-        return self.register_account(token)  # TODO: deprecate _user()-fn
+    @deprecated("use .register_account()")
+    def register_user(self, token: str) -> bool:
+        return self.register_account(token)
 
-    def delete_account(self) -> None:
+    def delete_account(self) -> bool:
         """Remove account and content from server."""
-        rsp = requests.delete(
-            url=f"{self._cfg.server}/user",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self._req("delete", "/accounts")
         if rsp.ok:
-            log.info(f"User {self._cfg.user_email} deleted")
+            log.info(f"Account {self._cfg.account_email} deleted")
         else:
-            log.warning("User-Deletion failed with: %s", msg(rsp))
+            log.warning("Account-Deletion failed with: %s", self._msg(rsp))
+        return rsp.ok
 
-    def delete_user(self) -> None:
-        return self.delete_user()  # TODO: deprecate _user()-fn
+    @deprecated("use .delete_account()")
+    def delete_user(self) -> bool:
+        return self.delete_account()
 
-    def get_user_info(self) -> dict:
-        """Query user info stored on the server."""
-        rsp = requests.get(
-            url=f"{self._cfg.server}/user",
-            headers=self._auth,
-            timeout=3,
-        )
+    def get_account_info(self) -> dict:
+        """Query account info stored on the server."""
+        rsp = self._req("get", "/accounts")
         if rsp.ok:
             info = rsp.json()
-            log.debug("User-Info: %s", info)
+            log.debug("Account-Info: %s", info)
         else:
-            log.warning("Query for User-Info failed with: %s", msg(rsp))
+            log.warning("Query for Account-Info failed with: %s", self._msg(rsp))
             info = {}
         return info
 
-    def get_account_info(self) -> dict:
-        return self.get_user_info()  # TODO: deprecate _user()-fn
+    @deprecated("use .get_account_info()")
+    def get_user_info(self) -> dict:
+        return self.get_account_info()
+
+    def request_password_reset(self) -> bool:
+        data = {"email": self._cfg.account_email}
+        rsp = self._req("post", "/accounts/forgot-password", json=data)
+        if rsp.ok:
+            log.info("Request successful - you will shortly receive an email with a reset-token.")
+        else:
+            log.error("Reset request was NOT successful.")
+        return rsp.ok
+
+    @validate_call
+    def reset_password(self, token: str, password: str) -> bool:
+        data = {
+            "token": token,
+            "password": password,
+        }
+        rsp = self._req("post", "/accounts/reset-password", json=data)
+        if rsp.ok:
+            log.info("Password was reset successfully.")
+        else:
+            log.error("Password reset was NOT successful.")
+        return rsp.ok
 
     # ####################################################################
     # Experiments
@@ -190,11 +195,7 @@ class UserClient(WebClient):
 
     def list_experiments(self, *, only_finished: bool = False) -> list[UUID]:
         """Query users experiment-IDs."""
-        rsp = requests.get(
-            url=f"{self._cfg.server}/experiment",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self._req("get", "/experiments")
         if not rsp.ok:
             return []
         if only_finished:
@@ -202,54 +203,45 @@ class UserClient(WebClient):
         return list(rsp.json().keys())
 
     def create_experiment(self, xp: Experiment) -> UUID | None:
-        """Upload a local experiment to the testbed.
+        """Upload a local experiment to the testbed-server and validate its feasibility.
 
         Will return the new UUID if successful.
         """
-        rsp = requests.post(
-            url=f"{self._cfg.server}/experiment",
-            json=xp.model_dump(mode="json"),
-            headers=self._auth,
-            timeout=3,
-        )
+        data = xp.model_dump(mode="json")
+        rsp = self._req("post", "/experiments", json=data)
         if not rsp.ok:
-            log.warning("Experiment creation failed with: %s", msg(rsp))
+            log.warning("Experiment creation failed with: %s", self._msg(rsp))
             return None
         return UUID(rsp.json())
 
     def get_experiment(self, xp_id: UUID) -> Experiment | None:
         """Request the experiment config matching the UUID."""
-        rsp = requests.get(
-            url=f"{self._cfg.server}/experiment/{xp_id}",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self._req("get", f"/experiments/{xp_id}")
         if not rsp.ok:
-            log.warning("Getting experiment failed with: %s", msg(rsp))
+            log.warning("Getting experiment failed with: %s", self._msg(rsp))
             return None
 
         return Experiment(**rsp.json())
 
     def delete_experiment(self, xp_id: UUID) -> bool:
         """Delete the experiment config matching the UUID."""
-        rsp = requests.delete(
-            url=f"{self._cfg.server}/experiment/{xp_id}",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self._req("delete", f"/experiments/{xp_id}")
         if not rsp.ok:
-            log.warning("Deleting experiment failed with: %s", msg(rsp))
+            log.warning("Deleting experiment failed with: %s", self._msg(rsp))
         return rsp.ok
 
     def get_experiment_state(self, xp_id: UUID) -> str | None:
-        """Get state of a specific experiment."""
-        rsp = requests.get(
-            url=f"{self._cfg.server}/experiment/{xp_id}/state",
-            headers=self._auth,
-            timeout=3,
-        )
+        """Get state of a specific experiment.
+
+        - after valid submission: created
+        - after scheduling: scheduled
+        - during experiment: running
+        - after the run: finished or failed
+
+        """
+        rsp = self._req("get", f"/experiments/{xp_id}/state")
         if not rsp.ok:
-            log.warning("Getting experiment state failed with: %s", msg(rsp))
+            log.warning("Getting experiment state failed with: %s", self._msg(rsp))
             return None
 
         state = rsp.json()
@@ -261,39 +253,27 @@ class UserClient(WebClient):
 
         This contains currently: ID, state, execution-time, duration, size, owner
         """
-        rsp = requests.get(
-            url=f"{self._cfg.server}/experiment/{xp_id}/statistics",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self._req("get", f"/experiments/{xp_id}/statistics")
         if not rsp.ok:
-            log.warning("Getting experiment statistics failed with: %s", msg(rsp))
+            log.warning("Getting experiment statistics failed with: %s", self._msg(rsp))
             return None
         return rsp.json()
 
     def schedule_experiment(self, xp_id: UUID) -> bool:
-        """Enter the experiment into the queue.
+        """Enter the experiment into the scheduling-queue.
 
         Only possible if they never run before (state is "created").
         """
-        rsp = requests.post(
-            url=f"{self._cfg.server}/experiment/{xp_id}/schedule",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self._req("post", f"/experiments/{xp_id}/schedule")
         if rsp.ok:
             log.info("Experiment %s scheduled", xp_id)
         else:
-            log.warning("Scheduling experiment failed with: %s", msg(rsp))
+            log.warning("Scheduling experiment failed with: %s", self._msg(rsp))
         return rsp.ok
 
     def _get_experiment_downloads(self, xp_id: UUID) -> list[str] | None:
         """Query all endpoints for a specific experiment."""
-        rsp = requests.get(
-            url=f"{self._cfg.server}/experiment/{xp_id}/download",
-            headers=self._auth,
-            timeout=3,
-        )
+        rsp = self._req("get", f"/experiments/{xp_id}/download")
         if not rsp.ok:
             return None
         return rsp.json()
@@ -303,14 +283,9 @@ class UserClient(WebClient):
         path_file = path / f"{node_id}.h5"
         if path_file.exists():
             log.warning("File already exists - will skip download: %s", path_file)
-        rsp = requests.get(
-            f"{self._cfg.server}/experiment/{xp_id}/download/{node_id}",
-            headers=self._auth,
-            timeout=3,
-            stream=True,
-        )
+        rsp = self._req("get", f"/experiments/{xp_id}/download/{node_id}", stream=True)
         if not rsp.ok:
-            log.warning("Downloading %s - %s failed with: %s", xp_id, node_id, msg(rsp))
+            log.warning("Downloading %s - %s failed with: %s", xp_id, node_id, self._msg(rsp))
             return False
         with path_file.open("wb") as fp:
             shutil.copyfileobj(rsp.raw, fp)

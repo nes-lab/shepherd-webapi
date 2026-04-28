@@ -1,21 +1,19 @@
 name: Release tagged Commit
-
 on:
   workflow_call:
   push:
     tags:
       - 'v*.*.*'
     # branches: [ main ]  # handled as OR! (push to main OR tagged)
-
-permissions:
-  contents: write
-
+permissions: {}
 jobs:
   run-quality-assurance:
     uses: ./.github/workflows/quality_assurance.yaml
   release:
     #if: github.ref == 'refs/heads/main' # TODO: does NOT work - is 'refs/tags/v2025.xx.x'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs:
       - run-quality-assurance
     steps:

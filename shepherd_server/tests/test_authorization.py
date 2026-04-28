@@ -25,7 +25,7 @@ def test_access_token_unlocks_authenticated_endpoints(client: TestClient) -> Non
     )
     assert response.status_code == 200
     response2 = client.get(
-        "/user",
+        "/accounts",
         headers={"Authorization": f"Bearer {response.json()['access_token']}"},
     )
     assert response2.status_code == 200
@@ -43,7 +43,7 @@ def test_login_with_wrong_password_is_rejected(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-def test_login_rejects_non_existing_user(client: TestClient) -> None:
+def test_login_rejects_non_existing_account(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -55,7 +55,7 @@ def test_login_rejects_non_existing_user(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-def test_login_rejects_if_mail_is_unconfirmed(client: TestClient) -> None:
+def test_login_allowed_if_mail_is_unconfirmed(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
@@ -64,16 +64,16 @@ def test_login_rejects_if_mail_is_unconfirmed(client: TestClient) -> None:
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 401
+    assert response.status_code == 200
 
 
-def test_login_rejects_disabled_user(client: TestClient) -> None:
+def test_login_allowed_deactivated_account(client: TestClient) -> None:
     response = client.post(
         "/auth/token",
         data={
-            "username": "disabled@test.com",
+            "username": "deactivated_mail@test.com",
             "password": "safe-password",
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
-    assert response.status_code == 401
+    assert response.status_code == 200

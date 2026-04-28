@@ -6,10 +6,10 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from pydantic import EmailStr
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 
-from shepherd_server.api_experiment.models import ExperimentStats
-from shepherd_server.api_experiment.models import WebExperiment
+from shepherd_server.api_experiments.models import ExperimentStats
+from shepherd_server.api_experiments.models import WebExperiment
 
 from .models import PasswordStr
 from .models import User
@@ -18,14 +18,14 @@ from .models import UserQuota
 from .models import UserRegistration
 from .models import UserRole
 from .models import UserUpdate
-from .utils_mail import MailEngine
-from .utils_mail import mail_engine
-from .utils_misc import active_user_is_admin
+from .utils_mail import get_mail_engine
+from .utils_misc import active_admin_user
+from .utils_misc import active_user
 from .utils_misc import calculate_hash
 from .utils_misc import calculate_password_hash
-from .utils_misc import current_active_user
+from .utils_misc import current_user
 
-router = APIRouter(prefix="/user", tags=["User"])
+router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 
 # ###############################################################
@@ -34,23 +34,23 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 
 @router.get("")
-async def user_info(user: Annotated[User, Depends(current_active_user)]) -> UserOut:
+async def user_info(user: Annotated[User, Depends(current_user)]) -> UserOut:
+    """Get info of current user (even deactivated & unconfirmed)."""
     user.storage_available = user.quota_storage - await WebExperiment.get_storage(user)
     await user.save_changes()
     return user
 
 
 @router.patch("")
-async def update_user(
-    update: UserUpdate, user: Annotated[User, Depends(current_active_user)]
-) -> UserOut:
+async def update_user(update: UserUpdate, user: Annotated[User, Depends(active_user)]) -> UserOut:
     """Update allowed user fields."""
     fields = update.model_dump(exclude_unset=True)
     new_email = fields.pop("email", None)
     if isinstance(new_email, str) and new_email != user.email:
         if await User.by_email(new_email) is not None:
             raise HTTPException(406, "Email already exists")
-        user.update_email(new_email)
+        raise HTTPException(406, "Changing email currently not supported")
+        # await user.update_email(new_email)
     user = user.model_copy(update=fields)
     await user.save()
     return user
@@ -58,12 +58,16 @@ async def update_user(
 
 @router.delete("")
 async def delete_user(
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(current_user)],
 ) -> Response:
-    """Delete current user and its experiments & content."""
+    """Delete current user (even deactivated & unconfirmed) and its experiments & content."""
     xp_states = await WebExperiment.get_all_states(user)
     for xp_id in xp_states:
         xp = await WebExperiment.get_by_id(xp_id)
+        if xp is None:
+            raise HTTPException(
+                406, "Unexpected error while deleting experiments that do not exist"
+            )
         await ExperimentStats.update_with(xp, to_be_deleted=True)
         await xp.delete_content()
         await xp.delete()
@@ -77,19 +81,21 @@ async def delete_user(
 # ###############################################################
 
 
-@router.patch("/quota", dependencies=[Depends(active_user_is_admin)])
+@router.patch("/quota", dependencies=[Depends(active_admin_user)])
 async def update_quota(
     email: Annotated[EmailStr, Body(embed=True)],
     quota: Annotated[UserQuota, Body(embed=True)],
+    *,
+    force: Annotated[bool, Body(embed=True)] = False,
 ) -> UserQuota:
     _user = await User.by_email(email)
     if _user is None:
         raise HTTPException(status_code=401, detail="Incorrect username")
-    if quota.custom_quota_expire_date is not None:
+    if force or quota.custom_quota_expire_date is not None:
         _user.custom_quota_expire_date = quota.custom_quota_expire_date
-    if quota.custom_quota_duration is not None:
+    if force or quota.custom_quota_duration is not None:
         _user.custom_quota_duration = quota.custom_quota_duration
-    if quota.custom_quota_storage is not None:
+    if force or quota.custom_quota_storage is not None:
         _user.custom_quota_storage = quota.custom_quota_storage
     await _user.save_changes()
     # TODO: inform user about it?
@@ -105,15 +111,14 @@ async def update_quota(
 @router.post("/forgot-password")
 async def forgot_password(
     email: Annotated[EmailStr, Body(embed=True)],
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Send password reset email."""
     user = await User.by_email(email)
     if user is None:
         return Response(status_code=200)
-    user.token_pw_reset = calculate_hash(user.email + str(local_now()))[-12:]
-    await mail_sys.send_password_reset_email(email, user.token_pw_reset)
-    await user.save_changes()
+    user.token_pw_reset = calculate_hash(user.email + str(local_now()))[-12:]  # => unstable token
+    await get_mail_engine().send_password_reset_email(email, user.token_pw_reset)
+    await user.save_changes()  # mail is sent first!
     return Response(status_code=200)
 
 
@@ -128,6 +133,7 @@ async def reset_password(
     if user is None:
         raise HTTPException(404, "Invalid password reset token")
     user.password_hash = calculate_password_hash(password)
+    user.token_pw_reset = None
     await user.save_changes()
     return user
 
@@ -137,10 +143,9 @@ async def reset_password(
 # ###############################################################
 
 
-@router.post("/approve", dependencies=[Depends(active_user_is_admin)])
+@router.post("/approve", dependencies=[Depends(active_admin_user)])
 async def approve(
     email: Annotated[EmailStr, Body(embed=True)],
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Pre-Approve Email-Address for registration - also functions as validation.
 
@@ -149,37 +154,38 @@ async def approve(
     user = await User.by_email(email)
     if user is not None:
         raise HTTPException(409, "Account already exists")
-    token_verification = calculate_hash(email)[-12:]
-    await mail_sys.send_approval_email(email, token_verification)
-    return Response(status_code=200, content=token_verification)
+    user = User(
+        email=email,
+        password_hash="",  # placeholder not usable for long
+        token_verification=calculate_hash(email)[-12:],  # without date -> stable token
+        role=UserRole.user,
+    )
+    await get_mail_engine().send_approval_email(email, user.token_verification)
+    await User.insert_one(user)  # mail is sent first!
+    return Response(status_code=200, content=user.token_verification)
 
 
 @router.post("/register")
 async def user_registration(
     user_reg: UserRegistration,
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> UserOut:
     """Create a new user.
 
     To avoid spam / misuse, a valid token (generated from email) is needed.
     """
-    token_sys = calculate_hash(user_reg.email)[-12:]
-    if token_sys != user_reg.token:
-        raise HTTPException(404, "Invalid user registration token")
     user = await User.by_email(user_reg.email)
-    if user is not None:
-        raise HTTPException(409, "User with that email already exists")
-    pw_hash = calculate_password_hash(user_reg.password)
-    user = User(
-        email=user_reg.email,
-        password_hash=pw_hash,
-        disabled=False,
-        email_confirmed_at=local_now(),
-        token_verification=None,
-        role=UserRole.user,
-    )
-    await user.create()
-    await mail_sys.send_registration_complete_email(user_reg.email)
+    if user_reg.token is None:
+        raise HTTPException(404, "Invalid registration-token")
+    if (user is None) or (user.token_verification != user_reg.token):
+        raise HTTPException(404, "Invalid account registration")
+    if user.email_confirmed_at is not None:
+        raise HTTPException(409, "Invalid user registration - account is already confirmed")
+    user.password_hash = calculate_password_hash(user_reg.password)
+    user.disabled = False
+    user.email_confirmed_at = local_now()
+    user.token_verification = None
+    await get_mail_engine().send_registration_complete_email(user_reg.email)
+    await user.save_changes()  # mail is sent first!
     return user
 
 
@@ -187,7 +193,6 @@ async def user_registration(
 @router.post("/verify/{token}")
 async def verify_email(
     token: str,
-    mail_sys: Annotated[MailEngine, Depends(mail_engine)],
 ) -> Response:
     """Verify the user's email with the supplied token.
 
@@ -203,12 +208,12 @@ async def verify_email(
     user.email_confirmed_at = local_now()
     user.token_verification = None
     user.disabled = False
-    await mail_sys.send_registration_complete_email(user.email)
-    await user.save_changes()
+    await get_mail_engine().send_registration_complete_email(user.email)
+    await user.save_changes()  # mail is sent first!
     return Response(status_code=200, content="Verification successful")
 
 
-@router.post("/change_state", dependencies=[Depends(active_user_is_admin)])
+@router.post("/change_state", dependencies=[Depends(active_admin_user)])
 async def change_state(
     email: Annotated[EmailStr, Body(embed=True)],
     enabled: Annotated[bool, Body(embed=True)],
@@ -221,6 +226,15 @@ async def change_state(
     if user is None:
         raise HTTPException(status_code=401, detail="Incorrect username")
     user.disabled = not enabled
-    user.save_changes()
+    await user.save_changes()
     # TODO: inform user about it?
     return Response(status_code=200, content="State-Change successful")
+
+
+# TODO: allow elevating users & add this to Client
+
+
+@router.get("/all", dependencies=[Depends(active_admin_user)])
+async def list_all_users() -> list[UserOut]:
+    # not the most elegant solution, but this is admin-only anyway
+    return await User.all().to_list()

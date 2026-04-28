@@ -3,17 +3,17 @@ from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from shepherd_core import local_tz
-from shepherd_server.api_user.models import UserOut
-from shepherd_server.api_user.models import UserQuota
-from shepherd_server.api_user.utils_mail import MailEngine
+from shepherd_core.data_models.base.timezone import local_tz
+from shepherd_server.api_accounts.models import UserOut
+from shepherd_server.api_accounts.models import UserQuota
+from shepherd_server.api_accounts.utils_mail import MailEngine
 
 from .conftest import UserTestClient
 
 
-def test_user_can_query_account_data(client: UserTestClient) -> None:
+def test_account_can_query_account_data(client: UserTestClient) -> None:
     with client.authenticate_user_1():
-        response = client.get("/user")
+        response = client.get("/accounts")
     assert response.status_code == 200
     user = UserOut(**response.json())
     assert user.email == "user@test.com"
@@ -21,8 +21,8 @@ def test_user_can_query_account_data(client: UserTestClient) -> None:
     assert user.last_name == "last name"
 
 
-def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None:
-    response = client.get("/user")
+def test_account_account_data_endpoint_is_authenticated(client: TestClient) -> None:
+    response = client.get("/accounts")
     assert response.status_code == 401
 
 
@@ -30,9 +30,9 @@ def test_user_account_data_endpoint_is_authenticated(client: TestClient) -> None
 
 
 @pytest.mark.dependency
-def test_user_can_query_quota_data(client: UserTestClient) -> None:
+def test_account_can_query_quota_data(client: UserTestClient) -> None:
     with client.authenticate_user_1():
-        response = client.get("/user")
+        response = client.get("/accounts")
     assert response.status_code == 200
     quota = UserQuota(**response.json())
     assert quota.custom_quota_expire_date is None
@@ -51,11 +51,11 @@ def test_admin_can_update_quota_date(
         ).model_dump(exclude_defaults=True, mode="json"),
     }
     with client.authenticate_admin():
-        response = client.patch("/user/quota", json=json_dict)
+        response = client.patch("/accounts/quota", json=json_dict)
         assert response.status_code == 200
 
     with client.authenticate_user_1():
-        response = client.get("/user")
+        response = client.get("/accounts")
         assert response.status_code == 200
         quota = UserQuota(**response.json())
         assert quota.custom_quota_expire_date is not None
@@ -74,11 +74,11 @@ def test_admin_can_update_quota_duration(
         ).model_dump(exclude_defaults=True, mode="json"),
     }
     with client.authenticate_admin():
-        response = client.patch("/user/quota", json=json_dict)
+        response = client.patch("/accounts/quota", json=json_dict)
         assert response.status_code == 200
 
     with client.authenticate_user_1():
-        response = client.get("/user")
+        response = client.get("/accounts")
         assert response.status_code == 200
         quota = UserQuota(**response.json())
         assert quota.custom_quota_expire_date is None
@@ -97,11 +97,11 @@ def test_admin_can_update_quota_storage(
         ).model_dump(exclude_defaults=True, mode="json"),
     }
     with client.authenticate_admin():
-        response = client.patch("/user/quota", json=json_dict)
+        response = client.patch("/accounts/quota", json=json_dict)
         assert response.status_code == 200
 
     with client.authenticate_user_1():
-        response = client.get("/user")
+        response = client.get("/accounts")
         assert response.status_code == 200
         quota = UserQuota(**response.json())
         assert quota.custom_quota_expire_date is None
@@ -124,7 +124,7 @@ def test_forgot_password_process(
     assert login_response.status_code == 401
 
     forgot_response = client.post(
-        "/user/forgot-password",
+        "/accounts/forgot-password",
         json={"email": "user@test.com"},
     )
     assert forgot_response.status_code == 200
@@ -133,7 +133,7 @@ def test_forgot_password_process(
     _, token = mail_engine_mock.send_password_reset_email.call_args.args
 
     reset_response = client.post(
-        "/user/reset-password",
+        "/accounts/reset-password",
         json={
             "token": token,
             "password": "some-new-password",
@@ -156,19 +156,19 @@ def test_forgot_password_endpoint_returns_success_for_invalid_email(
     client: TestClient,
 ) -> None:
     response = client.post(
-        "/user/forgot-password",
+        "/accounts/forgot-password",
         json={"email": "non-existing-user@test.com"},
     )
     assert response.status_code == 200
 
 
-def test_forgot_password_endpoint_returns_success_for_disabled_account(
+def test_forgot_password_endpoint_returns_success_for_deactivated_account(
     client: TestClient,
 ) -> None:
     """Regression test motivated by previously existing issue."""
     response = client.post(
-        "/user/forgot-password",
-        json={"email": "disabled@test.com"},
+        "/accounts/forgot-password",
+        json={"email": "deactivated_mail@test.com"},
     )
     assert response.status_code == 200
 
@@ -177,7 +177,7 @@ def test_invalid_password_reset_token_returns_error(
     client: TestClient,
 ) -> None:
     response = client.post(
-        "/user/reset-password",
+        "/accounts/reset-password",
         json={
             "token": "some-invalid-token",
             "password": "new-password",
@@ -190,6 +190,6 @@ def test_invalid_email_verification_token_returns_error(
     client: TestClient,
 ) -> None:
     response = client.post(
-        "/user/verify/some-invalid-token",
+        "/accounts/verify/some-invalid-token",
     )
     assert response.status_code == 404

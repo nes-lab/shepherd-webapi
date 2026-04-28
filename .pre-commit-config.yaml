@@ -36,7 +36,6 @@ repos:
       - id: destroyed-symlinks
       - id: check-merge-conflict
       - id: detect-private-key
-      # - id: no-commit-to-branch
       - id: check-executables-have-shebangs
 
   - repo: https://github.com/pre-commit/pygrep-hooks
@@ -54,7 +53,7 @@ repos:
       - id: text-unicode-replacement-char
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.8'
+    rev: 'v0.15.12'
     hooks:
       - id: ruff-format
       - id: ruff-check
@@ -65,6 +64,12 @@ repos:
 #    hooks:
 #      - id: ansible-lint
 #        files: \.(yaml|yml)$
+
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.24.1
+    hooks:
+      - id: zizmor
+        args: ["--min-severity", "high", "--no-progress", "--fix", "."]
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.2"

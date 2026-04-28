@@ -10,20 +10,23 @@ from uuid import UUID
 
 import numpy as np
 from beanie import Link
-from shepherd_core import Writer as CoreWriter
-from shepherd_core import local_now
+from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
+from shepherd_core.testbed_client import tb_client
+from shepherd_core.writer import Writer as CoreWriter
 from shepherd_herd.herd import Herd
 
-from .api_experiment.models import ReplyData
-from .api_experiment.models import WebExperiment
+from shepherd_server.instance_fixtures import prepare_fixture_client
+
+from .api_accounts.models import User
+from .api_accounts.utils_mail import get_mail_engine
+from .api_experiments.models import ReplyData
+from .api_experiments.models import WebExperiment
 from .api_testbed.models_status import TestbedDB
-from .api_user.models import User
-from .api_user.utils_mail import mail_engine
 from .async_wrapper import async_wrap
-from .config import config
+from .config import server_config
 from .instance_db import db_available
 from .instance_db import db_client
 from .logger import log
@@ -45,6 +48,11 @@ def herd_cleanup(herd: Herd) -> None:
 
 @async_wrap(timeout=5 * 60)
 def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
+    """Mod and program firmware to targets.
+
+    This makes one direct sheep-call: run preparation-tasks
+    """
+
     def tbt_patch_pre(tb_ts: TestbedTasks) -> TestbedTasks:
         tb_ts_pre = tb_ts.model_dump()
         ots_new = []
@@ -66,6 +74,11 @@ def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
 
 @async_wrap(timeout=30)
 def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
+    """Schedule the actual experiment of the user.
+
+    This makes one direct sheep-call: run emulation-task
+    """
+
     def tbt_patch_emu(tb_ts: TestbedTasks, ts_start: datetime) -> TestbedTasks:
         tb_ts_emu = tb_ts.model_dump()
         ots_new = []
@@ -93,7 +106,7 @@ def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
         raise RuntimeError("Starting Emulation failed")
 
 
-async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:  # noqa: ASYNC109
+async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:
     # this fn can not be wrapped, because it has no fixed timeout
     # TODO: add to main code?
     ts_timeout = local_now() + timeout
@@ -186,7 +199,7 @@ async def herd_reboot(herd: Herd) -> None:
         "pre": {herd.hostnames[cnx.host] for cnx in group_pre},
         "post": {herd.hostnames[cnx.host] for cnx in herd.group_online},
     }
-    await mail_engine().send_herd_reboot_email(composition)
+    await get_mail_engine().send_herd_reboot_email(composition)
 
 
 async def run_web_experiment(
@@ -203,7 +216,7 @@ async def run_web_experiment(
         log.warning("XP-dataset not found (deleted?) before running it")
         return had_error
     web_exp.started_at = local_now()
-    testbed = Testbed(name=config.testbed_name)
+    testbed = Testbed(name=server_config.testbed_name)
     testbed_tasks = TestbedTasks.from_xp(web_exp.experiment, testbed)
     if not testbed_tasks.is_contained():
         log.error("Tasks used Paths outside of allowed directory-set")
@@ -211,8 +224,8 @@ async def run_web_experiment(
     web_exp.observer_paths = testbed_tasks.get_output_paths()
     tb_status = await TestbedDB.get_one()
     web_exp.observers_requested = sorted(testbed_tasks.get_observers())
-    web_exp.observers_online = sorted(tb_status.scheduler.observers_online)
-    web_exp.observers_offline = sorted(tb_status.scheduler.observers_offline)
+    web_exp.observers_online = sorted(set(tb_status.scheduler.targets_online.values()))
+    web_exp.observers_offline = sorted(set(tb_status.scheduler.targets_offline.values()))
     await web_exp.update_time_start(web_exp.started_at, force=True)
     await web_exp.save_changes()
 
@@ -318,11 +331,13 @@ async def notify_user(xp_id: UUID) -> None:
 
     # send out Mail if user wants it
     if web_exp.had_errors or not isinstance(web_exp.owner, Link | User):
-        await mail_engine().send_experiment_finished_email(config.contact["email"], web_exp)
+        await get_mail_engine().send_experiment_finished_email(
+            server_config.contact["email"], web_exp
+        )
         return
     all_done = not await WebExperiment.has_scheduled_by_user(web_exp.owner)
     if web_exp.had_errors or web_exp.experiment.email_results or all_done:
-        await mail_engine().send_experiment_finished_email(
+        await get_mail_engine().send_experiment_finished_email(
             web_exp.owner.email, web_exp, all_done=all_done
         )
 
@@ -338,18 +353,30 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
     if isinstance(herd, Herd):
         await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
         tb_.scheduler.observer_count = len(herd.group_online)
-        tb_.scheduler.observers_online = sorted(
-            herd.hostnames[cnx.host] for cnx in herd.group_online
-        )
-        tb_.scheduler.observers_offline = sorted(
-            set(herd.hostnames.values()) - set(tb_.scheduler.observers_online)
-        )
+
+        tb_.scheduler.targets_online = {}
+        tb_.scheduler.targets_offline = {}
+        tb = Testbed(name=server_config.testbed_name)
+        observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
+        observers_offline = set(herd.hostnames.values()) - observers_online
+        for target_id in tb_client.list_resource_ids("Target"):
+            observer_name = tb.get_observer(target_id).name
+            if observer_name in observers_online:
+                tb_.scheduler.targets_online[target_id].append(observer_name)
+            elif observer_name in observers_offline:
+                tb_.scheduler.targets_offline[target_id].append(observer_name)
+            else:
+                log.warning(
+                    f"Observer {observer_name} of Target {target_id} "
+                    "not found in list of online/offline observers"
+                )
     else:  # dry run or offline
         tb_.scheduler.observer_count = 0
-        tb_.scheduler.observers_online = []
-        tb_.scheduler.observers_offline = []
+        tb_.scheduler.targets_online = {}
+        tb_.scheduler.targets_offline = {}
 
     # TODO: include storage & uptime, warn via mail if low
+    # TODO: timesync
     await tb_.save_changes()
 
 
@@ -371,7 +398,7 @@ async def scheduler(
         if dry_run:
             temp_dir = TemporaryDirectory(suffix="srv_scheduler_")
             stack.enter_context(temp_dir)
-            temp_path: Path = Path(temp_dir)
+            temp_path: Path = Path(temp_dir.name)
             log.debug("Temp path: %s", temp_path.resolve())
             log.warning("Dry run mode - not executing tasks!")
             herd = None
@@ -381,7 +408,6 @@ async def scheduler(
             herd.disable_progress_bar()
             log.info("Run initial herd-cleanup")
             await herd_cleanup(herd)
-
         # TODO: how to make sure there is only one scheduler? Singleton
         log.info("Checking experiment scheduling FIFO")
         await WebExperiment.reset_stuck_items()
@@ -413,6 +439,8 @@ def run(
     if not db_available(timeout=5):
         log.error("No connection to database! Will exit scheduler now.")
         return
+
+    prepare_fixture_client()
 
     try:
         asyncio.run(scheduler(inventory, dry_run=dry_run, only_elevated=only_elevated))

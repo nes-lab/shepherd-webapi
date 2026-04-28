@@ -18,10 +18,7 @@ from shepherd_server.logger import log
 
 
 async def repair_db() -> None:
-    await db_client
-
-    if not db_available(timeout=2):
-        return
+    await db_client()
 
     st_states = await ExperimentStats.get_all_states()
     xp_states = await WebExperiment.get_all_states()
@@ -31,12 +28,12 @@ async def repair_db() -> None:
         if xp_stat is None:
             raise ValueError("This should not have happened.")
 
-        if xp_stat.state == "finished" and xp_stat.id not in xp_states:
+        if False:  # and xp_stat.state == "finished" and xp_stat.id not in xp_states:
             log.info("Fixing XP-Statistic %s - wrong state '%s'", uid, state)
             xp_stat.state = "deleted"
             await xp_stat.save_changes()
 
-        if xp_stat.state == "deleted" and xp_stat.deleted_at is None:
+        if xp_stat.deleted_at is None and xp_stat.id not in xp_states:
             log.info("Fixing XP-Statistic %s - missing deletion-timestamp ", uid)
             xp_stat.deleted_at = local_now()
             await xp_stat.save_changes()

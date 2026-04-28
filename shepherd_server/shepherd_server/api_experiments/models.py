@@ -383,6 +383,7 @@ class WebExperiment(Document, ResultData, ErrorData):
     @property
     def state(self) -> str:
         # not included scheduler_error here
+        # TODO: add deleted?
         if self.had_errors:
             return "failed"
         if self.finished_at is not None:

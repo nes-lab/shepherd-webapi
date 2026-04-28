@@ -70,18 +70,22 @@ class ServerConfigDefault(BaseModel):
 
     def ssl_available(self) -> bool:
         _files = (self.ssl_keyfile, self.ssl_certfile)
-        _avail = all(isinstance(_p, Path) and _p.resolve().exists() for _p in _files)
-        if _avail:
-            log.info("SSL available, as keys & certs were found")
-        else:
-            log.warning("SSL is deactivated!")
-            for _file in _files:
-                if not isinstance(_file, Path):
-                    log.warning("At least one SSL-Path was not specified")
-                if _file.is_symlink():
-                    _file = _file.resolve()
-                if not _file.exists():
-                    log.warning(" -> NOT FOUND: %s", _file.as_posix())
+        try:
+            _avail = all(isinstance(_p, Path) and _p.resolve().exists() for _p in _files)
+            if _avail:
+                log.info("SSL available, as keys & certs were found")
+            else:
+                log.warning("SSL is deactivated!")
+                for _file in _files:
+                    if not isinstance(_file, Path):
+                        log.warning("At least one SSL-Path was not specified")
+                    if _file.is_symlink():
+                        _file = _file.resolve()
+                    if not _file.exists():
+                        log.warning(" -> NOT FOUND: %s", _file.as_posix())
+        except PermissionError:
+            log.warning("SSL-Certs seem to be present, but can't be accessed")
+            _avail = False
         return _avail
 
     def server_url(self) -> str:

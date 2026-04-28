@@ -117,6 +117,15 @@ Further reading:
 - https://eff-certbot.readthedocs.io/en/stable/using.html#id8
 - https://certbot.eff.org/faq/
 
+**Addition**:
+
+Certbot protects the archive directory, and we don't want to execute our server with root-permissions, so lets try
+
+```Shell
+sudo chmod +x /etc/letsencrypt/archive
+```
+
+
 ### Prepare Config
 
 There is more than one way to alter the server configuration.

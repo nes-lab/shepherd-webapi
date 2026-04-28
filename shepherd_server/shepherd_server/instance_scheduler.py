@@ -14,7 +14,7 @@ from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
-from shepherd_core.testbed_client import tb_client
+from shepherd_core.testbed_client import get_client
 from shepherd_core.writer import Writer as CoreWriter
 from shepherd_herd.herd import Herd
 
@@ -359,8 +359,11 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
         tb = Testbed(name=server_config.testbed_name)
         observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
         observers_offline = set(herd.hostnames.values()) - observers_online
-        for target_id in tb_client.list_resource_ids("Target"):
-            observer_name = tb.get_observer(target_id).name
+        for target_id in get_client().list_resource_ids("Target"):
+            try:
+                observer_name = tb.get_observer(target_id).name
+            except ValueError:
+                continue
             if observer_name in observers_online:
                 tb_.scheduler.targets_online[target_id].append(observer_name)
             elif observer_name in observers_offline:

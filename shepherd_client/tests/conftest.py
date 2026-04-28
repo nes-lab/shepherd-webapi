@@ -271,7 +271,21 @@ def _server_api_up(*, mock_mail_engine: MockMailEngine) -> Generator[bool, None,
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: pool.shutdown() does not work on infinite tasks
             proc.terminate()
-        # pool.shutdown(wait=False, cancel_futures=True)
+            time.sleep(0.5)
+        pool.shutdown(wait=True, cancel_futures=True)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _cleanup() -> Generator[None, None, None]:
+    import multiprocessing
+
+    # setup here
+    yield
+    # teardown here
+    for child in multiprocessing.active_children():
+        print("Terminating", child)
+        child.terminate()
+        time.sleep(0.5)
 
 
 @pytest.fixture
@@ -282,7 +296,7 @@ def _server_scheduler_up() -> Generator[bool, None, None]:
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: pool.shutdown() does not work on infinite tasks
             proc.terminate()
-        # pool.shutdown(wait=False, cancel_futures=True)
+        pool.shutdown(wait=True, cancel_futures=True)
 
 
 def herd_present() -> bool:

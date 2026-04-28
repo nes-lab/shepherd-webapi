@@ -46,7 +46,8 @@ core_config.testbed_name = "unit_testing_testbed"
 server_cfg.mail_enabled = False
 
 
-@pytest_asyncio.fixture
+# TODO: transform into generators for each
+@pytest_asyncio.fixture(autouse=True)
 async def _primed_database(
     scheduled_experiment_id: UUID,
     running_experiment_id: UUID,

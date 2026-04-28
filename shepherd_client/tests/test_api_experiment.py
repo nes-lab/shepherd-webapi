@@ -529,6 +529,7 @@ def test_delete_scheduled_experiments(
     assert success
 
 
+@pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
 def test_delete_running_experiment_is_rejected(
     user1_client: UserClient, running_experiment_id: UUID

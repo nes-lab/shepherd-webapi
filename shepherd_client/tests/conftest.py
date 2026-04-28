@@ -1,4 +1,5 @@
 import os
+import time
 from collections.abc import Generator
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
@@ -240,6 +241,16 @@ def cfg_env() -> bool:
     return True
 
 
+def api_is_up() -> bool:
+    # TODO: next core-lib release has client.is_connected()
+    try:
+        # Test if another API is running that will interfere
+        TestbedClient(server=server_cfg.server_url(), timeout=1, debug=True).testbed_name()
+    except ConnectionError:
+        return False
+    return True
+
+
 @pytest.fixture(scope="module")  # restarts once per module
 def _server_api_up(
     *, cfg_env: bool, mock_mail_engine: MockMailEngine
@@ -247,13 +258,17 @@ def _server_api_up(
     assert cfg_env
     assert mock_mail_engine
     assert db_available(timeout=2)
-    with pytest.raises(ConnectionError):
-        # Test if another API is running that will interfere
-        TestbedClient(server=server_cfg.server_url(), timeout=1, debug=True).testbed_name()
+    assert not api_is_up()  # Test if another API is running that will interfere
     # TODO: could just use Process(target=run_api_server) & .start()
     with ProcessPoolExecutor() as pool:
         pool.submit(run_api_server)
-        yield True
+        # make sure API is actually up
+        retries = 4
+        while retries > 0 and not api_is_up():
+            time.sleep(1)
+            retries -= 1
+        if retries > 0:
+            yield True
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: ppe.shutdown() does not work on infinite tasks
             proc.terminate()

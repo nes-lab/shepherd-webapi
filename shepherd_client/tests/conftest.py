@@ -286,6 +286,7 @@ def _server_scheduler_up(*, cfg_env: bool) -> Generator[bool, None, None]:
             proc.terminate()
         pool.shutdown(wait=False, cancel_futures=True)
 
+
 def herd_present() -> bool:
     try:
         _ = Herd()

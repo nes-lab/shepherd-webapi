@@ -165,6 +165,7 @@ def test_state_of_scheduled_experiment(
     assert state == "scheduled"
 
 
+@pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
 def test_state_of_running_experiment(user1_client: UserClient, running_experiment_id: UUID) -> None:
     state = user1_client.get_experiment_state(running_experiment_id)

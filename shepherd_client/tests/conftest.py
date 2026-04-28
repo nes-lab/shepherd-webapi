@@ -134,13 +134,15 @@ async def _primed_database(
 
 
 @pytest.fixture
-def testbed_client() -> AbcClient:
+def testbed_client(*, _server_scheduler_up: bool) -> AbcClient:
+    assert _server_scheduler_up
     return TestbedClient(server=server_cfg.server_url(), debug=True)
 
 
 @pytest.fixture
-def user1_client() -> AbcClient:
+def user1_client(*, _server_scheduler_up: bool) -> AbcClient:
     # TODO: transform these into generators that add and clear these to DB
+    assert _server_scheduler_up
     return UserClient(
         account_email="user@test.com",
         password="safe-password",
@@ -150,7 +152,8 @@ def user1_client() -> AbcClient:
 
 
 @pytest.fixture
-def user2_client() -> AbcClient:
+def user2_client(*, _server_scheduler_up: bool) -> AbcClient:
+    assert _server_scheduler_up
     return UserClient(
         account_email="user2@test.com",
         password="safe-password",
@@ -160,8 +163,9 @@ def user2_client() -> AbcClient:
 
 
 @pytest.fixture
-def unknown_client() -> AbcClient:
+def unknown_client(*, _server_scheduler_up: bool) -> AbcClient:
     # TODO: this loads local files, should we fake FS? done in sheep-tests
+    assert _server_scheduler_up
     return UserClient(
         account_email="unknown_mail@test.com",
         password="safe-password",
@@ -171,7 +175,8 @@ def unknown_client() -> AbcClient:
 
 
 @pytest.fixture
-def unconfirmed_client() -> AbcClient:
+def unconfirmed_client(*, _server_scheduler_up: bool) -> AbcClient:
+    assert _server_scheduler_up
     return UserClient(
         account_email="unconfirmed_mail@test.com",
         password="safe-password",
@@ -181,7 +186,8 @@ def unconfirmed_client() -> AbcClient:
 
 
 @pytest.fixture
-def deactivated_client() -> AbcClient:
+def deactivated_client(*, _server_scheduler_up: bool) -> AbcClient:
+    assert _server_scheduler_up
     return UserClient(
         account_email="deactivated_mail@test.com",
         password="safe-password",
@@ -191,7 +197,8 @@ def deactivated_client() -> AbcClient:
 
 
 @pytest.fixture
-def admin_client() -> AbcClient:
+def admin_client(*, _server_scheduler_up: bool) -> AbcClient:
+    assert _server_scheduler_up
     return AdminClient(
         account_email="admin@test.com",
         password="safe-password",
@@ -235,7 +242,7 @@ def cfg_env() -> bool:
 @pytest.fixture(scope="module")  # restarts once per module
 def _server_api_up(
     *, cfg_env: bool, mock_mail_engine: MockMailEngine
-) -> Generator[None, None, None]:
+) -> Generator[bool, None, None]:
     assert cfg_env
     assert mock_mail_engine
     assert db_available(timeout=2)
@@ -245,18 +252,18 @@ def _server_api_up(
     # TODO: could just use Process(target=run_api_server) & .start()
     with ProcessPoolExecutor() as pool:
         pool.submit(run_api_server)
-        yield
+        yield True
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: ppe.shutdown() does not work on infinite tasks
             proc.terminate()
 
 
 @pytest.fixture
-def _server_scheduler_up(*, cfg_env: bool) -> Generator[None, None, None]:
+def _server_scheduler_up(*, cfg_env: bool) -> Generator[bool, None, None]:
     assert cfg_env
     with ProcessPoolExecutor() as pool:
         pool.submit(run_scheduler_server, dry_run=True)
-        yield
+        yield True
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: ppe.shutdown() does not work on infinite tasks
             proc.terminate()

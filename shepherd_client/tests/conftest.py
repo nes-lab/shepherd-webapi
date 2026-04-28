@@ -282,10 +282,14 @@ def _cleanup() -> Generator[None, None, None]:
     # setup here
     yield
     # teardown here
+    # this is a cry for help
+    # - sporadic runs in Github Actions are stuck after finishing
+    # - this is often a sign for some stuck async threads or processes
     for child in multiprocessing.active_children():
         print("Terminating", child)
         child.terminate()
         time.sleep(0.5)
+    raise KeyboardInterrupt
 
 
 @pytest.fixture

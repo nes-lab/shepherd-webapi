@@ -81,6 +81,7 @@ norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv',
 markers = [
     "timeout: limit for individual test to finish",
 ]
+timeout = 60
 
 [tool.coverage.run]
 source = ["shepherd_client"]

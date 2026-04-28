@@ -263,15 +263,16 @@ def _server_api_up(
     with ProcessPoolExecutor() as pool:
         pool.submit(run_api_server)
         # make sure API is actually up
-        retries = 4
-        while retries > 0 and not api_is_up():
+        retries = 5
+        while retries >= 0 and not api_is_up():
             time.sleep(1)
             retries -= 1
         if retries > 0:
             yield True
         for proc in pool._processes.values():  # noqa: SLF001
-            # hacky: ppe.shutdown() does not work on infinite tasks
+            # hacky: pool.shutdown() does not work on infinite tasks
             proc.terminate()
+        pool.shutdown(wait=False, cancel_futures=True)
 
 
 @pytest.fixture
@@ -281,9 +282,9 @@ def _server_scheduler_up(*, cfg_env: bool) -> Generator[bool, None, None]:
         pool.submit(run_scheduler_server, dry_run=True)
         yield True
         for proc in pool._processes.values():  # noqa: SLF001
-            # hacky: ppe.shutdown() does not work on infinite tasks
+            # hacky: pool.shutdown() does not work on infinite tasks
             proc.terminate()
-
+        pool.shutdown(wait=False, cancel_futures=True)
 
 def herd_present() -> bool:
     try:

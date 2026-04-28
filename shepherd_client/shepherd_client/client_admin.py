@@ -137,10 +137,10 @@ class AdminClient(UserClient):
                 timeout=30,
             )
         except requests.Timeout:
-            msg = "Command timed out."
+            msg = f"Command '{cmd}' timed out."
             raise ConnectionError(msg) from None
         except requests.ConnectionError:
-            msg = "Command failed."
+            msg = f"Command '{cmd}' failed."
             raise ConnectionError(msg) from None
         if rsp.ok:
             log.info("Starting command succeeded with: %s", rsp.json())

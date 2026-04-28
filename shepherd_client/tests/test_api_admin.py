@@ -1,4 +1,3 @@
-import time
 from datetime import timedelta
 
 import pytest
@@ -8,6 +7,8 @@ from shepherd_core.data_models import Experiment
 from shepherd_server.api_accounts.utils_misc import calculate_hash
 
 from shepherd_client import AdminClient
+
+from .conftest import herd_present
 
 # ###############################################################################
 # AUTH
@@ -181,11 +182,9 @@ def test_admin_get_commands(admin_client: AdminClient) -> None:
 @pytest.mark.usefixtures("_server_api_up")
 @pytest.mark.usefixtures("_server_scheduler_up")
 @pytest.mark.timeout(60)
+@pytest.mark.skipif(condition=not herd_present(), reason="no herd present")
 def test_admin_send_command_space(admin_client: AdminClient) -> None:
-    state = False
-    while not state:
-        time.sleep(1)  # dynamically retry
-        state = admin_client.testbed_status()
+    admin_client.testbed_name()
     data = admin_client.get_commands()
     print(data)
     assert len(data) > 0

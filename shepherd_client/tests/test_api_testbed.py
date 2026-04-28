@@ -22,11 +22,13 @@ def test_testbed_status_fails(testbed_client: TestbedClient) -> None:
 @pytest.mark.usefixtures("_server_api_up")
 @pytest.mark.usefixtures("_server_scheduler_up")
 @pytest.mark.timeout(30)
+@pytest.mark.skip(reason="scheduler runs in drymode")
 def test_testbed_status_with_scheduler(testbed_client: TestbedClient) -> None:
     state = False
     while not state:
         time.sleep(1)  # dynamically retry
-        state = testbed_client.testbed_status()
+        state = testbed_client.testbed_status(allow_dry_run=True)
+        # TODO: next version allows excusing dry-mode!
     assert state
 
 

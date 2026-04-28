@@ -25,6 +25,7 @@ from shepherd_core.data_models.testbed import MCU
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import AbcClient
 from shepherd_core.writer import Writer as CoreWriter
+from shepherd_herd import Herd
 from shepherd_server.api_accounts.models import User
 from shepherd_server.api_accounts.models import UserRole
 from shepherd_server.api_accounts.utils_mail import MailEngine
@@ -259,6 +260,14 @@ def _server_scheduler_up(*, cfg_env: bool) -> Generator[None, None, None]:
         for proc in pool._processes.values():  # noqa: SLF001
             # hacky: ppe.shutdown() does not work on infinite tasks
             proc.terminate()
+
+
+def herd_present() -> bool:
+    try:
+        _ = Herd()
+    except FileNotFoundError:
+        return False
+    return True
 
 
 @pytest.fixture

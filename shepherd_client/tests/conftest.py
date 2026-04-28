@@ -33,6 +33,7 @@ from shepherd_server.api_experiments.models import WebExperiment
 from shepherd_server.api_testbed.models_status import TestbedDB
 from shepherd_server.config import server_config as server_cfg
 from shepherd_server.instance_api import run as run_api_server
+from shepherd_server.instance_db import db_available
 from shepherd_server.instance_db import db_client
 from shepherd_server.instance_scheduler import run as run_scheduler_server
 
@@ -234,10 +235,12 @@ def cfg_env() -> bool:
 def _server_api_up(
     *, cfg_env: bool, mock_mail_engine: MockMailEngine
 ) -> Generator[None, None, None]:
-    # TODO: check if server is already running (ping with client),
-    # TODO: make sure the DB is connectable
     assert cfg_env
     assert mock_mail_engine
+    assert db_available(timeout=2)
+    with pytest.raises(ConnectionError):
+        # Test if another API is running that will interfere
+        TestbedClient(server=server_cfg.server_url(), timeout=1, debug=True).testbed_name()
     # TODO: could just use Process(target=run_api_server) & .start()
     with ProcessPoolExecutor() as pool:
         pool.submit(run_api_server)

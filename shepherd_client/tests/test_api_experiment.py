@@ -314,6 +314,8 @@ def test_statistics_of_experiments_as_admin(
 def test_schedule_experiment(user1_client: UserClient, sample_experiment: Experiment) -> None:
     uid = user1_client.create_experiment(sample_experiment)
     assert uid is not None
+    state = user1_client.get_experiment_state(uid)
+    assert state == "created"
     success = user1_client.schedule_experiment(uid)
     assert success
     state = user1_client.get_experiment_state(uid)
@@ -326,6 +328,8 @@ def test_schedule_scheduled_experiment_is_rejected(
 ) -> None:
     uid = user1_client.create_experiment(sample_experiment)
     assert uid is not None
+    state = user1_client.get_experiment_state(uid)
+    assert state == "created"
     success = user1_client.schedule_experiment(uid)
     assert success
     success = user1_client.schedule_experiment(uid)
@@ -334,10 +338,13 @@ def test_schedule_scheduled_experiment_is_rejected(
     assert state == "scheduled"
 
 
+@pytest.mark.usefixtures("_primed_database")
 @pytest.mark.usefixtures("_server_api_up")
 def test_schedule_running_experiment_is_rejected(
     user1_client: UserClient, running_experiment_id: UUID
 ) -> None:
+    state = user1_client.get_experiment_state(running_experiment_id)
+    assert state == "running"
     success = user1_client.schedule_experiment(running_experiment_id)
     assert not success
     state = user1_client.get_experiment_state(running_experiment_id)
@@ -348,6 +355,8 @@ def test_schedule_running_experiment_is_rejected(
 def test_schedule_finished_experiment_is_rejected(
     user1_client: UserClient, finished_experiment_id: UUID
 ) -> None:
+    state = user1_client.get_experiment_state(finished_experiment_id)
+    assert state == "finished"
     success = user1_client.schedule_experiment(finished_experiment_id)
     assert not success
     state = user1_client.get_experiment_state(finished_experiment_id)

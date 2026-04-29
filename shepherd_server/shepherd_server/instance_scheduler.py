@@ -11,7 +11,6 @@ from uuid import UUID
 import numpy as np
 from beanie import Link
 from shepherd_core.data_models.base.timezone import local_now
-from shepherd_core.data_models.task import EmulationTask
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import get_client
@@ -24,6 +23,7 @@ from .api_accounts.models import User
 from .api_accounts.utils_mail import get_mail_engine
 from .api_experiments.models import ReplyData
 from .api_experiments.models import WebExperiment
+from .api_testbed.models_status import SchedulerStatus
 from .api_testbed.models_status import TestbedDB
 from .async_wrapper import async_wrap
 from .config import server_config
@@ -88,7 +88,7 @@ def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
             ots["fw2_mod"] = None
             ots["fw2_prog"] = None
             emu_dict = ots.get("emulation")
-            if isinstance(emu_dict, EmulationTask):
+            if emu_dict is not None:
                 ots["emulation"]["time_start"] = ts_start
             ots_new.append(ots)
         tb_ts_emu["observer_tasks"] = ots_new
@@ -96,7 +96,7 @@ def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
 
     time_start, delay_s = herd.find_consensus_time()
     log.info(
-        "  .. waiting %d seconds: %s (obs-time)",
+        "  .. waiting %d seconds for start: %s (obs-time)",
         int(delay_s),
         time_start.isoformat(sep=" ")[:19],
     )
@@ -149,7 +149,7 @@ def fetch_scheduler_log(ts_start: datetime) -> str | None:
         ts_start.isoformat(sep=" ")[:16],
         # "--priority", "emerg..info",  # does NOT reduce tqdm output
     ]
-    # TODO: use queue for logger
+    # TODO: use queue for logger! log is only fetched if run as service
     ret = subprocess.run(  # noqa: S603
         command,
         timeout=10,
@@ -244,6 +244,7 @@ async def run_web_experiment(
 
         exe_timestamp = None
         exe_delay = timedelta(seconds=60)  # to better synchronize start
+        # TODO: make this delay 60s configurable?
         exe_timeout = web_exp.experiment.duration + timedelta(minutes=10)
         if _err1 is None:
             herd.start_delay_s = exe_delay.total_seconds()
@@ -383,6 +384,13 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
     await tb_.save_changes()
 
 
+async def reset_status() -> None:
+    _client = await db_client()
+    tb_ = await TestbedDB.get_one()
+    tb_.scheduler = SchedulerStatus()
+    await tb_.save_changes()
+
+
 async def scheduler(
     inventory: Path | None = None,
     *,
@@ -453,7 +461,7 @@ def run(
         log.info("Exit-Signal received.")
 
     log.info("Scheduler will now shut down.")
-    asyncio.run(update_status())
+    asyncio.run(reset_status())
 
 
 if __name__ == "__main__":

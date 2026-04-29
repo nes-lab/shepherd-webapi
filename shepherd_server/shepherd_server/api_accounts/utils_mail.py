@@ -116,14 +116,13 @@ class FastMailEngine(MailEngine):
     async def send_password_reset_email(self, email: EmailStr, token: str) -> None:
         """Send password reset email."""
         # Change this later to public endpoint
-        _url = f"{server_config.server_url()}/accounts/reset-password/{token}"
-        log.debug("-> EMAIL RESET POST to %s", _url)
+        log.debug("-> EMAIL RESET POST")
         if self.mail_srv is not None:
             message = MessageSchema(
                 recipients=[email],
                 subject="[Shepherd] Password Reset",
-                body="Click the link to reset your Testbed account password: "
-                f"{_url}\nIf you did not request this, please ignore this email",
+                body=f"Use the following token to reset your Testbed account password: {token}"
+                f"\nIf you did not request this, please ignore this email!",
                 subtype=MessageType.plain,
             )
             await self.mail_srv.send_message(message)

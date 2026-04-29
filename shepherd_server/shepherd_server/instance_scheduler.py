@@ -96,9 +96,9 @@ def herd_schedule_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
 
     time_start, delay_s = herd.find_consensus_time()
     log.info(
-        "  .. waiting %d seconds for start: %s (obs-time)",
+        "  .. waiting %d seconds for start: %s (observer-time)",
         int(delay_s),
-        time_start.isoformat(sep=" ")[:19],
+        time_start.isoformat(sep=" ")[:19],  # :19 is second-resolution
     )
     tasks_emu = tbt_patch_emu(tb_tasks, ts_start=time_start)
     ret = herd.run_task(tasks_emu, attach=False, quiet=True)
@@ -147,7 +147,7 @@ def fetch_scheduler_log(ts_start: datetime) -> str | None:
         "--all",  # includes unprintable chars and message-chunks?
         "--quiet",  # avoid non-sudo warning
         "--since",
-        ts_start.isoformat(sep=" ")[:16],
+        ts_start.isoformat(sep=" ")[:19],  # :19 is second-resolution
         # "--priority", "emerg..info",  # does NOT reduce tqdm output
     ]
     # TODO: use queue for logger! log is only fetched if run as service
@@ -237,7 +237,7 @@ async def run_web_experiment(
             for cnx in herd.group_online
             if herd.hostnames[cnx.host] in web_exp.observers_requested
         ]
-        log.info("  .. preparation")
+        log.info("  >>> Preparation <<<")
         ts_herd, _err1 = await herd_fetch_timestamp(herd)
         if _err1 is None:
             _, _err1 = await herd_prepare_experiment(herd, testbed_tasks)
@@ -250,7 +250,7 @@ async def run_web_experiment(
         if _err1 is None:
             herd.start_delay_s = exe_delay.total_seconds()
             log.info(
-                "  .. now executing - runtime %s hms, timeout in %s hms, %d of %d observers",
+                "  >>> Execution <<< runtime %s hms, timeout in %s hms, %d of %d observers",
                 str(web_exp.experiment.duration),
                 str(exe_timeout),
                 len(herd.group_online),

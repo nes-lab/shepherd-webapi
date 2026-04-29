@@ -389,6 +389,15 @@ async def reset_status() -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.scheduler = SchedulerStatus()
+    tb_.scheduler.last_update = local_now()
+    await tb_.save()  # .save_changes() fails to clear
+
+
+async def set_status_busy() -> None:
+    _client = await db_client()
+    tb_ = await TestbedDB.get_one()
+    tb_.scheduler.busy = True
+    tb_.scheduler.last_update = local_now()
     await tb_.save()  # .save_changes() fails to clear
 
 
@@ -438,6 +447,7 @@ async def scheduler(
                 continue
 
             log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
+            await set_status_busy()
             had_error = await run_web_experiment(
                 next_experiment.id,
                 temp_path=temp_path,

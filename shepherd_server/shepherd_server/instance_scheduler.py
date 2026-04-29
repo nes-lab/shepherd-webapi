@@ -42,7 +42,7 @@ def herd_cleanup(herd: Herd) -> None:
     herd.kill_sheep_process()
     # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
     while herd.service_is_active():
-        time.sleep(8)
+        time.sleep(5)
     herd.service_erase_log()
 
 
@@ -67,7 +67,7 @@ def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
     if ret > 0:
         raise RuntimeError("Starting preparation of targets failed")
     while herd.service_is_active():
-        time.sleep(11)
+        time.sleep(5)
     if herd.service_is_failed():
         raise RuntimeError("Preparation of targets failed - will skip XP")
 
@@ -116,7 +116,8 @@ async def herd_wait_completion(herd: Herd, timeout: timedelta) -> str | None:
             if local_now() > ts_timeout:
                 error_msg = f"Timeout ({timeout} hms) waiting for experiment to complete"
                 break
-            await asyncio.sleep(21)
+            # we want to disturb the sheep as little as possible, so we wait
+            await asyncio.sleep(5)
     except TimeoutError:
         error_msg = "Timeout waiting for experiment-status during execution"
     return error_msg
@@ -240,10 +241,10 @@ async def run_web_experiment(
         ts_herd, _err1 = await herd_fetch_timestamp(herd)
         if _err1 is None:
             _, _err1 = await herd_prepare_experiment(herd, testbed_tasks)
-            await asyncio.sleep(30)  # stabilize
+            await asyncio.sleep(10)  # stabilize
 
         exe_timestamp = None
-        exe_delay = timedelta(seconds=60)  # to better synchronize start
+        exe_delay = timedelta(seconds=50)  # to better synchronize start
         # TODO: make this delay 60s configurable?
         exe_timeout = web_exp.experiment.duration + timedelta(minutes=10)
         if _err1 is None:
@@ -265,7 +266,7 @@ async def run_web_experiment(
             log.warning(_err1)
 
         log.info("  .. retrieve logs")
-        await asyncio.sleep(30)  # finish IO, precaution
+        await asyncio.sleep(20)  # finish IO, precaution
         log_herd, _err2 = await herd_fetch_logs(herd, since=ts_herd)
         if _err2 is not None:
             log.warning(_err2)
@@ -381,18 +382,14 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
 
     # TODO: include storage & uptime, warn via mail if low
     # TODO: timesync
-    await tb_.save_changes()
+    await tb_.save()
 
 
 async def reset_status() -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.scheduler = SchedulerStatus()
-    # resets below should not be needed, but are?
-    tb_.scheduler.observer_count = 0
-    tb_.scheduler.targets_online = {}
-    tb_.scheduler.targets_offline = {}
-    await tb_.save()
+    await tb_.save()  # .save_changes() fails to clear
 
 
 async def scheduler(
@@ -405,7 +402,8 @@ async def scheduler(
     tb_ = await TestbedDB.get_one()
     tb_.scheduler.activated = local_now()
     await tb_.save_changes()
-    wait_delay: int = 20
+    wait_delay: int = 5
+    update_delay: timedelta = timedelta(seconds=60)
 
     # allow running dry in temp-folder
     with ExitStack() as stack:
@@ -426,9 +424,12 @@ async def scheduler(
         # TODO: how to make sure there is only one scheduler? Singleton
         log.info("Checking experiment scheduling FIFO")
         await WebExperiment.reset_stuck_items()
+        ts_update_next = local_now()
 
         while True:
-            await update_status(herd=herd, active=True)
+            if local_now() > ts_update_next:
+                ts_update_next = local_now() + update_delay
+                await update_status(herd=herd, active=True)
 
             next_experiment = await WebExperiment.get_next_scheduling(only_elevated=only_elevated)
             if next_experiment is None:

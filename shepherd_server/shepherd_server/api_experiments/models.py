@@ -157,6 +157,7 @@ class ResultData(ErrorData):
             path_rel = path_obs.relative_to("/var/shepherd/experiments")
             path_srv = Path("/var/shepherd/experiments") / observer / path_rel
             obtain_access_permissions(path_srv.parent)
+            # TODO: switch to root-xp-path and run recursively? that output in the logs is bad
             try:
                 path_srv_exists = path_srv.exists()
 

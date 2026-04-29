@@ -134,7 +134,7 @@ class FastMailEngine(MailEngine):
         if web_exp.had_errors:
             msg += "\nErrors were encountered during execution:\n"
         if web_exp.has_missing_data:
-            msg += "- one or more files are missing\n"
+            msg += "- one or more result-files are missing\n"
         if web_exp.max_exit_code > 0:
             msg += (
                 "- Console-Outputs of failing Observers are attached in this mail and "

@@ -80,7 +80,8 @@ class ErrorData(BaseModel):
                 string += reply.stderr
             string += f"\nExit-code of {hostname} = {reply.exited}\n"
             files.append(UploadFile(filename=f"{hostname}_error.log", file=StringIO(string)))
-        if self.scheduler_log is not None:  # TODO: only admin & only if faulty
+        if self.scheduler_log is not None and len(self.scheduler_log) > 0:
+            # TODO: only admin & only if faulty
             files.append(UploadFile(filename="scheduler.log", file=StringIO(self.scheduler_log)))
         return files
 

@@ -1,6 +1,23 @@
 # History of Changes
 
-## v2026.04.2 - unreleased
+## v2026.05.1 - unreleased
+
+### Server
+
+-
+- allow symlinks for SSL-cert-paths
+- avoid crashing on targets not present in TB
+- fix listing of online & offline targets
+- scheduler
+  - properly set start-time for observers
+  - reset status (for root-API) on exit
+  - optimize usage of sleep
+    - in addition to latest speed improvements the sleeps-overhead was reduced by ~ 40 s
+    - more responsiveness by shorter idle-waiting intervals
+    - scheduler-overhead should currently be down to 2 minutes per experiment (includes preparation, programming targets, collecting results, ...)
+    - see server/performance.md for more details
+
+## v2026.04.2
 
 **Breaking Changes:** The whole shepherd-software-stack will have to be updated.
 

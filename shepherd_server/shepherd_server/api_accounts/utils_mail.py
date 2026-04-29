@@ -79,7 +79,9 @@ class FastMailEngine(MailEngine):
                 subject="[Shepherd] Testbed Approval",
                 body="Welcome to the Shepherd Nova Testbed!"
                 f"\n\nUse the following token for registering this Email-Address: {token}\n"
-                "The client is available at: https://pypi.org/project/shepherd-client/",
+                "Our client is available at: https://pypi.org/project/shepherd-client/"
+                "\n\nFirst steps for registering your account are documented here:"
+                "\nhttps://nes-lab.github.io/shepherd-nova/content/account.html",
                 subtype=MessageType.plain,
             )
             await self.mail_srv.send_message(message)

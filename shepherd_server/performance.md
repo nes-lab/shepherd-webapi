@@ -15,7 +15,7 @@ t_overhead = t_finished - t_scheduled - duration
     - pre: 149 s; sheep needs 21s till idle-wait
     - post: 16 s ???
 - v2026.04.x - 3:00
-    - pre 137 s, sheeps needs 21s till idle-wait, and waits 37s => 60 s wanted, (now 45)
+    - pre 137 s, sheep needs 21s till idle-wait, and waits 37s => 60 s wanted, (now 45)
     - post 43 s, between completion & herd_fetch_logs() is a 30s (now 20s) wait
 - sleeps changes in scheduler
     - completion-wait (prep-xp)		11 -> 5 s
@@ -26,7 +26,7 @@ t_overhead = t_finished - t_scheduled - duration
     - post-xp						30 -> 20 s
     - scheduler idle-wait		    20 -> 5 s (decoupled updating status)
     - minimum idle-wait - before: 120 s, now: 85 s
-- v2026.04.x - 2:06
-    pre 105 s
+- there was a bug before - experiments ended 10s early
+- v2026.04.x - 2:12
+    pre 111 s
     post 21 s
-- there is still a bug that lets sheep exit early

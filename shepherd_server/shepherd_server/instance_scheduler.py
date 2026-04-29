@@ -392,7 +392,7 @@ async def reset_status() -> None:
     tb_.scheduler.observer_count = 0
     tb_.scheduler.targets_online = {}
     tb_.scheduler.targets_offline = {}
-    await tb_.save_changes()
+    await tb_.save()
 
 
 async def scheduler(

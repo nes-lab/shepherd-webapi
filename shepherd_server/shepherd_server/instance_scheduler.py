@@ -388,6 +388,10 @@ async def reset_status() -> None:
     _client = await db_client()
     tb_ = await TestbedDB.get_one()
     tb_.scheduler = SchedulerStatus()
+    # resets below should not be needed, but are?
+    tb_.scheduler.observer_count = 0
+    tb_.scheduler.targets_online = {}
+    tb_.scheduler.targets_offline = {}
     await tb_.save_changes()
 
 

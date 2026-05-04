@@ -47,8 +47,8 @@ class ClientConfig(BaseModel):
         model_wrap = Wrapper(
             datatype=type(self).__name__,
             created=local_now(),
-            parameters=self.model_dump(exclude_unset=True),
-        ).model_dump(exclude_unset=True, exclude_defaults=True)
+            parameters=self.model_dump(exclude_unset=False, mode="json"),
+        ).model_dump(exclude_unset=True, exclude_defaults=False, mode="json")
         config_path = self.file_path()
         if not config_path.parent.exists():
             config_path.parent.mkdir(parents=True)

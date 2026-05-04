@@ -2,9 +2,12 @@
 
 ## v2026.05.1 - unreleased
 
+### Client
+
+- make saving the config less prone to raise
+
 ### Server
 
--
 - allow symlinks for SSL-cert-paths
 - avoid crashing on targets not present in TB
 - fix listing of online & offline targets
@@ -16,6 +19,8 @@
     - more responsiveness by shorter idle-waiting intervals
     - scheduler-overhead should currently be down to 2 minutes per experiment (includes preparation, programming targets, collecting results, ...)
     - see server/performance.md for more details
+- fix password-reset mail - the link was not usable
+- silence permission file-changes
 
 ## v2026.04.2
 

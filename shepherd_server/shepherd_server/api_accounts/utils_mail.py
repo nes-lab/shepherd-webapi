@@ -135,7 +135,7 @@ class FastMailEngine(MailEngine):
         msg = f"Experiment '{web_exp.experiment.name}' finished.\n"
         msg += web_exp.summary
         if not isinstance(web_exp.owner, Link | User):
-            msg += "\nPOSSIBLE BUG: this experiment has no owner - so you (the admin) were contacted instead."
+            msg += "\nBUG: this experiment has no owner -> you (the admin) were contacted instead."
         if web_exp.had_errors:
             msg += "\nErrors were encountered during execution:\n"
         if web_exp.has_missing_data:

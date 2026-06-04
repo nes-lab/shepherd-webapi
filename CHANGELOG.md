@@ -1,6 +1,13 @@
 # History of Changes
 
-## v2026.05.1 - unreleased
+## v2026.05.2 - unreleased
+
+### Scheduler
+
+- email warns admin if experiment had no user-account attached
+- repair email-logic to also send result-mails to users in case of errors
+
+## v2026.05.1
 
 ### Client
 

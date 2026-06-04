@@ -1,4 +1,4 @@
-# Schepherd-Client
+# Shepherd-Client
 
 [![PyPIVersion](https://img.shields.io/pypi/v/shepherd_client.svg)](https://pypi.org/project/shepherd_client)
 [![PyVers](https://img.shields.io/pypi/pyversions/shepherd_client.svg)](https://pypi.python.org/pypi/shepherd-client)

@@ -2,12 +2,14 @@
 
 from collections.abc import Mapping
 
+from beanie import Link
 from fastapi_mail import ConnectionConfig
 from fastapi_mail import FastMail
 from fastapi_mail import MessageSchema
 from fastapi_mail import MessageType
 from pydantic import EmailStr
 
+from shepherd_server import User
 from shepherd_server.api_experiments.models import WebExperiment
 from shepherd_server.config import server_config
 from shepherd_server.logger import log
@@ -132,6 +134,8 @@ class FastMailEngine(MailEngine):
     ) -> None:
         msg = f"Experiment '{web_exp.experiment.name}' finished.\n"
         msg += web_exp.summary
+        if not isinstance(web_exp.owner, Link | User):
+            msg += "\nPOSSIBLE BUG: this experiment has no owner - so you (the admin) were contacted instead."
         if web_exp.had_errors:
             msg += "\nErrors were encountered during execution:\n"
         if web_exp.has_missing_data:

@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 from uuid import UUID
 
 import numpy as np
-from beanie import Link
 from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
@@ -332,16 +331,17 @@ async def notify_user(xp_id: UUID) -> None:
         return
 
     # send out Mail if user wants it
-    if web_exp.had_errors or not isinstance(web_exp.owner, Link | User):
-        await get_mail_engine().send_experiment_finished_email(
-            server_config.contact["email"], web_exp
-        )
-        return
-    all_done = not await WebExperiment.has_scheduled_by_user(web_exp.owner)
+    if isinstance(web_exp.owner, User):
+        all_done = not await WebExperiment.has_scheduled_by_user(web_exp.owner)
+    else:
+        all_done = True  # just to force-trigger an email. the owner should be known!
     if web_exp.had_errors or web_exp.experiment.email_results or all_done:
-        await get_mail_engine().send_experiment_finished_email(
-            web_exp.owner.email, web_exp, all_done=all_done
+        email = (
+            web_exp.owner.email
+            if isinstance(web_exp.owner, User)
+            else server_config.contact["email"]
         )
+        await get_mail_engine().send_experiment_finished_email(email, web_exp, all_done=all_done)
 
 
 async def update_status(herd: Herd | None = None, *, active: bool = False) -> None:

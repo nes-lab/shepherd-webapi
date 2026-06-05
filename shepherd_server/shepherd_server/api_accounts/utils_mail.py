@@ -141,19 +141,19 @@ class FastMailEngine(MailEngine):
             msg += "\nErrors were encountered during execution:\n"
         if web_exp.has_missing_data:
             msg += "- one or more result-files are missing\n"
-        if web_exp.max_exit_code > 0:
-            msg += (
-                "- console-outputs of failing observers are attached in this mail and "
-                "have also been sent to the admin. "
-                "An observer failed, when errors were logged (non zero exit) "
-                "or no result-file was produced.\n"
-            )
         if web_exp.scheduler_error:
             msg += f"- the scheduler recorded an error: {web_exp.scheduler_error}\n"
         if len(web_exp.missing_observers) > 0:
             msg += (
                 f"- {len(web_exp.missing_observers)} requested observer(s) "
                 f"was/were unavailable: {', '.join(web_exp.missing_observers)}\n"
+            )
+        if web_exp.max_exit_code > 0:
+            msg += (
+                "- console-outputs of failing observers are attached in this mail and "
+                "have also been sent to the admin. "
+                "An observer failed, when errors were logged (non zero exit) "
+                "or no result-file was produced.\n"
             )
         if web_exp.had_errors:
             msg += "- the testbed is now being rebooted as a precaution\n"

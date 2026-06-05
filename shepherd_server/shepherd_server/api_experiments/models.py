@@ -401,6 +401,10 @@ class WebExperiment(Document, ResultData, ErrorData):
             return "scheduled"
         return "created"
 
+    @property
+    def has_missing_data(self) -> bool:
+        return self.finished_at is not None and super().has_missing_data
+
     async def update_time_start(
         self, time_start: datetime | None = None, *, force: bool = False
     ) -> None:

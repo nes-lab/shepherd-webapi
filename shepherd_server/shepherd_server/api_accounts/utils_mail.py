@@ -142,11 +142,13 @@ class FastMailEngine(MailEngine):
             msg += "- one or more result-files are missing\n"
         if web_exp.max_exit_code > 0:
             msg += (
-                "- Console-Outputs of failing Observers are attached in this mail and "
-                "have also been sent to the admin.\n"
+                "- console-outputs of failing observers are attached in this mail and "
+                "have also been sent to the admin. "
+                "An observer failed, when errors were logged (non zero exit) "
+                "or no result-file was produced.\n"
             )
         if web_exp.scheduler_error:
-            msg += f"- the Scheduler recorded an error: {web_exp.scheduler_error}\n"
+            msg += f"- the scheduler recorded an error: {web_exp.scheduler_error}\n"
         if len(web_exp.missing_observers) > 0:
             msg += (
                 f"- {len(web_exp.missing_observers)} requested observer(s) "

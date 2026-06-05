@@ -9,6 +9,7 @@
 - improve email texts to the user
 - improve log-file naming for non-failed observers
 - improve texts of exceptions and errors
+- fix: state of currently running were reported as failed, because the experiment expected result-files
 
 ## v2026.05.1
 

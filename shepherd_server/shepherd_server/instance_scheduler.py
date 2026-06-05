@@ -68,7 +68,7 @@ def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
     while herd.service_is_active():
         time.sleep(5)
     if herd.service_is_failed():
-        raise RuntimeError("Preparation of targets failed - will skip XP")
+        raise RuntimeError("Preparation of targets failed - will skip experiment")
 
 
 @async_wrap(timeout=30)

@@ -60,11 +60,11 @@ def async_wrap(
                     else await asyncio.wait_for(thread_task, timeout=timeout)
                 )
             except TimeoutError:
-                error_msg = f"Timeout ({timeout} s) running {fn_name}"
+                error_msg = f"Timeout ({timeout} s) during {fn_name}()"
             except RuntimeError as xpt:
-                error_msg = f"Caught runtime error ({xpt}) running {fn_name}"
+                error_msg = f"Caught runtime error during {fn_name}() -> {xpt}"
             except Exception as xpt:  # noqa: BLE001
-                error_msg = f"Caught general exception ({xpt}) running {fn_name}"
+                error_msg = f"Caught general exception during {fn_name}() -> {xpt}"
             else:
                 error_msg = None
             if error_msg is not None:

@@ -6,6 +6,9 @@
 
 - email warns admin if experiment had no user-account attached
 - repair email-logic to also send result-mails to users in case of errors
+- improve email texts to the user
+- improve log-file naming for non-failed observers
+- improve texts of exceptions and errors
 
 ## v2026.05.1
 

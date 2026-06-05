@@ -132,7 +132,8 @@ class FastMailEngine(MailEngine):
     async def send_experiment_finished_email(
         self, email: EmailStr, web_exp: WebExperiment, *, all_done: bool = False
     ) -> None:
-        msg = f"Experiment '{web_exp.experiment.name}' finished.\n"
+        extra_subj = " with errors" if web_exp.had_errors else ""
+        msg = f"Experiment '{web_exp.experiment.name}' finished{extra_subj}.\n"
         msg += web_exp.summary
         if not isinstance(web_exp.owner, Link | User):
             msg += "\nBUG: this experiment has no owner -> you (the admin) were contacted instead."
@@ -167,7 +168,6 @@ class FastMailEngine(MailEngine):
         if all_done:
             msg += "\nThere are no further experiments scheduled for you.\n"
 
-        extra_subj = " with errors" if web_exp.had_errors else ""
         log.debug("-> EMAIL XP-Finished" + extra_subj)
         if self.mail_srv is not None:
             message = MessageSchema(

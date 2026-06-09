@@ -226,7 +226,7 @@ async def run_web_experiment(
     web_exp.observers_requested = sorted(testbed_tasks.get_observers())
     web_exp.observers_online = sorted(set(tb_status.scheduler.targets_online.values()))
     web_exp.observers_offline = sorted(set(tb_status.scheduler.targets_offline.values()))
-    await web_exp.update_time_start(web_exp.started_at, force=True)
+    # await web_exp.update_time_start(web_exp.started_at, force=True)
     await web_exp.save_changes()
 
     if isinstance(herd, Herd):
@@ -247,7 +247,7 @@ async def run_web_experiment(
         # TODO: make this delay 60s configurable?
         exe_timeout = web_exp.experiment.duration + timedelta(minutes=10)
         if _err1 is None:
-            herd.start_delay_s = exe_delay.total_seconds()
+            herd.start_delay_s = round(exe_delay.total_seconds())
             log.info(
                 "  >>> Execution <<< runtime %s hms, timeout in %s hms, %d of %d observers",
                 str(web_exp.experiment.duration),
@@ -257,6 +257,12 @@ async def run_web_experiment(
             )
             exe_timestamp = local_now() + exe_delay
             _, _err1 = await herd_schedule_experiment(herd, testbed_tasks)
+
+        # Reload XP to avoid race-condition / working on old data
+        web_exp = await WebExperiment.get_by_id(xp_id)
+        if isinstance(web_exp, WebExperiment):
+            await web_exp.update_time_start(exe_timestamp, force=True)
+            await web_exp.save_changes()
 
         if _err1 is None:
             log.info("  .. waiting for completion")
@@ -284,7 +290,7 @@ async def run_web_experiment(
 
         if log_herd is not None:
             web_exp.observers_output = log_herd
-        web_exp.executed_at = exe_timestamp
+        web_exp.executed_at = exe_timestamp  # TODO: do earlier?
         web_exp.finished_at = local_now()
         web_exp.scheduler_error = _err1 or _err2 or _err3
 
@@ -293,8 +299,9 @@ async def run_web_experiment(
         if web_exp.max_exit_code > 0:
             log.error("Herd failed on at least one Observer")
 
-        await web_exp.update_time_start(web_exp.executed_at, force=True)
+        # update XP from result-files with observer-start-TS
         # await web_exp.update_time_start()
+
         # take from files if possible, BUT has time of observer
         await web_exp.update_result()
         web_exp.scheduler_log, _ = await fetch_scheduler_log(ts_start=ts_start)

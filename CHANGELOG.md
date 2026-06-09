@@ -1,6 +1,6 @@
 # History of Changes
 
-## v2026.05.2 - unreleased
+## v2026.06.1 - unreleased
 
 ### Scheduler
 
@@ -10,6 +10,10 @@
 - improve log-file naming for non-failed observers
 - improve texts of exceptions and errors
 - fix: state of currently running were reported as failed, because the experiment expected result-files
+- clean up state-changes further and add preparation-state
+  - created -> scheduled -> preparation -> running -> finished OR failed
+- update experiment.time_start only once - with future synchronized start-timestamp of actual experiment
+- handle exceptions in scheduler, instead of just restarting it
 
 ## v2026.05.1
 

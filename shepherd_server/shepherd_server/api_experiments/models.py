@@ -332,7 +332,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         stuck_xps = await cls.find(
             cls.finished_at == None,  # noqa: E711 beanie cannot handle 'is not None'
             cls.started_at != None,  # noqa: E711
-            cls.scheduler_error == None,  # noqa: E711, TODO
+            # used to also filter for scheduler_error==None, but finished_at is enough
             fetch_links=True,
             # lazy_parse only recommended when not changing & saving
         ).to_list()

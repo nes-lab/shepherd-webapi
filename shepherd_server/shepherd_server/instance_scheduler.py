@@ -470,7 +470,8 @@ async def scheduler(
                 if isinstance(web_exp, WebExperiment):
                     if web_exp.scheduler_error is None:
                         web_exp.scheduler_error = "Execution interrupted by unknown error"
-                    web_exp.finished_at = local_now()
+                    if web_exp.finished_at is None:
+                        web_exp.finished_at = local_now()
                     await web_exp.save_changes()
 
                 log.info("  .. herd-reboot due to errors (scheduler will quit / restart after)")

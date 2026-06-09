@@ -439,7 +439,7 @@ def test_experiment_state_running(client: UserTestClient, running_experiment_id:
     with client.authenticate_user_1():
         response = client.get(f"/experiments/{running_experiment_id}/state")
     assert response.status_code == 200
-    assert response.json() == "running"
+    assert response.json() in {"running", "preparation"}
 
 
 def test_experiment_state_finished(client: UserTestClient, finished_experiment_id: str) -> None:

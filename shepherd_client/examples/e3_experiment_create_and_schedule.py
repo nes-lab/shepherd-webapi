@@ -5,8 +5,8 @@
 - that ID can now be used to schedule the experiment or get infos
     - scheduling will fail if your quota is exceeded
 - the state of the experiment progresses from:
-        created -> scheduled -> running -> finished
-                                        -> failed (finished with error)
+        created -> scheduled -> preparation -> running -> finished
+                                                       -> failed (finished with error)
 """
 
 import sys

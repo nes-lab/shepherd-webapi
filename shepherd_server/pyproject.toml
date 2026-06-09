@@ -6,7 +6,7 @@ keywords = ["testbed", "beaglebone", "pru", "batteryless", "energyharvesting", "
 authors = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 maintainers = [{name = "Ingmar Splitt", email = "ingmar.splitt@tu-dresden.de"},]
 
-version = "2026.05.1"
+version = "2026.06.1"
 
 readme = {file = "README.md", content-type = "text/markdown"}
 
@@ -37,7 +37,7 @@ dependencies = [
     "beanie>=2.0",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
-    "shepherd-core==2026.5.1",
+    "shepherd-core==2026.06.1",
     "python-decouple",
     "shepherd-herd>=2026.4.2",
     "typing-extensions",

@@ -169,7 +169,7 @@ def test_state_of_scheduled_experiment(
 @pytest.mark.usefixtures("_server_api_up")
 def test_state_of_running_experiment(user1_client: UserClient, running_experiment_id: UUID) -> None:
     state = user1_client.get_experiment_state(running_experiment_id)
-    assert state == "running"
+    assert state in {"preparation", "running"}
 
 
 @pytest.mark.usefixtures("_server_api_up")
@@ -344,11 +344,11 @@ def test_schedule_running_experiment_is_rejected(
     user1_client: UserClient, running_experiment_id: UUID
 ) -> None:
     state = user1_client.get_experiment_state(running_experiment_id)
-    assert state == "running"
+    assert state in {"preparation", "running"}
     success = user1_client.schedule_experiment(running_experiment_id)
     assert not success
     state = user1_client.get_experiment_state(running_experiment_id)
-    assert state == "running"
+    assert state in {"preparation", "running"}
 
 
 @pytest.mark.usefixtures("_server_api_up")

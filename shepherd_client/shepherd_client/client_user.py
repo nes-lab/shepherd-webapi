@@ -235,6 +235,7 @@ class UserClient(TestbedClient):
 
         - after valid submission: created
         - after scheduling: scheduled
+        - during prep: preparation
         - during experiment: running
         - after the run: finished or failed
 

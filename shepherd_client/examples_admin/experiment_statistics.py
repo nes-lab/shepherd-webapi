@@ -59,7 +59,7 @@ log.info(
     100 * len(derr) / len(data),
 )
 
-for state in ["created", "scheduled", "running", "finished"]:
+for state in ["created", "scheduled", "preparation", "running", "finished"]:
     data_state = data[data["state"] == state]
     if len(data_state) > 0:
         log.info(

@@ -313,6 +313,8 @@ async def run_web_experiment(
     else:  # dry run
         if temp_path is None:
             raise RuntimeError("Dry-running Scheduler needs a temporary directory")
+        web_exp.executed_at = local_now()
+        await web_exp.save_changes()
         await asyncio.sleep(10)  # mocked length
         # create mocked files
         paths_task = testbed_tasks.get_output_paths()
@@ -455,14 +457,25 @@ async def scheduler(
 
             log.debug("NOW scheduling experiment '%s'", next_experiment.experiment.name)
             await set_status_busy()
-            had_error = await run_web_experiment(
-                next_experiment.id,
-                temp_path=temp_path,
-                herd=herd,
-            )
+            try:
+                had_error = await run_web_experiment(
+                    next_experiment.id,
+                    temp_path=temp_path,
+                    herd=herd,
+                )
+            except RuntimeError:
+                had_error = True
             if had_error:
+                web_exp = await WebExperiment.get_by_id(next_experiment.id)
+                if isinstance(web_exp, WebExperiment):
+                    if web_exp.scheduler_error is None:
+                        web_exp.scheduler_error = "Execution interrupted by unknown error"
+                    web_exp.finished_at = local_now()
+                    await web_exp.save_changes()
+
                 log.info("  .. herd-reboot due to errors (scheduler will quit / restart after)")
-                await herd_reboot(herd)
+                if herd is not None:
+                    await herd_reboot(herd)
                 return
 
 

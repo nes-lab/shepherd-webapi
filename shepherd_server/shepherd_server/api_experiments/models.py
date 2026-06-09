@@ -332,7 +332,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         stuck_xps = await cls.find(
             cls.finished_at == None,  # noqa: E711 beanie cannot handle 'is not None'
             cls.started_at != None,  # noqa: E711
-            cls.scheduler_error == None,  # noqa: E711
+            cls.scheduler_error == None,  # noqa: E711, TODO
             fetch_links=True,
             # lazy_parse only recommended when not changing & saving
         ).to_list()
@@ -389,14 +389,15 @@ class WebExperiment(Document, ResultData, ErrorData):
 
     @property
     def state(self) -> str:
-        # not included scheduler_error here
         # TODO: add deleted?
-        if self.had_errors:
-            return "failed"
         if self.finished_at is not None:
+            if self.had_errors:
+                return "failed"
             return "finished"
-        if self.started_at is not None:
+        if self.executed_at is not None and self.executed_at > local_now():
             return "running"
+        if self.started_at is not None:
+            return "preparation"
         if self.requested_execution_at is not None:
             return "scheduled"
         return "created"

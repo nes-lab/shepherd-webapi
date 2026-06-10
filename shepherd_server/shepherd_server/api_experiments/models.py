@@ -394,7 +394,10 @@ class WebExperiment(Document, ResultData, ErrorData):
             if self.had_errors:
                 return "failed"
             return "finished"
-        if self.executed_at is not None and self.executed_at > local_now():
+        if self.executed_at is not None and self.executed_at < datetime.now(
+            tz=self.executed_at.tzinfo
+        ):
+            # the code above looks weird, but default beanie does not save TZ, so we adapt
             return "running"
         if self.started_at is not None:
             return "preparation"

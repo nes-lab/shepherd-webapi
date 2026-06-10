@@ -206,7 +206,7 @@ def test_list_experiments(
     with client.authenticate_user_1():
         response = client.get("/experiments")
     assert response.status_code == 200
-    assert len(response.json()) == 4
+    assert len(response.json()) == 5
     assert response.json()[created_experiment_id] is not None
     assert response.json()[created_experiment_id] == "created"
 
@@ -218,7 +218,7 @@ def test_experiments_are_private_to_user(
     with client.authenticate_user_1():
         response = client.get("/experiments")
         assert response.status_code == 200
-        assert len(response.json()) == 3
+        assert len(response.json()) == 4
 
     with client.authenticate_admin():
         response = client.get("/experiments")
@@ -234,7 +234,7 @@ def test_experiments_are_private_to_user(
     with client.authenticate_user_1():
         response = client.get("/experiments")
         assert response.status_code == 200
-        assert len(response.json()) == 3
+        assert len(response.json()) == 4
 
 
 @pytest.fixture

@@ -261,6 +261,7 @@ async def run_web_experiment(
         # Reload XP to avoid race-condition / working on old data
         web_exp = await WebExperiment.get_by_id(xp_id)
         if isinstance(web_exp, WebExperiment):
+            web_exp.executed_at = exe_timestamp
             await web_exp.update_time_start(exe_timestamp, force=True)
             await web_exp.save_changes()
 
@@ -290,7 +291,6 @@ async def run_web_experiment(
 
         if log_herd is not None:
             web_exp.observers_output = log_herd
-        web_exp.executed_at = exe_timestamp  # TODO: do earlier?
         web_exp.finished_at = local_now()
         web_exp.scheduler_error = _err1 or _err2 or _err3
 

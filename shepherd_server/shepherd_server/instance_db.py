@@ -24,7 +24,7 @@ from .logger import log
 
 async def db_client() -> AsyncDatabase:
     """Call this from within your event loop to get beanie setup."""
-    client = AsyncMongoClient("mongodb://localhost:27017")
+    client = AsyncMongoClient("mongodb://localhost:27017", tz_aware=True)
     # Note: if ".shp" does not exist, it will be created
     await init_beanie(
         database=client.shp,

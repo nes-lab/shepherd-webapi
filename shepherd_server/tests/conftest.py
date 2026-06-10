@@ -9,6 +9,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from shepherd_core import fw_tools
+from shepherd_core import local_now
 from shepherd_core.config import core_config
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.content import EnergyEnvironment
@@ -39,6 +40,7 @@ server_cfg.mail_enabled = False
 @pytest_asyncio.fixture
 async def database_for_tests(
     scheduled_experiment_id: str,
+    preparing_experiment_id: str,
     running_experiment_id: str,
     finished_experiment_id: str,
     sample_experiment: Experiment,
@@ -84,16 +86,26 @@ async def database_for_tests(
         id=UUID(scheduled_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(tz=local_tz()),
+        requested_execution_at=local_now(),
     )
     await WebExperiment.insert_one(scheduled_web_experiment)
+
+    preparing_web_experiment = WebExperiment(
+        id=UUID(preparing_experiment_id),
+        experiment=sample_experiment,
+        owner=working_user,
+        requested_execution_at=local_now(),
+        started_at=local_now(),
+    )
+    await WebExperiment.insert_one(preparing_web_experiment)
 
     running_web_experiment = WebExperiment(
         id=UUID(running_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(tz=local_tz()),
-        started_at=datetime.now(tz=local_tz()),
+        requested_execution_at=local_now(),
+        started_at=local_now(),
+        executed_at=local_now(),
     )
     await WebExperiment.insert_one(running_web_experiment)
 
@@ -102,9 +114,10 @@ async def database_for_tests(
         id=UUID(finished_experiment_id),
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(tz=local_tz()),
-        started_at=datetime.now(tz=local_tz()),
-        finished_at=datetime.now(tz=local_tz()),
+        requested_execution_at=local_now(),
+        started_at=local_now(),
+        executed_at=local_now(),
+        finished_at=local_now(),
     )
     # mock files
     testbed = Testbed(
@@ -241,6 +254,11 @@ def sample_experiment(sample_target_config: TargetConfig) -> Experiment:
 @pytest.fixture
 def scheduled_experiment_id() -> str:
     return "00000000-0000-0000-0000-123400000001"
+
+
+@pytest.fixture
+def preparing_experiment_id() -> str:
+    return "00000000-0000-0000-0000-123400000004"
 
 
 @pytest.fixture

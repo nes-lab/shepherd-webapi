@@ -22,6 +22,7 @@ import pytest_asyncio
 from shepherd_client.client_user import UserClient
 from shepherd_core import fw_tools
 from shepherd_core.config import core_config
+from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
@@ -60,6 +61,7 @@ server_cfg.mail_enabled = False
 @pytest_asyncio.fixture(autouse=True)
 async def _primed_database(
     scheduled_experiment_id: UUID,
+    preparing_experiment_id: UUID,
     running_experiment_id: UUID,
     finished_experiment_id: UUID,
     sample_experiment: Experiment,
@@ -108,16 +110,26 @@ async def _primed_database(
         id=scheduled_experiment_id,
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(tz=local_tz()),
+        requested_execution_at=local_now(),
     )
     await WebExperiment.insert_one(scheduled_web_experiment)
+
+    preparing_web_experiment = WebExperiment(
+        id=preparing_experiment_id,
+        experiment=sample_experiment,
+        owner=working_user,
+        requested_execution_at=local_now(),
+        started_at=local_now(),
+    )
+    await WebExperiment.insert_one(preparing_web_experiment)
 
     running_web_experiment = WebExperiment(
         id=running_experiment_id,
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(tz=local_tz()),
-        started_at=datetime.now(tz=local_tz()),
+        requested_execution_at=local_now(),
+        started_at=local_now(),
+        executed_at=local_now(),
     )
     await WebExperiment.insert_one(running_web_experiment)
 
@@ -126,9 +138,9 @@ async def _primed_database(
         id=finished_experiment_id,
         experiment=sample_experiment,
         owner=working_user,
-        requested_execution_at=datetime.now(tz=local_tz()),
-        started_at=datetime.now(tz=local_tz()),
-        finished_at=datetime.now(tz=local_tz()),
+        requested_execution_at=local_now(),
+        started_at=local_now(),
+        finished_at=local_now(),
     )
     # mock files
     testbed = Testbed(
@@ -344,6 +356,11 @@ def sample_experiment(sample_target_config: TargetConfig) -> Experiment:
 def scheduled_experiment_id() -> UUID:
     # TODO: transform these into generators that add and clear these to DB
     return UUID("00000000-0000-0000-0000-123400000001")
+
+
+@pytest.fixture
+def preparing_experiment_id() -> UUID:
+    return UUID("00000000-0000-0000-0000-123400000004")
 
 
 @pytest.fixture

@@ -1,6 +1,21 @@
 # History of Changes
 
-## v2026.06.1 - unreleased
+## v2026.06.2 - unreleased
+
+## Client
+
+- small logic-fix in admin-client
+
+## API
+
+- repair resource-endpoints for tb-components (no content)
+
+## Scheduler
+
+- new error-class: skipped execution
+- allow graceful termination without interrupting XP
+
+## v2026.06.1
 
 ### Scheduler
 

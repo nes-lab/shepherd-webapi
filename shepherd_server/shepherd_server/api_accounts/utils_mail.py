@@ -139,6 +139,8 @@ class FastMailEngine(MailEngine):
             msg += "\nBUG: this experiment has no owner -> you (the admin) were contacted instead."
         if web_exp.had_errors:
             msg += "\nErrors were encountered during execution:\n"
+        if web_exp.skipped_execution:
+            msg += "- the experiment itself was NOT run\n"
         if web_exp.has_missing_data:
             msg += "- one or more result-files are missing\n"
         if web_exp.scheduler_error:
@@ -152,7 +154,7 @@ class FastMailEngine(MailEngine):
             msg += (
                 "- console-outputs of failing observers are attached in this mail and "
                 "have also been sent to the admin. "
-                "An observer failed, when errors were logged (non zero exit) "
+                "An observer failed, when errors were logged (non zero exit-code) "
                 "or no result-file was produced.\n"
             )
         if web_exp.had_errors:

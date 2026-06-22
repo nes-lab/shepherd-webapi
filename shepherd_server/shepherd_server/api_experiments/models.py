@@ -470,7 +470,7 @@ class ExperimentStats(Document):
     result_size: int = 0
 
     had_errors: bool = False
-    skipped_execution: bool = False
+    skipped_execution: bool | None = None
     has_missing_data: bool = False
     max_exit_code: int | None = None
     scheduler_error: str | None = None

@@ -10,6 +10,9 @@ RestartSec=3
 User=service
 EnvironmentFile=/home/service/.env
 ExecStart=/home/service/.local/bin/shepherd-server -v run-scheduler
+# allow graceful termination (without killing experiments)
+KillSignal=SIGTERM
+TimeoutStopSec=4000
 
 [Install]
 WantedBy=multi-user.target

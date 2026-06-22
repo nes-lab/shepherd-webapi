@@ -1,4 +1,5 @@
 import asyncio
+import signal
 import subprocess
 import time
 from contextlib import ExitStack
@@ -6,6 +7,7 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import FrameType
 from uuid import UUID
 
 import numpy as np
@@ -410,6 +412,14 @@ async def set_status_busy() -> None:
     await tb_.save()  # .save_changes() fails to clear
 
 
+shutdown_event = asyncio.Event()
+
+
+def shutdown_gracefully(_signum: int, _frame: FrameType | None) -> None:
+    log.warning("Request Scheduler-Shutdown!")
+    shutdown_event.set()
+
+
 async def scheduler(
     inventory: Path | None = None,
     *,
@@ -443,8 +453,9 @@ async def scheduler(
         log.info("Checking experiment scheduling FIFO")
         await WebExperiment.reset_stuck_items()
         ts_update_next = local_now()
+        handler_prev = signal.signal(signal.SIGTERM, shutdown_gracefully)
 
-        while True:
+        while not shutdown_event.is_set():
             if local_now() > ts_update_next:
                 ts_update_next = local_now() + update_delay
                 await update_status(herd=herd, active=True)
@@ -478,6 +489,8 @@ async def scheduler(
                 if herd is not None:
                     await herd_reboot(herd)
                 return
+
+        signal.signal(signal.SIGTERM, handler_prev)
 
 
 def run(

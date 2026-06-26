@@ -79,9 +79,6 @@ platforms = ["unix", "linux"]
 [tool.aliases]
 test = "pytest"
 
-[tool.pytest]
-timeout = 20
-
 [tool.pytest.ini_options]
 addopts = ["-vvv", "--stepwise"]
 asyncio_mode = "auto"
@@ -90,6 +87,7 @@ norecursedirs = ['*.egg', '*.egg-info', '.*', '_darcs', 'build', 'dist', 'venv',
 markers = [
     "timeout: limit for individual test to finish",
 ]
+timeout = 20
 
 [tool.coverage.run]
 source = ["shepherd_server"]

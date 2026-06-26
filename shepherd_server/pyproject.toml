@@ -79,6 +79,9 @@ platforms = ["unix", "linux"]
 [tool.aliases]
 test = "pytest"
 
+[tool.pytest]
+timeout = 20
+
 [tool.pytest.ini_options]
 addopts = ["-vvv", "--stepwise"]
 asyncio_mode = "auto"

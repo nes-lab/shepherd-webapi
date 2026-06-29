@@ -75,7 +75,7 @@ jobs:
           activate-environment: true
 
       - name: Install Server-Package 🧱
-        run: uv pip install .[all] -U
+        run: uv pip install . -U
         working-directory: "./shepherd_server"
 
       - name: Test-Build Client-Package 🧱
@@ -83,7 +83,7 @@ jobs:
         working-directory: "./shepherd_client"
 
       - name: Install Client-package 🧱
-        run: uv pip install .[all] -U
+        run: uv pip install .[admin,test] -U
         working-directory: "./shepherd_client"
 
       - name: Unittest Client

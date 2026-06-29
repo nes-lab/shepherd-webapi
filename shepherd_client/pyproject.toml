@@ -49,7 +49,7 @@ dev = ["trafficbench"]
 test = [
     "pytest",
     "pytest-click",
-    "pytest-async",
+    "pytest-asyncio",
     "pytest-dependency",
     "pytest-timeout",
     "coverage",

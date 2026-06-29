@@ -25,6 +25,9 @@ from .logger import log
 async def db_client() -> AsyncDatabase:
     """Call this from within your event loop to get beanie setup."""
     client = AsyncMongoClient("mongodb://localhost:27017", tz_aware=True)
+    # above we want 'tz_aware=True' for offset-aware timestamps
+    # BUT then Observers need "bson"-package to unpickle tasks
+
     # Note: if ".shp" does not exist, it will be created
     await init_beanie(
         database=client.shp,

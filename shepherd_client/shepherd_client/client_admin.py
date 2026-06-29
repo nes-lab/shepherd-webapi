@@ -110,7 +110,7 @@ class AdminClient(UserClient):
     def set_restrictions(self, restrictions: list[str]) -> bool:
         data = {"value": restrictions}
         rsp = self._req("patch", "/testbed/restrictions", json=data)
-        if not rsp.ok:
+        if rsp.ok:
             log.info("Updating Restrictions succeeded with: %s", rsp.reason)
         else:
             log.warning("Updating Restrictions failed with: %s", self._msg(rsp))

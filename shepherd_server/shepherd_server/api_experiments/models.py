@@ -104,15 +104,6 @@ class ErrorData(BaseModel):
     def missing_observers(self) -> list[str]:
         return sorted(set(self.observers_requested) - set(self.observers_online))
 
-    @property
-    def had_errors(self) -> bool:
-        return (
-            self.max_exit_code > 0
-            or self.scheduler_error is not None
-            or self.has_missing_data
-            or len(self.missing_observers) > 0
-        )
-
 
 class ResultData(ErrorData):
     observer_paths: dict[str, Path] | None = None
@@ -406,8 +397,26 @@ class WebExperiment(Document, ResultData, ErrorData):
         return "created"
 
     @property
+    def skipped_execution(self) -> bool:
+        return self.finished_at is not None and self.executed_at is None
+
+    @property
     def has_missing_data(self) -> bool:
-        return self.finished_at is not None and super().has_missing_data
+        return (
+            self.finished_at is not None
+            and self.executed_at is not None
+            and super().has_missing_data
+        )
+
+    @property
+    def had_errors(self) -> bool:
+        return (
+            self.max_exit_code > 0
+            or self.scheduler_error is not None
+            or self.skipped_execution
+            or self.has_missing_data
+            or len(self.missing_observers) > 0
+        )
 
     async def update_time_start(
         self, time_start: datetime | None = None, *, force: bool = False
@@ -461,6 +470,7 @@ class ExperimentStats(Document):
     result_size: int = 0
 
     had_errors: bool = False
+    skipped_execution: bool | None = None
     has_missing_data: bool = False
     max_exit_code: int | None = None
     scheduler_error: str | None = None
@@ -497,6 +507,7 @@ class ExperimentStats(Document):
         self.result_size = xp.result_size
         # errors
         self.had_errors = xp.had_errors
+        self.skipped_execution = xp.skipped_execution
         self.has_missing_data = xp.has_missing_data
         self.max_exit_code = xp.max_exit_code
         self.scheduler_error = xp.scheduler_error

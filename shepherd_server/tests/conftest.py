@@ -1,3 +1,4 @@
+import os
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
@@ -5,12 +6,18 @@ from pathlib import Path
 from unittest.mock import AsyncMock
 from uuid import UUID
 
+# disarm & configure server
+# NOTE: this has to be done before the imports
+os.environ["TESTBED_NAME"] = "unit_testing_testbed"
+os.environ["MAIL_ENABLED"] = "False"
+# os.environ["AUTH_SALT"] = "salty_business"
+
+
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from shepherd_core import fw_tools
 from shepherd_core import local_now
-from shepherd_core.config import core_config
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
@@ -28,13 +35,8 @@ from shepherd_server.api_accounts.models import UserRole
 from shepherd_server.api_accounts.utils_mail import MailEngine
 from shepherd_server.api_accounts.utils_misc import calculate_password_hash
 from shepherd_server.api_experiments.models import WebExperiment
-from shepherd_server.config import server_config as server_cfg
 from shepherd_server.instance_api import app
 from shepherd_server.instance_db import db_client
-
-# switch core-lib to another fixture
-core_config.testbed_name = "unit_testing_testbed"
-server_cfg.mail_enabled = False
 
 
 @pytest_asyncio.fixture

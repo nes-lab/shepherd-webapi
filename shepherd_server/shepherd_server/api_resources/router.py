@@ -15,7 +15,6 @@ from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import tb_client
 
 router = APIRouter(prefix="/resources", tags=["Resources"])
-# TODO: rename to resources
 
 resource_types = [
     # content
@@ -51,7 +50,8 @@ async def list_resource_by_type(resource: str) -> dict[int, str]:
     models = [
         model for model in models if model.get("visible2all", True)
     ]  # TODO: or account identical
-    return {int(model.get("id", 0)): str(model.get("name")) for model in models}
+    auto_id = iter(range(len(models)))  # tb-components do not have an ID -> mock one
+    return {int(model.get("id", next(auto_id))): str(model.get("name")) for model in models}
     # -> moved from sorted dict[ID,name] (that was resorted by fastapi) to
     #      - just list of names (was hardly usable by TestbedClient)
     #      - unsorted dict[ID, name]

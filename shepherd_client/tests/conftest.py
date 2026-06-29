@@ -3,10 +3,12 @@ import sys
 
 # disarm & configure server
 # NOTE: this has to be done before the imports
+os.environ["TESTBED_NAME"] = "unit_testing_testbed"
 os.environ["MAIL_ENABLED"] = "False"
 os.environ["AUTH_SALT"] = "salty_business"
 os.environ["ROOT_URL"] = "127.0.0.1"
 os.environ["ROOT_PORT"] = str(8000 + sys.version_info.minor)  # separate GH-actions
+
 
 import time
 from collections.abc import Generator
@@ -21,7 +23,6 @@ import pytest
 import pytest_asyncio
 from shepherd_client.client_user import UserClient
 from shepherd_core import fw_tools
-from shepherd_core.config import core_config
 from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.content import EnergyEnvironment
@@ -51,10 +52,6 @@ from shepherd_server.instance_scheduler import run as run_scheduler_server
 
 from shepherd_client import AdminClient
 from shepherd_client import TestbedClient
-
-# switch core-lib to another fixture
-core_config.testbed_name = "unit_testing_testbed"
-server_cfg.mail_enabled = False
 
 
 # TODO: transform into generators for each
@@ -140,6 +137,7 @@ async def _primed_database(
         owner=working_user,
         requested_execution_at=local_now(),
         started_at=local_now(),
+        executed_at=local_now(),
         finished_at=local_now(),
     )
     # mock files

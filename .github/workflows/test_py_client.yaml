@@ -45,7 +45,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         # python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"] # 4 version / years
-        python-version: ["3.13"] # # something is different in actions
+        python-version: ["3.14", "3.13", "3.12", "3.11"] # something is different in actions
 
     runs-on: ${{ matrix.os }}
     env:
@@ -75,7 +75,7 @@ jobs:
           activate-environment: true
 
       - name: Install Server-Package 🧱
-        run: uv pip install .[test] -U
+        run: uv pip install . -U
         working-directory: "./shepherd_server"
 
       - name: Test-Build Client-Package 🧱
@@ -83,7 +83,7 @@ jobs:
         working-directory: "./shepherd_client"
 
       - name: Install Client-package 🧱
-        run: uv pip install .[test] -U
+        run: uv pip install .[admin,test] -U
         working-directory: "./shepherd_client"
 
       - name: Unittest Client

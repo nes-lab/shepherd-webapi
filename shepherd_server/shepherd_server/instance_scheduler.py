@@ -37,14 +37,18 @@ from .logger import log
 #   - refactor complex herd-fn into sep file
 
 
-@async_wrap(timeout=60)
+@async_wrap(timeout=80)
 def herd_cleanup(herd: Herd) -> None:
     herd.open()
+    log.info("      .. reconnected sheep (step 1/4)")
     herd.kill_sheep_process()
+    log.info("      .. killed processes (step 2/4)")
     # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
     while herd.service_is_active():
         time.sleep(5)
+    log.info("      .. services are shut down (step 3/4)")
     herd.service_erase_log()
+    log.info("      .. erased service-logs (step 4/4)")
 
 
 @async_wrap(timeout=5 * 60)
@@ -270,8 +274,10 @@ async def run_web_experiment(
         if _err1 is None:
             log.info("  .. waiting for completion")
             _err1 = await herd_wait_completion(herd, exe_timeout)
-        else:
+
+        if _err1 is not None:
             log.warning(_err1)
+            await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30)
 
         log.info("  .. retrieve logs")
         await asyncio.sleep(20)  # finish IO, precaution
@@ -283,6 +289,7 @@ async def run_web_experiment(
         _, _err3 = await herd_cleanup(herd)  # will also re-add all online observers
         if _err3 is not None:
             log.warning(_err3)
+            await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30)
 
         log.info("  .. finished - now collecting data")
         # Reload XP to avoid race-condition / working on old data

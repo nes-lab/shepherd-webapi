@@ -133,7 +133,7 @@ def herd_fetch_timestamp(herd: Herd) -> datetime:
     return min(herd.get_local_timestamps()) - timedelta(minutes=2)
 
 
-@async_wrap(timeout=30)
+@async_wrap(timeout=60)
 def herd_fetch_logs(herd: Herd, since: datetime) -> dict[str, ReplyData]:
     replies = herd.service_get_logs(since=since)
     return {

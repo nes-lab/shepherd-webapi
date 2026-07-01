@@ -43,7 +43,7 @@ def obtain_access_permissions(path: Path) -> None:
 
 
 class ReplyData(BaseModel):
-    exited: int
+    exited: int   # state of process: -1: still active, 0: exited without error, 1: exited with error
     stdout: str
     stderr: str
 

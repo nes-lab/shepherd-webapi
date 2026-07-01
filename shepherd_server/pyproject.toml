@@ -76,6 +76,9 @@ module-root = "./"
 source-include = ["shepherd_server/favicon/**"]
 platforms = ["unix", "linux"]
 
+[tool.uv.sources]
+shepherd-herd = { git = "https://github.com/nes-lab/shepherd/", branch = "dev", subdirectory = "software/shepherd-herd"}
+
 [tool.aliases]
 test = "pytest"
 

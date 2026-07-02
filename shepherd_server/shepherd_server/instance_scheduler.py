@@ -11,12 +11,14 @@ from types import FrameType
 from uuid import UUID
 
 import numpy as np
+from fabric import Result
 from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.task import TestbedTasks
 from shepherd_core.data_models.testbed import Testbed
 from shepherd_core.testbed_client import get_client
 from shepherd_core.writer import Writer as CoreWriter
 from shepherd_herd.herd import Herd
+from typing_extensions import deprecated
 
 from shepherd_server.instance_fixtures import prepare_fixture_client
 
@@ -37,18 +39,58 @@ from .logger import log
 #   - refactor complex herd-fn into sep file
 
 
-@async_wrap(timeout=80)
-def herd_cleanup(herd: Herd) -> None:
+@async_wrap(timeout=80 + 60)
+def herd_fetch_logs_and_clean_up(herd: Herd, since: datetime | None = None) -> dict[str, ReplyData]:
+    log.info("      .. reconnect to all sheep (step 1/5)")
     herd.open()
-    log.info("      .. reconnected sheep (step 1/4)")
+
+    log.info("      .. determine state of processes (step 2/5)")
+    obs_failed = herd.run_cmd(
+        sudo=True, cmd="/usr/bin/systemctl is-failed shepherd", timeout=30, verbose=False
+    )
+    obs_active = herd.run_cmd(
+        sudo=True, cmd="/usr/bin/systemctl is-active shepherd", timeout=30, verbose=False
+    )
+
+    log.info("      .. kill remaining processes (step 3/5)")
     herd.kill_sheep_process()
-    log.info("      .. killed processes (step 2/4)")
-    # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
     while herd.service_is_active():
         time.sleep(5)
-    log.info("      .. services are shut down (step 3/4)")
+
+    log.info("      .. fetch service-logs (step 4/5)")
+    addition = f" --since='{since.isoformat(sep=' ')[:19]}'" if since is not None else ""
+    replies = herd.run_cmd(
+        sudo=True,
+        cmd="/usr/bin/journalctl --unit=shepherd.service "
+        "--no-pager --output=short-iso-precise "
+        "--utc --boot --all" + addition,
+        timeout=40,
+        verbose=False,
+    )
+    obs_logs: dict[str, ReplyData] = {}
+    for hostname, result in replies.items():
+        if not isinstance(result, Result):
+            continue
+        _failed = not isinstance(obs_failed.get(hostname), Result) or (
+            obs_failed.get(hostname).exited == 0
+        )
+        _active = isinstance(obs_active.get(hostname), Result) and (
+            obs_active.get(hostname).exited == 0
+        )
+        if _active:
+            exit_code = -1
+        elif _failed:
+            exit_code = 1
+        else:
+            exit_code = 0
+        obs_logs[hostname] = ReplyData(exited=exit_code, stdout=result.stdout, stderr=result.stderr)
+
+    log.info("      .. erase service-logs (step 5/5)")
     herd.service_erase_log()
-    log.info("      .. erased service-logs (step 4/4)")
+
+    # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
+
+    return obs_logs
 
 
 @async_wrap(timeout=5 * 60)
@@ -133,6 +175,7 @@ def herd_fetch_timestamp(herd: Herd) -> datetime:
     return min(herd.get_local_timestamps()) - timedelta(minutes=2)
 
 
+@deprecated("replaced by herd_fetch_logs_and_clean_up() to get more complete logs")
 @async_wrap(timeout=60)
 def herd_fetch_logs(herd: Herd, since: datetime) -> dict[str, ReplyData]:
     replies = herd.service_get_logs(since=since)
@@ -279,16 +322,12 @@ async def run_web_experiment(
             log.warning(_err1)
             await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30)
 
-        log.info("  .. retrieve logs")
+        log.info("  .. retrieve logs & clean up")
         await asyncio.sleep(20)  # finish IO, precaution
-        log_herd, _err2 = await herd_fetch_logs(herd, since=ts_herd)
+        log_herd, _err2 = await herd_fetch_logs_and_clean_up(herd, since=ts_herd)
+        # will also re-add all online observers
         if _err2 is not None:
             log.warning(_err2)
-
-        log.info("  .. cleanup")
-        _, _err3 = await herd_cleanup(herd)  # will also re-add all online observers
-        if _err3 is not None:
-            log.warning(_err3)
             await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30)
 
         log.info("  .. finished - now collecting data")
@@ -296,12 +335,12 @@ async def run_web_experiment(
         web_exp = await WebExperiment.get_by_id(xp_id)
         if web_exp is None:
             log.warning("XP-dataset not found (deleted?) after running it (deleted?)")
-            return (_err1 or _err2 or _err3) is not None
+            return (_err1 or _err2) is not None
 
         if log_herd is not None:
             web_exp.observers_output = log_herd
         web_exp.finished_at = local_now()
-        web_exp.scheduler_error = _err1 or _err2 or _err3
+        web_exp.scheduler_error = _err1 or _err2
 
         if len(web_exp.observers_output) == 0:
             log.error("Herd collected no logs from nodes")
@@ -456,7 +495,7 @@ async def scheduler(
             stack.enter_context(herd)  # TODO: this is not async
             herd.disable_progress_bar()
             log.info("Run initial herd-cleanup")
-            await herd_cleanup(herd)
+            await herd_fetch_logs_and_clean_up(herd)
             handler_prev = signal.signal(signal.SIGTERM, shutdown_gracefully)
         # TODO: how to make sure there is only one scheduler? Singleton
         log.info("Checking experiment scheduling FIFO")

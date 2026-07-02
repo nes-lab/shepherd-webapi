@@ -11,8 +11,8 @@ cli = typer.Typer(help="Web-Server & -API for the Shepherd-Testbed")
 
 
 def exit_gracefully(_signum: int, _frame: FrameType | None) -> None:
-    log.warning("Exiting!")
-    sys.exit(0)
+    log.warning("Exiting from signal %d!", _signum)
+    sys.exit(128 + _signum)
 
 
 verbose_opt_t = typer.Option(

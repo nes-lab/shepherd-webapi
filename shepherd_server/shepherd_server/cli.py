@@ -17,8 +17,8 @@ cli = typer.Typer(
 
 
 def exit_gracefully(_signum: int, _frame: FrameType | None) -> None:
-    log.warning("Exiting!")
-    sys.exit(0)
+    log.warning("Exiting from signal %d!", _signum)
+    sys.exit(128 + _signum)
 
 
 verbose_opt_t = typer.Option(
@@ -153,7 +153,7 @@ def reset(
             response = typer.prompt("Press y to continue")
             if response.lower() != "y":
                 log.info("Process interrupted by user")
-                sys.exit(0)
+                sys.exit(1)
     if accounts:
         asyncio.run(db.db_delete_all_accounts())
     if experiments:

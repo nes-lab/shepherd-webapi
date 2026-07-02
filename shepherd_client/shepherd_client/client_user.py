@@ -284,6 +284,7 @@ class UserClient(TestbedClient):
         path_file = path / f"{node_id}.h5"
         if path_file.exists():
             log.warning("File already exists - will skip download: %s", path_file)
+            return True
         rsp = self._req("get", f"/experiments/{xp_id}/download/{node_id}", stream=True)
         if not rsp.ok:
             log.warning("Downloading %s - %s failed with: %s", xp_id, node_id, self._msg(rsp))

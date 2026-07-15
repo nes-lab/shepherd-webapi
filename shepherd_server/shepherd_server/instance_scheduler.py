@@ -320,7 +320,8 @@ async def run_web_experiment(
 
         if _err1 is not None:
             log.warning(_err1)
-            await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30)
+            await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30 + 15)
+            # check_status() waits 30 s to finish cmd internally
 
         log.info("  .. retrieve logs & clean up")
         await asyncio.sleep(20)  # finish IO, precaution
@@ -328,7 +329,8 @@ async def run_web_experiment(
         # will also re-add all online observers
         if _err2 is not None:
             log.warning(_err2)
-            await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30)
+            await asyncio.wait_for(asyncio.to_thread(herd.check_status, warn=True), timeout=30 + 15)
+            # check_status() waits 30 s to finish cmd internally
 
         log.info("  .. finished - now collecting data")
         # Reload XP to avoid race-condition / working on old data
@@ -411,6 +413,7 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
         tb_.scheduler.activated = None
     if isinstance(herd, Herd):
         await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
+        # .open() waits 5 s to finish cmd internally
         tb_.scheduler.observer_count = len(herd.group_online)
 
         tb_.scheduler.targets_online = {}
@@ -522,6 +525,8 @@ async def scheduler(
                     herd=herd,
                 )
             except RuntimeError:
+                had_error = True
+            except TimeoutError:
                 had_error = True
             if had_error:
                 web_exp = await WebExperiment.get_by_id(next_experiment.id)

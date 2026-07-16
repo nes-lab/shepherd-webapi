@@ -1,16 +1,37 @@
 # History of Changes
 
-## v2026.06.2 - unreleased
+## v2026.07.1 - unreleased
 
-## Client
+### Client
+
+- don't overwrite existing downloads (like already promised)
+- exit CLI non-zero when receiving signal
+- make usage safer - mostly through type-checking
+
+### Server
+
+- exit CLI non-zero when receiving signal
+- fix potential bugs through type-checking
+- better distinguish between webExperiments and experiment-content
+
+### Scheduler
+
+- fetch more complete logs from observers
+- improve handling of timeouts
+- print more debug-info for failed runs
+- allow generating error log for (still) active instances
+
+## v2026.06.3 & v2026.06.2
+
+### Client
 
 - small logic-fix in admin-client
 
-## API
+### API
 
 - repair resource-endpoints for tb-components (no content)
 
-## Scheduler
+### Scheduler
 
 - new error-class: skipped execution
 - allow graceful termination without interrupting XP

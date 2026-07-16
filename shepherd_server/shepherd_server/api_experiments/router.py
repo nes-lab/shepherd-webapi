@@ -76,9 +76,9 @@ async def list_experiments(
 @router.get("/all", dependencies=[Depends(active_admin_user)])
 async def list_all_experiments() -> dict[UUID, str]:
     # not the most elegant solution, but this is admin-only anyway
-    st_states = await ExperimentStats.get_all_states()
-    xp_states = await WebExperiment.get_all_states()
-    return st_states | xp_states
+    stt_states = await ExperimentStats.get_all_states()
+    wxp_states = await WebExperiment.get_all_states()
+    return stt_states | wxp_states
 
 
 @router.get("/{experiment_id}")
@@ -193,17 +193,17 @@ async def statistics(
     user: Annotated[User, Depends(active_user)],
 ) -> ExperimentStats:
     """Trigger and fetch stat-update for all existing WebExperiments."""
-    xp = await WebExperiment.get_by_id(experiment_id)
-    if isinstance(xp, WebExperiment):
-        xp = await ExperimentStats.update_with(xp)
+    wxp = await WebExperiment.get_by_id(experiment_id)
+    if isinstance(wxp, WebExperiment):
+        wxp = await ExperimentStats.update_with(wxp)
     else:
-        xp = await ExperimentStats.get_by_id(experiment_id)
-    if xp is None:
+        wxp = await ExperimentStats.get_by_id(experiment_id)
+    if wxp is None:
         raise HTTPException(404, "Not Found")
-    if (user.role != UserRole.admin) and (xp.owner != user.email):
+    if (user.role != UserRole.admin) and (wxp.owner != user.email):
         raise HTTPException(403, "Forbidden")
 
-    return xp
+    return wxp
 
 
 @router.get("/{experiment_id}/download/{observer}")

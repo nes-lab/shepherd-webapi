@@ -345,59 +345,59 @@ class WebExperiment(Document, ResultData, ErrorData):
     @classmethod
     async def prune(cls, users: list[User] | None = None, *, dry_run: bool = True) -> int:
         # TODO: find xp with missing link to user (zombies)
-        xp_ids_2_prune = []
+        wxp_ids_2_prune = []
 
         # fetch experiments by user
         if users is not None:
             for user in users:
-                xp_ids_2_prune += list((await cls.get_all_states(user)).keys())
+                wxp_ids_2_prune += list((await cls.get_all_states(user)).keys())
 
         # get oldest XP of users over quota
         users_all = await User.find_all(lazy_parse=True).to_list()
-        xp_date_limit = local_now() - server_config.age_min_experiment
+        wxp_date_limit = local_now() - server_config.age_min_experiment
         for user in users_all:
-            xp_ids_user = await cls.get_all_states(user)
+            wxp_ids_user = await cls.get_all_states(user)
             storage_user = await cls.get_storage(user)
-            for xp_id in xp_ids_user:
-                xp = await cls.get_by_id(xp_id)
-                if not isinstance(xp, WebExperiment):
-                    log.error("XP %s could not be pruned (was not found)", xp_id)
+            for wxp_id in wxp_ids_user:
+                wxp = await cls.get_by_id(wxp_id)
+                if not isinstance(wxp, WebExperiment):
+                    log.error("XP %s could not be pruned (was not found)", wxp_id)
                     continue
-                if xp.created_at >= xp_date_limit:
+                if wxp.created_at >= wxp_date_limit:
                     continue
                 if storage_user >= user.quota_storage:
-                    xp_ids_2_prune.append(xp.id)
-                    storage_user -= xp.result_size
+                    wxp_ids_2_prune.append(wxp.id)
+                    storage_user -= wxp.result_size
 
         # get xp exceeding max age
-        xp_ids_2_prune += await cls.find(
+        wxp_ids_2_prune += await cls.find(
             cls.created_at <= local_now() - server_config.age_max_experiment,
             fetch_links=True,
         ).to_list()
 
         # calculate size of experiments
-        xp_ids_2_prune = set(xp_ids_2_prune)
+        wxp_ids_2_prune = set(wxp_ids_2_prune)
 
         size_total = 0
         # was: sum((await cls.get_by_id(xp_id)).result_size for xp_id in xp_ids_2_prune)
-        for xp_id in xp_ids_2_prune:
-            xp = await cls.get_by_id(xp_id)
-            if not isinstance(xp, WebExperiment):
+        for wxp_id in wxp_ids_2_prune:
+            wxp = await cls.get_by_id(wxp_id)
+            if not isinstance(wxp, WebExperiment):
                 continue
-            size_total += xp.result_size
+            size_total += wxp.result_size
 
         if dry_run:
             log.info("Pruning old experiments could free: %d MiB", size_total / (2**20))
         else:
-            for xp_id in xp_ids_2_prune:
-                xp = await cls.get_by_id(xp_id)
-                if not isinstance(xp, WebExperiment):
-                    log.error("XP %s could not be deleted (was not found)", xp_id)
+            for wxp_id in wxp_ids_2_prune:
+                wxp = await cls.get_by_id(wxp_id)
+                if not isinstance(wxp, WebExperiment):
+                    log.error("XP %s could not be deleted (was not found)", wxp_id)
                     continue
-                log.debug(" -> deleting experiment %s", xp.experiment.name)
-                await ExperimentStats.update_with(xp, to_be_deleted=True)
-                await xp.delete_content()
-                await xp.delete()
+                log.debug(" -> deleting experiment %s", wxp.experiment.name)
+                await ExperimentStats.update_with(wxp, to_be_deleted=True)
+                await wxp.delete_content()
+                await wxp.delete()
             log.info("Pruning old experiments freed: %d MiB", size_total / (2**20))
         return size_total
 
@@ -511,9 +511,9 @@ class ExperimentStats(Document):
         validate_on_save = True
 
     @classmethod
-    async def derive_from(cls, xp: WebExperiment) -> Self:
-        data = cls(id=xp.id)
-        data.update_common_fields(xp)
+    async def derive_from(cls, wxp: WebExperiment) -> Self:
+        data = cls(id=wxp.id)
+        data.update_common_fields(wxp)
         await data.save()
         return data
 
@@ -541,16 +541,16 @@ class ExperimentStats(Document):
     @classmethod
     async def update_with(
         cls,
-        xp: WebExperiment,
+        wxp: WebExperiment,
         *,
         to_be_deleted: bool = False,
     ) -> Self:
 
-        data: Self = await cls.find_one(cls.id == xp.id)
+        data: Self = await cls.find_one(cls.id == wxp.id)
         if data is None:
-            data = await cls.derive_from(xp)
+            data = await cls.derive_from(wxp)
         else:
-            data.update_common_fields(xp)
+            data.update_common_fields(wxp)
 
         if to_be_deleted:
             data.deleted_at = datetime.now(tz=local_tz())

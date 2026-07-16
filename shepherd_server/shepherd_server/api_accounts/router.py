@@ -61,16 +61,16 @@ async def delete_user(
     user: Annotated[User, Depends(current_user)],
 ) -> Response:
     """Delete current user (even deactivated & unconfirmed) and its experiments & content."""
-    xp_states = await WebExperiment.get_all_states(user)
-    for xp_id in xp_states:
-        xp = await WebExperiment.get_by_id(xp_id)
-        if xp is None:
+    wxp_states = await WebExperiment.get_all_states(user)
+    for wxp_id in wxp_states:
+        wxp = await WebExperiment.get_by_id(wxp_id)
+        if wxp is None:
             raise HTTPException(
                 406, "Unexpected error while deleting experiments that do not exist"
             )
-        await ExperimentStats.update_with(xp, to_be_deleted=True)
-        await xp.delete_content()
-        await xp.delete()
+        await ExperimentStats.update_with(wxp, to_be_deleted=True)
+        await wxp.delete_content()
+        await wxp.delete()
     await user.delete()
     # TODO: inform user about it
     return Response(status_code=204)

@@ -96,6 +96,9 @@ class UserClient(TestbedClient):
     # ####################################################################
 
     def authenticate(self) -> bool:
+        if self._cfg is None:
+            log.error("No valid account-data was provided for authentication")
+            return False
         try:
             rsp = requests.post(
                 url=f"{self._server}auth/token",
@@ -123,6 +126,10 @@ class UserClient(TestbedClient):
         """Create an account with a valid token."""
         if self._auth is not None:
             log.error("Account already registered and authenticated")
+            return False
+        if self._cfg is None:
+            log.error("No valid account-data was provided for registration")
+            return False
         data = {
             "email": self._cfg.account_email,
             "password": self._cfg.password,
@@ -141,6 +148,9 @@ class UserClient(TestbedClient):
 
     def delete_account(self) -> bool:
         """Remove account and content from server."""
+        if self._cfg is None:
+            log.error("No valid account-data was provided for deletion")
+            return False
         rsp = self._req("delete", "/accounts")
         if rsp.ok:
             log.info(f"Account {self._cfg.account_email} deleted")
@@ -168,6 +178,9 @@ class UserClient(TestbedClient):
         return self.get_account_info()
 
     def request_password_reset(self) -> bool:
+        if self._cfg is None:
+            log.error("No valid account-data was provided for password-reset")
+            return False
         data = {"email": self._cfg.account_email}
         rsp = self._req("post", "/accounts/forgot-password", json=data)
         if rsp.ok:

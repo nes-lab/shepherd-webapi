@@ -4,6 +4,7 @@ from pathlib import Path
 
 from decouple import config as dcoup_cfg
 from pydantic import BaseModel
+from pydantic import HttpUrl
 from pydantic import PositiveInt
 
 from .logger import log
@@ -46,7 +47,7 @@ class ServerConfigDefault(BaseModel):
     # will raise if missing default, TODO: remove default
 
     # api redirect
-    redirect_url: str = "https://nes-lab.github.io/shepherd-nova/"
+    redirect_url: HttpUrl = HttpUrl("https://nes-lab.github.io/shepherd-nova/")
 
     # MAIL
     mail_enabled: bool = dcoup_cfg("MAIL_ENABLED", default=False, cast=bool)
@@ -88,8 +89,10 @@ class ServerConfigDefault(BaseModel):
             _avail = False
         return _avail
 
-    def server_url(self) -> str:
-        return f"http{'s' if self.ssl_available() else ''}://{self.root_url}:{self.root_port}"
+    def server_url(self) -> HttpUrl:
+        return HttpUrl(
+            f"http{'s' if self.ssl_available() else ''}://{self.root_url}:{self.root_port}"
+        )
 
 
 server_config = ServerConfigDefault()

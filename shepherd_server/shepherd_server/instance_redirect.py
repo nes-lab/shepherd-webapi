@@ -5,6 +5,7 @@ run with: python3 ./prototype_redirect.py
 
 import asyncio
 from importlib import metadata
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
@@ -27,7 +28,7 @@ app = FastAPI(
 
 @app.get("/")
 async def redir() -> RedirectResponse:
-    return RedirectResponse(server_config.redirect_url)
+    return RedirectResponse(str(server_config.redirect_url))
 
 
 async def update_status(*, active: bool = False) -> None:
@@ -45,7 +46,7 @@ def run() -> None:
 
     log.info("Starting http-redirect ...")
 
-    uvi_args = {
+    uvi_args: dict[str, Any] = {
         "app": f"{run.__module__}:app",
         "reload": False,
         "port": 443 if ssl_enabled else 80,

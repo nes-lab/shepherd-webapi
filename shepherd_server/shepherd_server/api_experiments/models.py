@@ -81,7 +81,7 @@ class ErrorData(BaseModel):
             string += f"\nExit-code of {hostname} = {reply.exited}\n"
             files.append(
                 UploadFile(
-                    filename=f"{hostname}{'_error' if reply.exited > 0 else ''}.log",
+                    filename=f"{hostname}{'_error' if reply.exited != 0 else ''}.log",
                     file=StringIO(string),
                 )
             )
@@ -120,13 +120,17 @@ class ResultData(ErrorData):
 
     async def update_size(self) -> None:
         _size = 0
-        for path in self.result_paths.values():
-            if path.exists() and path.is_file():
-                _size += path.stat().st_size
-            else:
-                log.warning(f"file '{path}' does not exist after the experiment")
+        if isinstance(self.result_paths, dict):
+            for path in self.result_paths.values():
+                if path.exists() and path.is_file():
+                    _size += path.stat().st_size
+                else:
+                    log.warning(f"file '{path}' does not exist after the experiment")
         self.result_size = _size
-        await self.save_changes()
+        if isinstance(self, Document):
+            await self.save_changes()
+        else:
+            raise TypeError("ResultData-Type was used outside of WebExperiment-Context")
 
     async def update_result(self, paths: dict[str, Path] | None = None) -> None:
         if paths is None:
@@ -169,14 +173,17 @@ class ResultData(ErrorData):
             path = self.result_paths.get(observer)
             self.observers_had_data[observer] = path is not None and path.exists()
 
-        if len(self.result_paths) > 0:
+        if isinstance(self.result_paths, dict) and len(self.result_paths) > 0:
             self.content_paths = {key: path.parent for key, path in self.result_paths.items()}
             await self.update_size()
         else:
             log.warning("Skipped adding empty content path list")
             self.content_paths = None
             self.result_paths = None
-        await self.save_changes()
+        if isinstance(self, Document):
+            await self.save_changes()
+        else:
+            raise TypeError("ResultData-Type was used outside of WebExperiment-Context")
 
     async def delete_content(self) -> None:
         # TODO: just overwrite default delete-method?
@@ -191,7 +198,10 @@ class ResultData(ErrorData):
             for content_dir in self.content_paths.values():
                 shutil.rmtree(content_dir, ignore_errors=True)
             self.content_paths = None
-        await self.save_changes()
+        if isinstance(self, Document):
+            await self.save_changes()
+        else:
+            raise TypeError("ResultData-Type was used outside of WebExperiment-Context")
 
 
 class WebExperiment(Document, ResultData, ErrorData):
@@ -350,6 +360,9 @@ class WebExperiment(Document, ResultData, ErrorData):
             storage_user = await cls.get_storage(user)
             for xp_id in xp_ids_user:
                 xp = await cls.get_by_id(xp_id)
+                if not isinstance(xp, WebExperiment):
+                    log.error("XP %s could not be pruned (was not found)", xp_id)
+                    continue
                 if xp.created_at >= xp_date_limit:
                     continue
                 if storage_user >= user.quota_storage:
@@ -364,14 +377,24 @@ class WebExperiment(Document, ResultData, ErrorData):
 
         # calculate size of experiments
         xp_ids_2_prune = set(xp_ids_2_prune)
-        size_total = sum((await cls.get_by_id(xp_id)).result_size for xp_id in xp_ids_2_prune)
+
+        size_total = 0
+        # was: sum((await cls.get_by_id(xp_id)).result_size for xp_id in xp_ids_2_prune)
+        for xp_id in xp_ids_2_prune:
+            xp = await cls.get_by_id(xp_id)
+            if not isinstance(xp, WebExperiment):
+                continue
+            size_total += xp.result_size
 
         if dry_run:
             log.info("Pruning old experiments could free: %d MiB", size_total / (2**20))
         else:
             for xp_id in xp_ids_2_prune:
                 xp = await cls.get_by_id(xp_id)
-                log.debug(" -> deleting experiment %s", xp.name)
+                if not isinstance(xp, WebExperiment):
+                    log.error("XP %s could not be deleted (was not found)", xp_id)
+                    continue
+                log.debug(" -> deleting experiment %s", xp.experiment.name)
                 await ExperimentStats.update_with(xp, to_be_deleted=True)
                 await xp.delete_content()
                 await xp.delete()
@@ -494,24 +517,26 @@ class ExperimentStats(Document):
         await data.save()
         return data
 
-    def update_common_fields(self, xp: WebExperiment) -> None:
-        self.owner = xp.owner.email
+    def update_common_fields(self, wxp: WebExperiment) -> None:
+        if not isinstance(wxp.owner, User):
+            raise TypeError("User of Experiment could not be verified")
+        self.owner = wxp.owner.email
         # timestamps
-        self.created_at = xp.created_at
-        self.started_at = xp.started_at
-        self.executed_at = xp.executed_at
-        self.finished_at = xp.finished_at
+        self.created_at = wxp.created_at
+        self.started_at = wxp.started_at
+        self.executed_at = wxp.executed_at
+        self.finished_at = wxp.finished_at
         # states
-        self.state = xp.state
-        self.duration = xp.experiment.duration
-        self.result_size = xp.result_size
+        self.state = wxp.state
+        self.duration = wxp.experiment.duration
+        self.result_size = wxp.result_size
         # errors
-        self.had_errors = xp.had_errors
-        self.skipped_execution = xp.skipped_execution
-        self.has_missing_data = xp.has_missing_data
-        self.max_exit_code = xp.max_exit_code
-        self.scheduler_error = xp.scheduler_error
-        self.missing_observers = xp.missing_observers
+        self.had_errors = wxp.had_errors
+        self.skipped_execution = wxp.skipped_execution
+        self.has_missing_data = wxp.has_missing_data
+        self.max_exit_code = wxp.max_exit_code
+        self.scheduler_error = wxp.scheduler_error
+        self.missing_observers = wxp.missing_observers
 
     @classmethod
     async def update_with(

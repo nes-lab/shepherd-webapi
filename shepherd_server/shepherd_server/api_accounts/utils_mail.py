@@ -161,7 +161,7 @@ class FastMailEngine(MailEngine):
             msg += "- the testbed is now being rebooted as a precaution\n"
             # TODO: should the user know about that?
 
-        xp_files_n = len(web_exp.result_paths) if web_exp.result_paths is not None else 0
+        xp_files_n = len(web_exp.result_paths) if isinstance(web_exp.result_paths, dict) else 0
         if xp_files_n > 0:
             xp_size_MiB = round(web_exp.result_size / 2**20)
             msg += f"\nResults can now be downloaded ({xp_files_n} files, {xp_size_MiB} MiB).\n"

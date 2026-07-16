@@ -12,6 +12,7 @@ from shepherd_core.data_models.base.timezone import local_now
 
 from .api_accounts.models import PasswordStr
 from .api_accounts.models import User
+from .api_accounts.models import UserRole
 from .api_accounts.utils_mail import get_mail_engine
 from .api_accounts.utils_misc import calculate_hash
 from .api_accounts.utils_misc import calculate_password_hash
@@ -46,7 +47,7 @@ def db_available(timeout: float = 2) -> bool:
 
 
 @asynccontextmanager
-async def db_context(app: FastAPI) -> AsyncGenerator[None, None, None]:
+async def db_context(app: FastAPI) -> AsyncGenerator[None]:
     """Initialize application services."""
     app.db = await db_client()
     log.info("FastAPI DB-Client connected")
@@ -67,7 +68,7 @@ async def db_create_admin(email: EmailStr, password: PasswordStr) -> None:
     admin = User(
         email=email,
         password_hash=calculate_password_hash(password),
-        role="admin",
+        role=UserRole.admin,
         group_confirmed_at=local_now(),
         token_verification=token_unstable,
         disabled=server_config.mail_enabled,

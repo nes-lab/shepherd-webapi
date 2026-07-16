@@ -116,8 +116,9 @@ async def forgot_password(
     user = await User.by_email(email)
     if user is None:
         return Response(status_code=200)
-    user.token_pw_reset = calculate_hash(user.email + str(local_now()))[-12:]  # => unstable token
-    await get_mail_engine().send_password_reset_email(email, user.token_pw_reset)
+    token = calculate_hash(user.email + str(local_now()))[-12:]  # => unstable token
+    user.token_pw_reset = token
+    await get_mail_engine().send_password_reset_email(email, token)
     await user.save_changes()  # mail is sent first!
     return Response(status_code=200)
 
@@ -154,15 +155,16 @@ async def approve(
     user = await User.by_email(email)
     if user is not None:
         raise HTTPException(409, "Account already exists")
+    token = calculate_hash(email)[-12:]  # without date -> stable token
     user = User(
         email=email,
         password_hash="",  # placeholder not usable for long
-        token_verification=calculate_hash(email)[-12:],  # without date -> stable token
+        token_verification=token,
         role=UserRole.user,
     )
-    await get_mail_engine().send_approval_email(email, user.token_verification)
+    await get_mail_engine().send_approval_email(email, token)
     await User.insert_one(user)  # mail is sent first!
-    return Response(status_code=200, content=user.token_verification)
+    return Response(status_code=200, content=token)
 
 
 @router.post("/register")

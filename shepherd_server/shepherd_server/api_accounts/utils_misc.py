@@ -71,4 +71,4 @@ async def active_elevated_user(user: Annotated[User, Depends(active_user)]) -> U
 async def active_admin_user(user: Annotated[User, Depends(active_user)]) -> User:
     if user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Forbidden")
-    return User
+    return user

@@ -71,12 +71,10 @@ def herd_fetch_logs_and_clean_up(herd: Herd, since: datetime | None = None) -> d
     for hostname, result in replies.items():
         if not isinstance(result, Result):
             continue
-        _failed = not isinstance(obs_failed.get(hostname), Result) or (
-            obs_failed.get(hostname).exited == 0
-        )
-        _active = isinstance(obs_active.get(hostname), Result) and (
-            obs_active.get(hostname).exited == 0
-        )
+        _result = obs_failed.get(hostname)
+        _failed = not isinstance(_result, Result) or (_result.exited == 0)
+        _result = obs_active.get(hostname)
+        _active = isinstance(_result, Result) and (_result.exited == 0)
         if _active:
             exit_code = -1
         elif _failed:
@@ -244,9 +242,9 @@ async def herd_reboot(herd: Herd) -> None:
     except TimeoutError:
         log.warning("Timeout waiting for reboot of herd")
     composition = {
-        "all": {herd.hostnames[cnx.host] for cnx in herd.group_all},
-        "pre": {herd.hostnames[cnx.host] for cnx in group_pre},
-        "post": {herd.hostnames[cnx.host] for cnx in herd.group_online},
+        "all": {herd.hostnames.get(cnx.host) for cnx in herd.group_all},
+        "pre": {herd.hostnames.get(cnx.host) for cnx in group_pre},
+        "post": {herd.hostnames.get(cnx.host) for cnx in herd.group_online},
     }
     await get_mail_engine().send_herd_reboot_email(composition)
 
@@ -283,7 +281,7 @@ async def run_web_experiment(
         herd.group_online = [
             cnx
             for cnx in herd.group_online
-            if herd.hostnames[cnx.host] in web_exp.observers_requested
+            if herd.hostnames.get(cnx.host) in web_exp.observers_requested
         ]
         log.info("  >>> Preparation <<<")
         ts_herd, _err1 = await herd_fetch_timestamp(herd)
@@ -294,7 +292,18 @@ async def run_web_experiment(
         exe_timestamp = None
         exe_delay = timedelta(seconds=50)  # to better synchronize start
         # TODO: make this delay 60s configurable?
-        exe_timeout = web_exp.experiment.duration + timedelta(minutes=10)
+        if isinstance(web_exp.experiment.duration, timedelta):
+            exe_timeout = web_exp.experiment.duration + timedelta(minutes=10)
+        else:
+            duration = (
+                web_exp.owner.custom_quota_duration
+                if (
+                    isinstance(web_exp.owner, User)
+                    and isinstance(web_exp.owner.custom_quota_duration, timedelta)
+                )
+                else server_config.quota_default_duration
+            )
+            exe_timeout = duration + timedelta(minutes=10)
         if _err1 is None:
             herd.start_delay_s = round(exe_delay.total_seconds())
             log.info(
@@ -419,7 +428,7 @@ async def update_status(herd: Herd | None = None, *, active: bool = False) -> No
         tb_.scheduler.targets_online = {}
         tb_.scheduler.targets_offline = {}
         tb = Testbed(name=server_config.testbed_name)
-        observers_online = {herd.hostnames[cnx.host] for cnx in herd.group_online}
+        observers_online = {herd.hostnames.get(cnx.host) for cnx in herd.group_online}
         observers_offline = set(herd.hostnames.values()) - observers_online
         for target_id in get_client().list_resource_ids("Target"):
             try:

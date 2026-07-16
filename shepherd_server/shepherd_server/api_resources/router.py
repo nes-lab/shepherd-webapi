@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from shepherd_core.data_models.base.content import ContentModel
+from shepherd_core.data_models.base.shepherd import ShpModel
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
 from shepherd_core.data_models.content import VirtualHarvesterConfig
@@ -16,7 +17,7 @@ from shepherd_core.testbed_client import tb_client
 
 router = APIRouter(prefix="/resources", tags=["Resources"])
 
-resource_types = [
+resource_types: list[type[ShpModel]] = [
     # content
     EnergyEnvironment,
     VirtualHarvesterConfig,
@@ -31,7 +32,7 @@ resource_types = [
     Target,
     Testbed,
 ]
-resource_names = [content.__name__.lower() for content in resource_types]
+resource_names: list[str] = [content.__name__.lower() for content in resource_types]
 
 
 @router.get("")
@@ -63,7 +64,7 @@ async def list_resource_by_type(resource: str) -> dict[int, str]:
 
 
 @router.get("/{resource}/{name}")
-async def get_resource_by_type_and_name(resource: str, name: str) -> ContentModel:
+async def get_resource_by_type_and_name(resource: str, name: str) -> ContentModel | ShpModel:
     resource = resource.lower()
     if resource not in resource_names:
         raise HTTPException(404, "Not Found")

@@ -123,7 +123,7 @@ def create_admin(email: str, password: PasswordStr) -> None:
     """
     from . import instance_db as db
 
-    asyncio.run(db.db_create_admin(email, password))
+    asyncio.run(db.db_create_admin(email=email, password=password))
 
 
 @cli.command()

@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
+from typing import Any
 
 from fastapi import HTTPException
 from fastapi import status
@@ -13,7 +14,7 @@ from .models import AccessToken
 
 
 def create_access_token(username: str, expires_delta: timedelta = timedelta(days=1)) -> AccessToken:
-    to_encode = {"sub": username}
+    to_encode: dict[str, Any] = {"sub": username}
     expire = datetime.now(tz=local_tz()) + expires_delta
     to_encode.update({"exp": expire})
     return AccessToken(
@@ -31,7 +32,7 @@ def decode_access_token(token: str) -> str:
     )
     try:
         payload = jwt.decode(token, server_config.secret_key, algorithms=["HS256"])
-        username: str = payload.get("sub")
+        username: str | None = payload.get("sub")
         if username is None:
             raise credentials_exception
     except JWTError as xpt:

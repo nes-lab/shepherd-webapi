@@ -14,6 +14,7 @@ small excurse into what HTTP-Verb to use:
 import asyncio
 from importlib import metadata
 from pathlib import Path
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
@@ -122,7 +123,7 @@ def run() -> None:
 
     log.info("Starting Web-Api server...")
 
-    uvi_args = {
+    uvi_args: dict[str, Any] = {
         "app": f"{run.__module__}:app",
         "reload": False,
         "port": server_config.root_port,

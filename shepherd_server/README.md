@@ -163,6 +163,18 @@ The following command adds read and write to all files and subdirectories in `/v
  sudo chmod a+rw -R /var/shepherd
 ```
 
+Also create the basic directory structure on the fileserver
+
+```Shell
+sudo shepherd-server fix-directories
+```
+
+And check if content is available with
+
+```Shell
+shepherd-server content
+```
+
 ### Install & test Dependencies
 
 - set up a local [MongoDB](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/) instance

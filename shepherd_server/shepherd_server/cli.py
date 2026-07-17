@@ -173,5 +173,16 @@ def content(*, verify: bool = False) -> None:
     typer.Exit(int(invalid))
 
 
+@cli.command(short_help="Check basic directory-structure and create if needed.")
+def fix_directories(*, sheep_count: int = 30) -> None:
+    """Make sure that file-structures can be created and read."""
+    Path("/var/shepherd/content").mkdir(parents=True, exist_ok=True)
+
+    for _i in range(sheep_count):
+        Path(f"/var/shepherd/experiments/sheep{str(_i).rjust(2, '0')}").mkdir(
+            parents=True, exist_ok=True
+        )
+
+
 if __name__ == "__main__":
     cli()

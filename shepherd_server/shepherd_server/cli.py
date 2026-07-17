@@ -6,6 +6,8 @@ from types import FrameType
 
 import typer
 
+from shepherd_server.api_experiments.models import obtain_access_permissions
+
 from .api_accounts.models import PasswordStr
 from .logger import log
 from .logger import set_verbosity
@@ -175,13 +177,15 @@ def content(*, verify: bool = False) -> None:
 
 @cli.command(short_help="Check basic directory-structure and create if needed.")
 def fix_directories(*, sheep_count: int = 30) -> None:
-    """Make sure that file-structures can be created and read."""
+    """Make sure that file-structures can be created and accessed."""
     Path("/var/shepherd/content").mkdir(parents=True, exist_ok=True)
 
     for _i in range(sheep_count):
         Path(f"/var/shepherd/experiments/sheep{str(_i).rjust(2, '0')}").mkdir(
             parents=True, exist_ok=True
         )
+
+    obtain_access_permissions(Path("/var/shepherd/"))
 
 
 if __name__ == "__main__":

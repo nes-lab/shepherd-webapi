@@ -97,6 +97,10 @@ def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
 
     This makes one direct sheep-call: run preparation-tasks
     """
+    if herd.resync() != 0:
+        raise RuntimeError("Resync of observers failed")
+    if herd.mount() != 0:
+        raise RuntimeError("Checking availability of network-drives on observers failed")
 
     def tbt_patch_pre(tb_ts: TestbedTasks) -> TestbedTasks:
         tb_ts_pre = tb_ts.model_dump()
@@ -234,10 +238,8 @@ async def herd_reboot(herd: Herd) -> None:
             asyncio.to_thread(herd_reboot_syn, herd=herd),
             timeout=200,
         )
-        delay = 5 * 60
-        log.info("  .. give PTP %d s to stabilize", delay)
-        await asyncio.sleep(delay)  # stabilize PTP
-        await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
+        log.info("  .. give PTP time to stabilize")
+        await asyncio.wait_for(asyncio.to_thread(herd.resync), timeout=4 * 60)
         log.info("  .. brought back %d of %d observers", len(herd.group_online), len(group_pre))
     except TimeoutError:
         log.warning("Timeout waiting for reboot of herd")

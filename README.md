@@ -64,6 +64,6 @@ coverage report
 - rebase dev-branch
 
 ```Shell
-bump2version --allow-dirty --new-version 2026.06.3 patch
+bump2version --allow-dirty --new-version 2026.07.1 patch
 # ⤷ format: year.month.patch_release
 ```

@@ -26,7 +26,7 @@ def test_admin_approves_registration(
         assert rsp.status_code == 200
     mail_engine_mock.send_approval_email.assert_called_once()
     _, token1 = mail_engine_mock.send_approval_email.call_args.args
-    token2 = rsp.resource_t.decode()
+    token2 = rsp.content.decode()
     assert token1 == token2
 
 

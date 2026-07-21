@@ -32,7 +32,7 @@ resource_types: list[type[ShpModel]] = [
     Target,
     Testbed,
 ]
-resource_names: list[str] = [content.__name__.lower() for content in resource_types]
+resource_names: list[str] = [resource_t.__name__.lower() for resource_t in resource_types]
 
 
 @router.get("")
@@ -64,7 +64,7 @@ async def list_resource_by_type(resource: str) -> dict[int, str]:
 
 
 @router.get("/{resource}/{name}")
-async def get_resource_by_type_and_name(resource: str, name: str) -> ContentModel | ShpModel:
+async def get_resource_by_type_and_name(resource: str, name: str) -> ShpModel:
     resource = resource.lower()
     if resource not in resource_names:
         raise HTTPException(404, "Not Found")

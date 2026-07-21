@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import HTTPException
 from shepherd_core.data_models.base.shepherd import ShpModel
@@ -63,7 +65,7 @@ async def list_resource_by_type(resource: str) -> dict[int, str]:
 
 
 @router.get("/{resource}/{name}")
-async def get_resource_by_type_and_name(resource: str, name: str) -> ShpModel:
+async def get_resource_by_type_and_name(resource: str, name: str) -> dict[str, Any]:
     resource = resource.lower()
     if resource not in resource_names:
         raise HTTPException(404, "Not Found")
@@ -75,4 +77,4 @@ async def get_resource_by_type_and_name(resource: str, name: str) -> ShpModel:
         data = tb_client.get_resource_item(resource, uid=int(name))
     if data is None:
         raise HTTPException(404, "Not Found")
-    return resource_types[resource_names.index(resource)](**data)
+    return resource_types[resource_names.index(resource)](**data).model_dump(mode="json")

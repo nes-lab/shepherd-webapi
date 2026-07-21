@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from shepherd_core.data_models.base.content import ContentModel
 from shepherd_core.data_models.base.shepherd import ShpModel
 from shepherd_core.data_models.content import EnergyEnvironment
 from shepherd_core.data_models.content import Firmware
@@ -72,7 +71,7 @@ async def get_resource_by_type_and_name(resource: str, name: str) -> ShpModel:
         data = tb_client.get_resource_item(resource, name=name)
     except ValueError:
         data = None
-    if name.isdecimal() and int(name) in tb_client.list_resource_ids(resource):
+    if data is None and name.isdecimal() and int(name) in tb_client.list_resource_ids(resource):
         data = tb_client.get_resource_item(resource, uid=int(name))
     if data is None:
         raise HTTPException(404, "Not Found")

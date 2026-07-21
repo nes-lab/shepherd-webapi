@@ -14,6 +14,7 @@
 - fix potential bugs through type-checking
 - better distinguish between webExperiments and experiment-content
 - add cli-command `fix-directories` to create a basic structure
+- fix resource-route (again)
 
 ### Scheduler
 

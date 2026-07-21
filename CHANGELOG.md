@@ -13,6 +13,7 @@
 - exit CLI non-zero when receiving signal
 - fix potential bugs through type-checking
 - better distinguish between webExperiments and experiment-content
+- add cli-command `fix-directories` to create a basic structure
 
 ### Scheduler
 
@@ -20,6 +21,8 @@
 - improve handling of timeouts
 - print more debug-info for failed runs
 - allow generating error log for (still) active instances
+- reboot now uses new herd.resync, which uses sheep.resync, that waits dynamically for a sync-threshold (instead of just idling 5 mins)
+- every experiment begins now with a resync and a mount-check during preparation-phase
 
 ## v2026.06.3 & v2026.06.2
 

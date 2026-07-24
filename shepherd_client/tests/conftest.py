@@ -56,7 +56,7 @@ from shepherd_client import TestbedClient
 
 # TODO: transform into generators for each
 @pytest_asyncio.fixture(autouse=True)
-async def _primed_database(
+async def _primed_database(  # noqa: PLR0917
     scheduled_experiment_id: UUID,
     preparing_experiment_id: UUID,
     running_experiment_id: UUID,

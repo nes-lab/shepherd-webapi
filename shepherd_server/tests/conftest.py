@@ -40,7 +40,7 @@ from shepherd_server.instance_db import db_client
 
 
 @pytest_asyncio.fixture
-async def database_for_tests(
+async def database_for_tests(  # noqa: PLR0917
     scheduled_experiment_id: str,
     preparing_experiment_id: str,
     running_experiment_id: str,

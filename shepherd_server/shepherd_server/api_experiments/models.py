@@ -244,7 +244,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         validate_on_save = True
 
     @classmethod
-    async def get_by_id(cls, experiment_id: UUID) -> None | Self:
+    async def get_by_id(cls, experiment_id: UUID) -> Self | None:
         return await cls.find_one(
             cls.id == experiment_id,
             fetch_links=True,
@@ -291,7 +291,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         return int(size) if size else 0
 
     @classmethod
-    async def get_next_scheduling(cls, *, only_elevated: bool = False) -> None | Self:
+    async def get_next_scheduling(cls, *, only_elevated: bool = False) -> Self | None:
         """
         Finds the WebExperiment with the oldest scheduling_at datetime,
         that has not been executed yet (status less than active).
@@ -558,7 +558,7 @@ class ExperimentStats(Document):
         return data
 
     @classmethod
-    async def get_by_id(cls, experiment_id: UUID) -> None | Self:
+    async def get_by_id(cls, experiment_id: UUID) -> Self | None:
         return await cls.find_one(
             cls.id == experiment_id,
         )

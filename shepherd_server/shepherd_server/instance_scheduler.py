@@ -222,10 +222,10 @@ def herd_reboot_syn(herd: Herd) -> set:
 
     herd.open()
     _try = 0
-    while _try < 6 and len(_pre) > len(herd.group_online):
-        time.sleep(10)
+    while _try < 4 and len(_pre) > len(herd.group_online):
+        time.sleep(20)
         _try += 1
-        herd.open()
+        herd.open()  # try to open remaining nodes
 
     return _pre
 

@@ -2,6 +2,10 @@
 
 ## v2026.10.1 - unreleased
 
+### Server
+
+- allow power-tracing with custom samplerate (for experiments)
+
 ### Scheduler
 
 - spam less ssh-reconnects during reboot

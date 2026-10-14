@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.experiment import Experiment
@@ -21,7 +21,7 @@ async def test_get_next_scheduling(
     assert await WebExperiment.get_next_scheduling() is None
 
     tzone = local_tz()
-    one.requested_execution_at = datetime.datetime(2000, 1, 1, tzinfo=tzone)
+    one.requested_execution_at = dt.datetime(2000, 1, 1, tzinfo=tzone)
     await one.save_changes()
 
     _next = await WebExperiment.get_next_scheduling()
@@ -32,19 +32,19 @@ async def test_get_next_scheduling(
 
     _next = await WebExperiment.get_next_scheduling()
     assert _next.id == one.id
-    two.requested_execution_at = datetime.datetime(2001, 1, 1, tzinfo=tzone)
+    two.requested_execution_at = dt.datetime(2001, 1, 1, tzinfo=tzone)
     await two.save_changes()
 
     _next = await WebExperiment.get_next_scheduling()
     assert _next.id == one.id
 
-    two.requested_execution_at = datetime.datetime(1999, 1, 1, tzinfo=tzone)
+    two.requested_execution_at = dt.datetime(1999, 1, 1, tzinfo=tzone)
     await two.save_changes()
 
     _next = await WebExperiment.get_next_scheduling()
     assert _next.id == two.id
 
-    two.started_at = datetime.datetime(1999, 1, 1, tzinfo=tzone)
+    two.started_at = dt.datetime(1999, 1, 1, tzinfo=tzone)
     await two.save_changes()
 
     _next = await WebExperiment.get_next_scheduling()

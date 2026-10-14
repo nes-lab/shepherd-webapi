@@ -1,6 +1,17 @@
 # History of Changes
 
-## v2026.07.1 - unreleased
+## v2026.10.1 - unreleased
+
+### Scheduler
+
+- spam less ssh-reconnects during reboot
+
+### Internal
+
+- lint & fix code
+- update tooling & buildsystem
+
+## v2026.07.1
 
 ### Client
 

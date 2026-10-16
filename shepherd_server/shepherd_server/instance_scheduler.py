@@ -97,7 +97,9 @@ def herd_resync(herd: Herd | None) -> None:
     """Correct time on observers."""
     if herd is None:
         return
-    herd.resync()
+    herd.open()
+    if herd.resync() != 0:
+        raise RuntimeError("Resync of observers failed")
 
 
 @async_wrap(timeout=5 * 60)
@@ -106,8 +108,6 @@ def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
 
     This makes one direct sheep-call: run preparation-tasks
     """
-    if herd.resync() != 0:
-        raise RuntimeError("Resync of observers failed")
     if herd.mount() != 0:
         raise RuntimeError("Checking availability of network-drives on observers failed")
 
@@ -288,6 +288,7 @@ async def run_web_experiment(
     await web_exp.save_changes()
 
     if isinstance(herd, Herd):
+        await herd_resync(herd)  # includes open()
         await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
         log.debug("\tObservers online = %d", len(herd.group_online))
         # only utilize nodes that online and requested

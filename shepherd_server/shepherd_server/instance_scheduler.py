@@ -98,7 +98,7 @@ def herd_resync(herd: Herd | None) -> None:
     if herd is None:
         return
     herd.open()
-    if herd.resync() != 0:
+    if herd.resync() != 0:  # TODO: add non-verbose option, only non-zero nodes
         raise RuntimeError("Resync of observers failed")
 
 
@@ -108,7 +108,7 @@ def herd_prepare_experiment(herd: Herd, tb_tasks: TestbedTasks) -> None:
 
     This makes one direct sheep-call: run preparation-tasks
     """
-    if herd.mount() != 0:
+    if herd.mount() != 0:  # TODO: add non-verbose option, only non-zero nodes
         raise RuntimeError("Checking availability of network-drives on observers failed")
 
     def tbt_patch_pre(tb_ts: TestbedTasks) -> TestbedTasks:
@@ -288,6 +288,8 @@ async def run_web_experiment(
     await web_exp.save_changes()
 
     if isinstance(herd, Herd):
+        # NOTE: resync and reopen must be in this order, connections
+        #        are recently closed silently after resync
         await herd_resync(herd)  # includes open()
         await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
         log.debug("\tObservers online = %d", len(herd.group_online))

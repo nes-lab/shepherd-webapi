@@ -187,6 +187,9 @@ class FastMailEngine(MailEngine):
         _all = set(herd_composition.get("all", []))
         _miss_pre = _all - set(herd_composition.get("pre", []))
         _miss_pst = _all - set(herd_composition.get("post", []))
+        if len(_miss_pst) == 0 and len(_miss_pre) == 0:
+            # skip email if nothing is wrong (failed XP is sent to admin anyway)
+            return
         msg = f"Herd was rebooted with:\n- {', '.join(sorted(_all))} (n={len(_all)})\n"
         if len(_miss_pre) > 0:
             msg += f"- pre-missing  = {', '.join(sorted(_miss_pre))} (n={len(_miss_pre)})\n"

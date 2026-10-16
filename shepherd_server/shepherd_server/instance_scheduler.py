@@ -57,8 +57,8 @@ def herd_fetch_logs_and_clean_up(herd: Herd, since: datetime | None = None) -> d
     while herd.service_is_active():
         time.sleep(5)
 
-    log.info("      .. fetch service-logs (step 4/5)")
     addition = f" --since='{since.isoformat(sep=' ')[:19]}'" if since is not None else ""
+    log.info("      .. fetch service-logs (step 4/5) %s", addition)
     replies = herd.run_cmd(
         sudo=True,
         cmd="/usr/bin/journalctl --unit=shepherd.service "

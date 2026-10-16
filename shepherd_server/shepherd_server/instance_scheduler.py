@@ -288,12 +288,15 @@ async def run_web_experiment(
     await web_exp.save_changes()
 
     if isinstance(herd, Herd):
+        await asyncio.wait_for(asyncio.to_thread(herd.open), timeout=30)
+        log.debug("\tObservers online = %d", len(herd.group_online))
         # only utilize nodes that online and requested
         herd.group_online = [
             cnx
             for cnx in herd.group_online
             if herd.hostnames.get(cnx.host) in web_exp.observers_requested
         ]
+        log.debug("\tObservers requested = %d", len(herd.group_online))
         log.info("  >>> Preparation <<<")
         ts_herd, _err1 = await herd_fetch_timestamp(herd)
         if _err1 is None:

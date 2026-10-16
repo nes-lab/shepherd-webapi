@@ -462,6 +462,7 @@ class WebExperiment(Document, ResultData, ErrorData):
         def as_iso(ts: datetime | None) -> str:
             return ts.isoformat(sep=" ")[:19] + " (UTC)" if ts is not None else "-"
 
+        obs_reqd = ", ".join(self.observers_requested)
         return (
             "\nSummary:\n"
             f"- id = {self.id}\n"
@@ -469,7 +470,7 @@ class WebExperiment(Document, ResultData, ErrorData):
             f"- scheduled @ {as_iso(self.started_at)}\n"
             f"- executed  @ {as_iso(self.executed_at)}\n"
             f"- finished  @ {as_iso(self.finished_at)}\n"
-            f"- observers requested: {', '.join(self.observers_requested)}\n"
+            f"- {len(self.observers_requested)} observers requested: {obs_reqd}\n"
         )
 
 

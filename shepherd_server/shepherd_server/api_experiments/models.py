@@ -469,7 +469,7 @@ class WebExperiment(Document, ResultData, ErrorData):
             f"- scheduled @ {as_iso(self.started_at)}\n"
             f"- executed  @ {as_iso(self.executed_at)}\n"
             f"- finished  @ {as_iso(self.finished_at)}\n"
-            f"- observers requested: {', '.join(self.observers_requested)}"
+            f"- observers requested: {', '.join(self.observers_requested)}\n"
         )
 
 

@@ -37,6 +37,7 @@ from .logger import log
 # TODO:
 #   - auto-retry sub-tasks or whole job after it failed
 #   - refactor complex herd-fn into sep file
+#       -> just do a async-herd?
 
 
 @async_wrap(timeout=80 + 60)
@@ -89,6 +90,14 @@ def herd_fetch_logs_and_clean_up(herd: Herd, since: datetime | None = None) -> d
     # TODO: add target-cleaner (chip erase) - at least flash sleep to avoid program-errors
 
     return obs_logs
+
+
+@async_wrap(timeout=150)
+def herd_resync(herd: Herd | None) -> None:
+    """Correct time on observers."""
+    if herd is None:
+        return
+    herd.resync()
 
 
 @async_wrap(timeout=5 * 60)
@@ -492,6 +501,7 @@ async def scheduler(
     await tb_.save_changes()
     wait_delay: int = 5
     update_delay: timedelta = timedelta(seconds=60)
+    resync_delay: timedelta = timedelta(minutes=60)
 
     # allow running dry in temp-folder
     handler_prev = None
@@ -515,11 +525,17 @@ async def scheduler(
         log.info("Checking experiment scheduling FIFO")
         await WebExperiment.reset_stuck_items()
         ts_update_next = local_now()
+        ts_resync_next = local_now()
 
         while not shutdown_event.is_set():
+            # some house-keeping
             if local_now() > ts_update_next:
                 ts_update_next = local_now() + update_delay
                 await update_status(herd=herd, active=True)
+            if local_now() > ts_resync_next:
+                ts_resync_next = local_now() + resync_delay
+                await herd_resync(herd=herd)
+            # TODO: add reboot after ~6h of no XP
 
             next_experiment = await WebExperiment.get_next_scheduling(only_elevated=only_elevated)
             if next_experiment is None:

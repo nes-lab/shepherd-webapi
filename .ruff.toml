@@ -22,6 +22,7 @@ ignore = [
     "PLC0415",  # not only import at top-level
     "CPY001",
     "D", "ERA",  # TODO: for releasing now - do add documentation later
+    "ASYNC109", # until async-herd is a thing
     ]
 
 [lint.per-file-ignores]

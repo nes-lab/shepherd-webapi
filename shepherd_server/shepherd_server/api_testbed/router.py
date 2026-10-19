@@ -162,7 +162,7 @@ async def list_targets() -> list[int]:
         try:
             if tb.get_observer(uid):
                 data.append(uid)
-        except ValueError:  # noqa: PERF203
+        except ValueError:
             pass
     return sorted(data)
 

@@ -5,6 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 from io import StringIO
 from pathlib import Path
+from typing import Self
 from uuid import UUID
 from uuid import uuid4
 
@@ -20,7 +21,6 @@ from shepherd_core.data_models.base.timezone import local_now
 from shepherd_core.data_models.base.timezone import local_tz
 from shepherd_core.data_models.experiment import Experiment
 from shepherd_core.reader import Reader as CoreReader
-from typing_extensions import Self
 from typing_extensions import deprecated
 
 from shepherd_server.api_accounts.models import User

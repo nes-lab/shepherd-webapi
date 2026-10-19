@@ -9,7 +9,7 @@
 - generate webform from class? constraints for var
 - interactive graphics with plotly?
 - login via oauth
-- email-account shepherd-neslab@tu-dresden.de ? neslab-shepherd@tu-dresden.de
+- email-account <shepherd-neslab@tu-dresden.de> ? <neslab-shepherd@tu-dresden.de>
 - ssl-certificate
 - figure out groups
 - load css and others locally
@@ -17,7 +17,6 @@
 - OneToOneField does not appear in form
 - even cleaner form from model? `editable` is there
 - dark mode toggle?
-
 - Measurement-Campaign
   - validate & add
   - activate / enqueue
@@ -39,4 +38,4 @@
   - (re-) index and use / serve
   -
 
-Try: https://github.com/fastapi-users/fastapi-users
+Try: <https://github.com/fastapi-users/fastapi-users>

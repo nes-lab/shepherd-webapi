@@ -76,3 +76,10 @@ repos:
     hooks:
       - id: codespell
         additional_dependencies: ["tomli"]  # for py<3.11
+
+  - repo: https://github.com/rvben/rumdl-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: rumdl      # Lint only;
+        args: [--fix]
+      - id: rumdl-fmt  # Pure format, exits 0 on violations

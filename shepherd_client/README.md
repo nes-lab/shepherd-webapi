@@ -4,7 +4,7 @@
 [![PyVers](https://img.shields.io/pypi/pyversions/shepherd_client.svg)](https://pypi.python.org/pypi/shepherd-client)
 [![QA-Tests](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml/badge.svg)](https://github.com/nes-lab/shepherd-webapi/actions/workflows/quality_assurance.yaml)
 
-**Shepherd Nova Testbed**: https://testbed.nes-lab.org/
+**Shepherd Nova Testbed**: <https://testbed.nes-lab.org/>
 
 **Testbed-WebAPI**: <https://shepherd.cfaed.tu-dresden.de:8000>
 

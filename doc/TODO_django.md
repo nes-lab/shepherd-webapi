@@ -7,10 +7,12 @@ Kept in here for the time being - because 2nd half has thoughts about datastruct
 large parts are related to django (but not all)
 
 django-questions
+
 - can we delete empty files like admin.py?
 - form to documentation, how?
 
 Later:
+
 - analyzers for codequality, coverage, maintainability
 
 ## Building-Blocks
@@ -18,49 +20,46 @@ Later:
 - Base -> Django (4.1 currently)
 - CSS
   - **[Bootstrap 5](https://blog.getbootstrap.com/)**
-  - https://github.com/StartBootstrap/startbootstrap-bare
+  - <https://github.com/StartBootstrap/startbootstrap-bare>
   - tailwind
 - Icons
-  - https://fontawesome.com/search?s=light
-  - https://fontawesome.com/docs/web/use-with/python-django
+  - <https://fontawesome.com/search?s=light>
+  - <https://fontawesome.com/docs/web/use-with/python-django>
 - Oauth
-  - https://djangopackages.org/grids/g/oauth/?python3=1 -> Client
-  - **https://django-allauth.readthedocs.io/en/latest/installation.html**
-  - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+  - <https://djangopackages.org/grids/g/oauth/?python3=1> -> Client
+  - **<https://django-allauth.readthedocs.io/en/latest/installation.html>**
+  - <https://python-social-auth.readthedocs.io/en/latest/backends/github.html>
   - Services: github, bitbucket, gitlab, stackoverflow
 - Rest-Framework
-  - https://www.django-rest-framework.org/
-
+  - <https://www.django-rest-framework.org/>
 - YAML as POST-source
-  - https://jpadilla.github.io/django-rest-framework-yaml/
+  - <https://jpadilla.github.io/django-rest-framework-yaml/>
 - Form, automatic layouts
-  - crispy: https://pypi.org/project/django-crispy-forms/
-    - https://django-crispy-forms.readthedocs.io/en/latest/
+  - crispy: <https://pypi.org/project/django-crispy-forms/>
+    - <https://django-crispy-forms.readthedocs.io/en/latest/>
 - try poetry instead of pipenv and other setup-tools?
-  - https://python-poetry.org/docs/basic-usage/
+  - <https://python-poetry.org/docs/basic-usage/>
 - use forge instead of django? more constrained fork
-  - https://github.com/forgepackages/forge
-
-
+  - <https://github.com/forgepackages/forge>
 - models of data-structures
   - django-internal -> should be independent of django, but I see no alternative atm
-  - validation (cross-field): https://github.com/shezadkhan137/required
-  - transformation: https://convtools.readthedocs.io/en/latest/index.html#ref-index-intro
-  - pydantic-models: https://pydantic-docs.helpmanual.io/usage/exporting_models/
-  - djantic: https://jordaneremieff.github.io/djantic/
+  - validation (cross-field): <https://github.com/shezadkhan137/required>
+  - transformation: <https://convtools.readthedocs.io/en/latest/index.html#ref-index-intro>
+  - pydantic-models: <https://pydantic-docs.helpmanual.io/usage/exporting_models/>
+  - djantic: <https://jordaneremieff.github.io/djantic/>
   - idea: django-model -> djantic -> pydantic -> dict -> yaml
 - view Data (list or individual elements)
-  - https://pypi.org/project/django-static-models/
+  - <https://pypi.org/project/django-static-models/>
   -
 
 Alternative Bases:
-- Panel, www.awesome-panel.org
-  - Streamz, https://streamz.readthedocs.io
-  - Param, https://param.holoviz.org/
-    - Param for django https://pypi.org/project/django-param/
-  - Pydantic, https://pydantic-docs.helpmanual.io/
--
 
+- Panel, <https://www.awesome-panel.org>
+  - Streamz, <https://streamz.readthedocs.io>
+  - Param, <https://param.holoviz.org/>
+    - Param for django <https://pypi.org/project/django-param/>
+  - Pydantic, <https://pydantic-docs.helpmanual.io/>
+-
 
 ## Data-Structures
 
@@ -75,6 +74,7 @@ Alternative Bases:
 ### Form-Design in Django
 
 General Form-Design:
+
 - proper Elements
   - CharField instead of textField (better documentation, smaller field?)
   - SlugField to force only letters, numbers, underscores, hyphens
@@ -97,6 +97,7 @@ General Form-Design:
 - Groups / Team
 
 internal:
+
 - oauth2-data
 - ID
 - storage_cap (all data)
@@ -111,21 +112,24 @@ internal:
 - locked - only members can add new users
 
 internal:
+
 - ID
 
 ### Experiment
 
 On Creation:
+
 - **name**
 - description
 - custom
 - **schedule**
 - group
 - state: prototype, scheduled, in progress, postprocessing, finished (downloadable)
-  - https://django-model-utils.readthedocs.io/en/latest/fields.html#statusfield
+  - <https://django-model-utils.readthedocs.io/en/latest/fields.html#statusfield>
 - **target-setup(s)**
 
 finished:
+
 - runtime_final
 - storage_size
 - path_data (usr_group_)
@@ -136,6 +140,7 @@ finished:
   - gpio-actuation
 
 internal:
+
 - ID
 - user-id
 - age_max
@@ -145,9 +150,10 @@ internal:
 
 - start
 - **duration**
-  - https://django-model-utils.readthedocs.io/en/latest/models.html#timeframedmodel + manager
+  - <https://django-model-utils.readthedocs.io/en/latest/models.html#timeframedmodel> + manager
 
 internal:
+
 - setup-duration (something like 120s + 10% of duration if power-)
 - finish-duration
 - experiment-ID
@@ -160,7 +166,6 @@ internal:
   - config-classes (hopefully derivable from core-lib)
   - recorded trace (if needed)
 - **imageID** ID of previously uploaded image **OR** **embeddedImage**
-
 
 ### Firmware / images (element of target-setup)
 
@@ -192,7 +197,6 @@ Power-Profiling
 - time_offset (timer after experiment-start)
 - duration (max default)
 - (fileformat) h5 preferred, csv in edgecases
-
 
 GPIO-Tracing
 

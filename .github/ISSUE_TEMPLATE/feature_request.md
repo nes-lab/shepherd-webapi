@@ -14,7 +14,6 @@ If possible choose the correct project:
 - [targets-repo](https://github.com/nes-lab/shepherd-targets/issues) - HW & SW for the cyber-physical systems running within the emulated energy environments
 - [webApi](https://github.com/nes-lab/shepherd-webapi/issues) - the interface between the testbed instance and the user
 
-
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 

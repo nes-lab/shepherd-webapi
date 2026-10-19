@@ -37,7 +37,8 @@
 - improve handling of timeouts
 - print more debug-info for failed runs
 - allow generating error log for (still) active instances
-- reboot now uses new herd.resync, which uses sheep.resync, that waits dynamically for a sync-threshold (instead of just idling 5 mins)
+- reboot now uses new herd.resync, which uses sheep.resync
+  - waits dynamically for a sync-threshold (instead of just idling 5 mins)
 - every experiment begins now with a resync and a mount-check during preparation-phase
 
 ## v2026.06.3 & v2026.06.2
@@ -87,7 +88,8 @@
   - optimize usage of sleep
     - in addition to latest speed improvements the sleeps-overhead was reduced by ~ 40 s
     - more responsiveness by shorter idle-waiting intervals
-    - scheduler-overhead should currently be down to 2 minutes per experiment (includes preparation, programming targets, collecting results, ...)
+    - scheduler-overhead should currently be down to 2 minutes per experiment
+      - includes preparation, programming targets, collecting results, ...
     - see server/performance.md for more details
 - fix password-reset mail - the link was not usable
 - silence permission file-changes
@@ -99,7 +101,8 @@
 ### Client
 
 - add admin-flavor for webclient (`install .[admin]`)
-- add testbed-flavor for webclient (usable without login) to query testbed status and resources -> moved to core-lib
+- add testbed-flavor for webclient (usable without login) to query testbed status and resources
+  - moved from webclient to core-lib
 - client FNs return success-state if no actual data was returned before
 - all accounts can log in, pull their info and delete the account (even disabled ones)
 - improve error-messages for timeouts or other connection-issues
@@ -110,7 +113,6 @@
 - replace setuptools with uv-build (faster and modern)
 
 ### Server
-
 
 - add target-ids to list of online observers in root-API
 - rename endpoints to match common CRUD-style (user=>accounts, experiment=>experiments, content=>resources)
@@ -127,7 +129,6 @@
 - now tested via GH-actions
 - lower python min-version to 3.10 as it is needed for unittesting the client in GH-actions
 
-
 ### Misc
 
 - fix deprecated httpx-usage (`.post(data=model.model_dump_json())` is replaced by `.post(json=model.model_dump(mode="json"))`)
@@ -142,6 +143,7 @@
 ## v2026.02.2
 
 **Breaking change:** Switch to newest core-lib!
+
 - users must now use the new battery-model for the virtual source
 - users must now use the new energyEnvironment-model
 

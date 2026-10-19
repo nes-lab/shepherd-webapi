@@ -40,3 +40,13 @@ skip = "*.svg,*.css,*.js,flocklab_template.xml"
 ignore-words-list = "jupyter,fram,ws,astroid,ro"
 check-filenames = true
 check-hidden = true
+
+[tool.rumdl]
+# Global options at root level
+line-length = 160
+respect-gitignore = true
+exclude = [".git"]
+
+[tool.rumdl.MD013] # line length
+code_blocks = false
+tables = false

@@ -46,7 +46,7 @@ mongorestore ~/mongo-backup/
 
 or to get YAML-files (not working ATM)
 
-```
+```text
 shepherd_server backup dir_path
 shepherd_server init dir_path
 ```
@@ -97,7 +97,7 @@ sudo certbot certonly --webroot
 
 The feedback will be:
 
-```
+```text
 Please enter the domain name(s) you would like on your certificate (comma and/or
 space separated) (Enter 'c' to cancel): shepherd.cfaed.tu-dresden.de
 Requesting a certificate for shepherd.cfaed.tu-dresden.de
@@ -114,8 +114,9 @@ Certbot will automatically renew certificates from now on.
 The config for the webservices can point directly to these files.
 
 Further reading:
-- https://eff-certbot.readthedocs.io/en/stable/using.html#id8
-- https://certbot.eff.org/faq/
+
+- <https://eff-certbot.readthedocs.io/en/stable/using.html#id8>
+- <https://certbot.eff.org/faq/>
 
 **Addition**:
 
@@ -124,7 +125,6 @@ Certbot protects the archive directory, and we don't want to execute our server 
 ```Shell
 sudo chmod +x /etc/letsencrypt/archive
 ```
-
 
 ### Prepare Config
 

@@ -10,8 +10,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.15", "3.14", "3.13"]
-
+        python-version: ["3.14", "3.13"]
+        # TODO: add "3.15" when h5py-lib is released for it
     runs-on: ubuntu-latest
     env:
       UV_PYTHON: ${{ matrix.python-version }}

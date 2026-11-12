@@ -1,6 +1,17 @@
 # History of Changes
 
-## v2026.10.1 - unreleased
+## v2026.11.1 - unreleased
+
+- force newest [core-library to enable new params for experiments](https://github.com/nes-lab/shepherd-tools/releases/tag/v2026.11.1)
+- phase out python 3.10
+
+### Server
+
+- fix disappearing observers (caused by ptp & timesteps on the observers)
+- email of XP includes requested observers
+- skip reboot-mail if all observers came back
+
+## v2026.10.1
 
 ### Server
 

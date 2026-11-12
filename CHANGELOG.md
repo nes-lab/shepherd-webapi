@@ -5,6 +5,30 @@
 - force newest [core-library to enable new params for experiments](https://github.com/nes-lab/shepherd-tools/releases/tag/v2026.11.1)
 - phase out python 3.10
 
+Users can now rescale Energy-Environments with `.rescale_factor` to answer question like
+"What if I use a larger solar cell?".
+It's also possible to begin emulation at a later point in (long) Environments with `.time_start_offset`.
+For experiments that don't require super accurate sync, but cause warnings due to very high recording-rates it is possible to raise the error-threshold.
+Example code looks like followed.
+
+```python
+exp = Experiment(
+    name="meaningful_TestName",
+    duration=30,  # ty: ignore[invalid-argument-type]
+    target_configs=[
+        TargetConfig(
+            target_IDs=[42],
+            energy_env=sdm.EnergyEnvironment(
+                name="bonito_stairs_solar",
+                rescale_factor=7.13,
+                time_start_offset=600,  # 10 min
+            ),
+        )
+    ],
+    sys_logging=SystemLogging(sync_offset_threshold=1e-3),  # 1 ms
+)
+```
+
 ### Server
 
 - fix disappearing observers (caused by ptp & timesteps on the observers)
